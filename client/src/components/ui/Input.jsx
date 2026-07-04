@@ -10,7 +10,7 @@ const Input = forwardRef(function Input(
       {label ? <span className="text-sm font-semibold text-heading">{label}</span> : null}
       <div
         className={cn(
-          'flex h-12 items-center gap-3 rounded-2xl border border-border bg-card px-4 transition focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-tint',
+          'flex h-12 items-center gap-3 rounded-2xl border border-border bg-card px-4 transition focus-within:ring-0',
           error && 'border-danger',
           className,
         )}
