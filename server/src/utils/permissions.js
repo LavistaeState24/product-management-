@@ -28,6 +28,10 @@ export const ROLE_PERMISSIONS = {
   [ROLES.Staff]: [PERMISSIONS.canViewDashboard],
   [ROLES.Accountant]: [
     PERMISSIONS.canViewDashboard,
+    PERMISSIONS.canViewPurchase,
+    PERMISSIONS.canCreatePurchase,
+    PERMISSIONS.canEditPurchase,
+    PERMISSIONS.canDeletePurchase,
     PERMISSIONS.canViewPayments,
     PERMISSIONS.canManagePayments,
     PERMISSIONS.canViewReports,

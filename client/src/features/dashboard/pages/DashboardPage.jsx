@@ -32,7 +32,7 @@ const activityData = [
 const foundationRows = [
   { area: 'Authentication', status: 'Ready', notes: 'JWT login, current-user API, logout flow' },
   { area: 'RBAC', status: 'Ready', notes: 'Role and permission-aware route protection' },
-  { area: 'Purchase', status: 'Locked', notes: 'Reserved for future phase' },
+  { area: 'Purchase', status: 'Ready', notes: 'Supplier bills, stock mutation, and payable logic are active' },
   { area: 'Sales', status: 'Locked', notes: 'Reserved for future phase' },
   { area: 'Stock', status: 'Locked', notes: 'Reserved for future phase' },
 ];
@@ -69,7 +69,7 @@ function DashboardPage() {
               Welcome back, {user?.name}
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-body lg:text-base">
-              This phase establishes the system shell, secure authentication flow, and reusable components that later purchase, sales, stock, and accounting modules will sit on top of.
+              The platform now includes the system shell, secure authentication flow, reusable components, and the first transactional purchase workflow.
             </p>
           </div>
 
@@ -83,8 +83,8 @@ function DashboardPage() {
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Active Role" value={user?.role} change="Role aware" trend="info" />
         <KpiCard title="Permissions Granted" value={user?.permissions?.length || 0} change="RBAC ready" trend="success" />
-        <KpiCard title="Protected Screens" value="4" change="Auth guard" trend="warning" />
-        <KpiCard title="Locked Modules" value="5" change="Future phases" trend="danger" />
+        <KpiCard title="Protected Screens" value="8" change="Auth guard" trend="warning" />
+        <KpiCard title="Locked Modules" value="4" change="Future phases" trend="danger" />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
@@ -161,15 +161,15 @@ function DashboardPage() {
                 <FolderLock className="mt-0.5 h-5 w-5 text-warning" />
                 <div>
                   <p className="font-semibold text-heading">Business modules withheld</p>
-                  <p className="text-sm text-body">Purchase, sales, stock, payments, and reports are intentionally excluded.</p>
+                  <p className="text-sm text-body">Sales, stock, payments, and reports are still withheld. Purchase is now active.</p>
                 </div>
               </div>
             </div>
           </div>
 
           <EmptyState
-            title="No business data yet"
-            description="This environment is limited to the visual system and secure access layer. Transactional features are not part of this phase."
+            title="Purchase workflow is ready"
+            description="Use the purchase module to create supplier transactions, upload bills, and update stock."
             actionLabel="Review Foundation"
             onAction={() => setModalOpen(true)}
             icon={FolderLock}
@@ -207,12 +207,12 @@ function DashboardPage() {
       <Modal
         open={modalOpen}
         title="Phase 1 Delivery"
-        description="The base system is ready for later module work, without introducing domain transactions yet."
+        description="The base system is ready and now includes the first live domain transaction workflow."
         onClose={() => setModalOpen(false)}
       >
         <div className="space-y-4 text-sm text-body">
-          <p>Included: app shell, theme tokens, reusable UI primitives, protected routing, JWT login, current user hydration, logout, RBAC, and boss seeding.</p>
-          <p>Excluded: purchase, sales, stock, payments, reports, inventory mutations, ledgers, and analytics beyond the foundation preview.</p>
+          <p>Included: app shell, theme tokens, reusable UI primitives, protected routing, JWT login, current user hydration, logout, RBAC, boss seeding, and the purchase workflow.</p>
+          <p>Excluded: sales, stock management screens, payments, reports, and analytics beyond the current foundation plus purchase release.</p>
           <div className="flex justify-end">
             <Button onClick={() => setModalOpen(false)}>Close</Button>
           </div>

@@ -20,7 +20,7 @@ function AppSidebar({ open, onClose, collapsed, }) {
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 flex w-80 flex-col bg-sidebar text-card transition-all duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0",
-          collapsed ? "md:w-24" : "md:w-80",
+          collapsed ? "md:w-12" : "md:w-64",
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
@@ -85,10 +85,10 @@ function AppSidebar({ open, onClose, collapsed, }) {
 
         {!collapsed && (
           <div className="m-4 rounded-3xl border border-card-soft bg-card-soft p-4">
-            <p className="text-sm font-semibold text-card">Foundation Only</p>
+            <p className="text-sm font-semibold text-card">Operations Roadmap</p>
             <p className="mt-2 text-sm text-card-muted">
-              Purchase, sales, stock, payments, and reports remain intentionally
-              locked for later phases.
+              Purchases are live. Sales, stock, payments, and reports remain
+              scheduled for later phases.
             </p>
           </div>
         )}

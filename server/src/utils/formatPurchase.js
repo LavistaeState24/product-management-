@@ -1,0 +1,60 @@
+import { calculatePurchaseAmounts } from './purchaseMath.js';
+
+function formatBill(bill) {
+  if (!bill?.url) {
+    return null;
+  }
+
+  return {
+    originalName: bill.originalName,
+    filename: bill.filename,
+    mimeType: bill.mimeType,
+    size: bill.size,
+    url: bill.url,
+  };
+}
+
+export function formatPurchase(purchase) {
+  const legacyAmounts = calculatePurchaseAmounts({
+    quantity: purchase.quantity,
+    purchasePrice: purchase.purchasePrice,
+    gstType:
+      purchase.gstType || (Number(purchase.gstRate ?? purchase.gst ?? 0) > 0 ? 'IGST' : 'None'),
+    gstRate: purchase.gstRate ?? purchase.gst ?? 0,
+    paymentType: purchase.paymentType,
+    paidAmount: purchase.paidAmount,
+  });
+  const dueAmount = purchase.dueAmount ?? purchase.pendingAmount ?? legacyAmounts.dueAmount;
+
+  return {
+    id: purchase._id,
+    supplier: {
+      id: purchase.supplier?._id || purchase.supplier,
+      name: purchase.supplier?.name || purchase.supplierName,
+    },
+    product: {
+      id: purchase.product?._id || purchase.product,
+      name: purchase.product?.name || purchase.productName,
+      currentStock: purchase.product?.currentStock,
+    },
+    purchaseDate: purchase.purchaseDate,
+    quantity: purchase.quantity,
+    purchasePrice: purchase.purchasePrice,
+    basicAmount: purchase.basicAmount ?? legacyAmounts.basicAmount,
+    gstType: purchase.gstType || (legacyAmounts.gstAmount > 0 ? 'IGST' : 'None'),
+    gstRate: purchase.gstRate ?? purchase.gst ?? 0,
+    gstAmount: purchase.gstAmount ?? legacyAmounts.gstAmount,
+    cgstAmount: purchase.cgstAmount ?? legacyAmounts.cgstAmount,
+    sgstAmount: purchase.sgstAmount ?? legacyAmounts.sgstAmount,
+    igstAmount: purchase.igstAmount ?? legacyAmounts.igstAmount,
+    paymentType: purchase.paymentType,
+    creditDueDate: purchase.creditDueDate,
+    bill: formatBill(purchase.bill),
+    totalAmount: purchase.totalAmount,
+    paidAmount: purchase.paidAmount,
+    dueAmount,
+    notes: purchase.notes,
+    createdAt: purchase.createdAt,
+    updatedAt: purchase.updatedAt,
+  };
+}

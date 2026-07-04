@@ -8,6 +8,10 @@ import { PERMISSIONS } from '@/constants/permissions';
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'));
+const PurchaseListPage = lazy(() => import('@/features/purchases/pages/PurchaseListPage'));
+const AddPurchasePage = lazy(() => import('@/features/purchases/pages/AddPurchasePage'));
+const EditPurchasePage = lazy(() => import('@/features/purchases/pages/EditPurchasePage'));
+const PurchaseDetailsPage = lazy(() => import('@/features/purchases/pages/PurchaseDetailsPage'));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
 const ForbiddenPage = lazy(() => import('@/routes/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/routes/NotFoundPage'));
@@ -28,6 +32,16 @@ function AppRouter() {
             </Route>
             <Route element={<ProtectedRoute permission={PERMISSIONS.canManageUsers} />}>
               <Route path="/users" element={<UsersPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewPurchase} />}>
+              <Route path="/purchases" element={<PurchaseListPage />} />
+              <Route path="/purchases/:purchaseId" element={<PurchaseDetailsPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canCreatePurchase} />}>
+              <Route path="/purchases/new" element={<AddPurchasePage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canEditPurchase} />}>
+              <Route path="/purchases/:purchaseId/edit" element={<EditPurchasePage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
           </Route>
