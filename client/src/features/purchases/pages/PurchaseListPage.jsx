@@ -18,6 +18,7 @@ import {
 import {
   formatCurrency,
   formatDate,
+  formatDateTime,
   formatGstTypeLabel,
   getPaymentBadgeVariant,
 } from '@/features/purchases/utils/purchaseHelpers';
@@ -28,7 +29,9 @@ import PurchasePageSkeleton from '@/features/purchases/components/PurchasePageSk
 const paymentTypeOptions = [
   { value: '', label: 'All Types' },
   { value: 'Cash', label: 'Cash' },
+  { value: 'Cheque', label: 'Cheque' },
   { value: 'Credit', label: 'Credit' },
+  { value: 'Advance', label: 'Advance' },
 ];
 
 function PurchaseListPage() {
@@ -99,30 +102,46 @@ function PurchaseListPage() {
       {
         key: 'supplier',
         title: 'Supplier',
-        render: (value) => value?.name,
-      },
-      {
-        key: 'product',
-        title: 'Product',
-        render: (value, row) => (
+        render: (_, row) => (
           <div>
-            <p className="font-semibold text-heading">{value?.name}</p>
-            <p className="text-xs text-body">Qty {row.quantity}</p>
+            <p className="font-semibold text-heading">{row.supplierName || row.supplier?.name}</p>
+            <p className="text-xs text-body">{row.supplierAddress || 'Address not available'}</p>
+            <p className="text-xs text-body">
+              {row.supplierLocation || 'Location not available'} | GST {row.gstNo || 'N/A'}
+            </p>
           </div>
         ),
       },
       {
-        key: 'purchaseDate',
-        title: 'Date',
-        render: (value) => formatDate(value),
+        key: 'itemName',
+        title: 'Item',
+        render: (value, row) => (
+          <div>
+            <p className="font-semibold text-heading">{value || row.product?.name}</p>
+            <p className="text-xs text-body">
+              {row.unit || 'Unit not set'} | Qty {row.quantity}
+            </p>
+            <p className="text-xs text-body">
+              {formatCurrency(row.pricePerUnit || row.purchasePrice)} per {row.unit || 'unit'}
+            </p>
+          </div>
+        ),
+      },
+      {
+        key: 'recordedAt',
+        title: 'Recorded',
+        render: (value) => formatDateTime(value),
       },
       {
         key: 'paymentType',
         title: 'Payment',
         render: (value, row) => (
-          <Badge variant={getPaymentBadgeVariant(value, row.dueAmount)}>
-            {value}
-          </Badge>
+          <div className="space-y-1">
+            <Badge variant={getPaymentBadgeVariant(value, row.dueAmount)}>{value}</Badge>
+            <p className="text-xs text-body">
+              Due: {row.dueDate ? formatDate(row.dueDate) : 'Not applicable'}
+            </p>
+          </div>
         ),
       },
       {
@@ -140,6 +159,11 @@ function PurchaseListPage() {
         key: 'dueAmount',
         title: 'Due',
         render: (value) => formatCurrency(value),
+      },
+      {
+        key: 'remarks',
+        title: 'Remarks',
+        render: (value) => value || 'No remarks',
       },
       {
         key: 'actions',
@@ -208,7 +232,7 @@ function PurchaseListPage() {
 
     try {
       await deletePurchase(deleteTarget.id);
-      toast.success('Purchase deleted', 'Stock and payables were adjusted successfully.');
+      toast.success('Purchase deleted', 'Raw material stock and payables were adjusted successfully.');
       const deletedId = deleteTarget.id;
       setState((current) => ({
         ...current,
@@ -237,10 +261,12 @@ function PurchaseListPage() {
       <section className="panel p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-primary">Purchase Module</p>
-            <h1 className="mt-2 text-3xl font-bold text-heading">Purchases</h1>
+            <p className="text-sm uppercase tracking-[0.24em] text-primary">
+              Raw Material Purchase Module
+            </p>
+            <h1 className="mt-2 text-3xl font-bold text-heading">Raw Material Purchases</h1>
             <p className="mt-2 max-w-2xl text-sm text-body">
-              Track supplier purchases, bill uploads, stock impact, and pending credit balances.
+              Track supplier raw material purchases, stock impact, bills, and pending balances.
             </p>
           </div>
           {hasPermission(PERMISSIONS.canCreatePurchase) ? (
@@ -262,7 +288,7 @@ function PurchaseListPage() {
             onChange={(event) =>
               setFilters((current) => ({ ...current, search: event.target.value }))
             }
-            placeholder="Search supplier, product, notes"
+            placeholder="Search supplier, item, location, GST, remarks"
           />
           <Select
             value={filters.paymentType}
@@ -301,7 +327,7 @@ function PurchaseListPage() {
               description={
                 hasActiveFilters
                   ? 'Try a broader search or clear the payment filter.'
-                  : 'Create the first purchase to start updating stock and supplier balances.'
+                  : 'Create the first raw material purchase to start updating stock and supplier balances.'
               }
               actionLabel={
                 hasActiveFilters
@@ -340,13 +366,13 @@ function PurchaseListPage() {
       <Modal
         open={Boolean(deleteTarget)}
         title="Delete purchase"
-        description="This will reverse the stock impact for the purchase and remove its payable entry."
+        description="This will reverse the raw material stock impact for the purchase and remove its payable entry."
         onClose={() => !deleteLoading && setDeleteTarget(null)}
       >
         <div className="space-y-4">
           <p className="text-sm text-body">
             {deleteTarget
-              ? `Delete the purchase for ${deleteTarget.product.name} from ${deleteTarget.supplier.name}?`
+              ? `Delete the purchase for ${deleteTarget.itemName || deleteTarget.product?.name} from ${deleteTarget.supplierName || deleteTarget.supplier?.name}?`
               : ''}
           </p>
           <div className="flex justify-end gap-3">

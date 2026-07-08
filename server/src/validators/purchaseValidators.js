@@ -3,12 +3,13 @@ import {
   calculatePurchaseAmounts,
   PURCHASE_GST_RATES,
   PURCHASE_GST_TYPES,
+  PURCHASE_PAYMENT_TYPES,
 } from '../utils/purchaseMath.js';
 
 function calculateRawTotal(req) {
   return calculatePurchaseAmounts({
     quantity: req.body.quantity,
-    purchasePrice: req.body.purchasePrice,
+    purchasePrice: req.body.pricePerUnit ?? req.body.purchasePrice,
     gstType: req.body.gstType,
     gstRate: req.body.gstRate,
     paymentType: req.body.paymentType,
@@ -19,16 +20,23 @@ function calculateRawTotal(req) {
 const supplierValidator = body('supplierName')
   .trim()
   .notEmpty()
-  .withMessage('Supplier is required.')
+  .withMessage('Supplier name is required.')
   .isLength({ max: 120 })
-  .withMessage('Supplier must be 120 characters or fewer.');
+  .withMessage('Supplier name must be 120 characters or fewer.');
 
-const productValidator = body('productName')
+const itemValidator = body('itemName')
+  .customSanitizer((value, { req }) => value ?? req.body.productName)
   .trim()
   .notEmpty()
-  .withMessage('Product is required.')
+  .withMessage('Item name is required.')
   .isLength({ max: 120 })
-  .withMessage('Product must be 120 characters or fewer.');
+  .withMessage('Item name must be 120 characters or fewer.');
+
+const unitValidator = body('unit')
+  .notEmpty()
+  .withMessage('Unit is required.')
+  .isIn(['Kg', 'PCS'])
+  .withMessage('Unit must be Kg or PCS.');
 
 const purchaseDateValidator = body('purchaseDate')
   .notEmpty()
@@ -43,12 +51,34 @@ const quantityValidator = body('quantity')
   .withMessage('Quantity must be greater than 0.')
   .toFloat();
 
-const purchasePriceValidator = body('purchasePrice')
+const pricePerUnitValidator = body('pricePerUnit')
+  .customSanitizer((value, { req }) => value ?? req.body.purchasePrice)
   .notEmpty()
-  .withMessage('Purchase price is required.')
+  .withMessage('Price per unit is required.')
   .isFloat({ min: 0 })
-  .withMessage('Purchase price must be 0 or greater.')
+  .withMessage('Price per unit must be 0 or greater.')
   .toFloat();
+
+const supplierAddressValidator = body('supplierAddress')
+  .trim()
+  .notEmpty()
+  .withMessage('Address is required.')
+  .isLength({ max: 240 })
+  .withMessage('Address must be 240 characters or fewer.');
+
+const supplierLocationValidator = body('supplierLocation')
+  .trim()
+  .notEmpty()
+  .withMessage('Location is required.')
+  .isLength({ max: 120 })
+  .withMessage('Location must be 120 characters or fewer.');
+
+const gstNoValidator = body('gstNo')
+  .trim()
+  .notEmpty()
+  .withMessage('GST number is required.')
+  .isLength({ max: 40 })
+  .withMessage('GST number must be 40 characters or fewer.');
 
 const gstTypeValidator = body('gstType')
   .notEmpty()
@@ -75,24 +105,29 @@ const gstRateValidator = body('gstRate')
 const paymentTypeValidator = body('paymentType')
   .notEmpty()
   .withMessage('Payment type is required.')
-  .isIn(['Cash', 'Credit'])
-  .withMessage('Payment type must be Cash or Credit.');
+  .isIn(PURCHASE_PAYMENT_TYPES)
+  .withMessage('Payment type must be Cash, Cheque, Credit, or Advance.');
 
-const creditDueDateValidator = body('creditDueDate').custom((value, { req }) => {
-  if (req.body.paymentType === 'Credit') {
-    if (!value) {
-      throw new Error('Credit due date is required for credit purchases.');
+const dueDateValidator = body('dueDate')
+  .customSanitizer((value, { req }) => value ?? req.body.creditDueDate)
+  .custom((value, { req }) => {
+  const paymentType = req.body.paymentType;
+  const normalizedValue = value;
+
+  if (paymentType === 'Credit' || paymentType === 'Advance') {
+    if (!normalizedValue) {
+      throw new Error('Due date is required for credit or advance purchases.');
     }
 
-    const isValidDate = !Number.isNaN(Date.parse(value));
+    const isValidDate = !Number.isNaN(Date.parse(normalizedValue));
 
     if (!isValidDate) {
-      throw new Error('Credit due date must be a valid date.');
+      throw new Error('Due date must be a valid date.');
     }
   }
 
-  if (req.body.paymentType === 'Cash' && value) {
-    throw new Error('Credit due date is only allowed for credit purchases.');
+  if ((paymentType === 'Cash' || paymentType === 'Cheque') && normalizedValue) {
+    throw new Error('Due date is only allowed for credit or advance purchases.');
   }
 
   return true;
@@ -118,6 +153,14 @@ const notesValidator = body('notes')
   .isLength({ max: 1000 })
   .withMessage('Notes must be 1000 characters or fewer.');
 
+const remarksValidator = body('remarks')
+  .customSanitizer((value, { req }) => value ?? req.body.notes)
+  .trim()
+  .notEmpty()
+  .withMessage('Remarks are required.')
+  .isLength({ max: 1000 })
+  .withMessage('Remarks must be 1000 characters or fewer.');
+
 const removeBillValidator = body('removeBill')
   .optional({ values: 'falsy' })
   .isBoolean()
@@ -125,15 +168,20 @@ const removeBillValidator = body('removeBill')
 
 export const createPurchaseValidator = [
   supplierValidator,
-  productValidator,
+  supplierAddressValidator,
+  supplierLocationValidator,
+  gstNoValidator,
+  itemValidator,
+  unitValidator,
   purchaseDateValidator,
   quantityValidator,
-  purchasePriceValidator,
+  pricePerUnitValidator,
   gstTypeValidator,
   gstRateValidator,
   paymentTypeValidator,
-  creditDueDateValidator,
+  dueDateValidator,
   paidAmountValidator,
+  remarksValidator,
   notesValidator,
   removeBillValidator,
 ];
@@ -158,8 +206,8 @@ export const listPurchaseValidator = [
     .withMessage('Search must be 120 characters or fewer.'),
   query('paymentType')
     .optional({ values: 'falsy' })
-    .isIn(['Cash', 'Credit'])
-    .withMessage('Payment type must be Cash or Credit.'),
+    .isIn(PURCHASE_PAYMENT_TYPES)
+    .withMessage('Payment type must be Cash, Cheque, Credit, or Advance.'),
 ];
 
 export const purchaseIdParamValidator = [

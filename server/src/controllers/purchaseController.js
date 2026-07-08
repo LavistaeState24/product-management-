@@ -1,106 +1,55 @@
 import fs from 'fs/promises';
-import mongoose from 'mongoose';
 import path from 'path';
-import Product from '../models/Product.js';
 import Purchase from '../models/Purchase.js';
 import Supplier from '../models/Supplier.js';
 import SupplierPayable from '../models/SupplierPayable.js';
+import Product from '../models/Product.js';
+import {
+  adjustProductStock,
+  adjustRawMaterialStock,
+  getRawMaterialStock,
+  resolveProductByName,
+  resolveSupplierByName,
+  syncPayableForPurchase,
+  syncSupplierOutstanding,
+} from '../services/purchaseService.js';
 import { formatPurchase } from '../utils/formatPurchase.js';
 import { createHttpError } from '../utils/httpError.js';
-import { calculatePurchaseAmounts, roundCurrency } from '../utils/purchaseMath.js';
-
-function normalizeName(name = '') {
-  return name.trim().toLowerCase();
-}
+import { calculatePurchaseAmounts } from '../utils/purchaseMath.js';
 
 function parsePurchasePayload(body) {
   const rawGstRate = body.gstRate ?? body.gst ?? 0;
+  const paymentType = body.paymentType;
+  const dueDate = body.dueDate ?? body.creditDueDate;
+  const itemName = body.itemName?.trim() || body.productName?.trim();
+  const remarks = body.remarks?.trim() || body.notes?.trim() || '';
+  const pricePerUnitValue = body.pricePerUnit ?? body.purchasePrice;
+  const purchaseDateValue = body.purchaseDate || new Date().toISOString();
 
   return {
     supplierName: body.supplierName?.trim(),
-    productName: body.productName?.trim(),
-    purchaseDate: new Date(body.purchaseDate),
+    supplierAddress: body.supplierAddress?.trim() || '',
+    supplierLocation: body.supplierLocation?.trim() || '',
+    gstNo: body.gstNo?.trim() || '',
+    productName: itemName,
+    itemName,
+    unit: body.unit || null,
+    purchaseDate: new Date(purchaseDateValue),
     quantity: Number(body.quantity),
-    purchasePrice: Number(body.purchasePrice),
+    purchasePrice: Number(pricePerUnitValue),
+    pricePerUnit: Number(pricePerUnitValue),
     gstType: body.gstType || 'None',
     gstRate: rawGstRate === '' ? 0 : Number(rawGstRate),
-    paymentType: body.paymentType,
-    creditDueDate: body.paymentType === 'Credit' ? new Date(body.creditDueDate) : null,
+    paymentType,
+    dueDate:
+      paymentType === 'Credit' || paymentType === 'Advance' ? new Date(dueDate) : null,
+    creditDueDate:
+      paymentType === 'Credit' || paymentType === 'Advance' ? new Date(dueDate) : null,
     paidAmount: body.paidAmount ? Number(body.paidAmount) : 0,
-    notes: body.notes?.trim() || '',
+    notes: remarks,
+    remarks,
     removeBill: body.removeBill === 'true' || body.removeBill === true,
   };
-}
-
-async function resolveSupplierByName(name) {
-  const normalizedName = normalizeName(name);
-  let supplier = await Supplier.findOne({ normalizedName });
-
-  if (!supplier) {
-    supplier = await Supplier.create({
-      name,
-      normalizedName,
-    });
-  }
-
-  return supplier;
-}
-
-async function resolveProductByName(name) {
-  const normalizedName = normalizeName(name);
-  let product = await Product.findOne({ normalizedName });
-
-  if (!product) {
-    product = await Product.create({
-      name,
-      normalizedName,
-    });
-  }
-
-  return product;
-}
-
-async function adjustProductStock(productId, delta) {
-  const product = await Product.findById(productId);
-
-  if (!product) {
-    throw createHttpError(404, 'Product not found.');
-  }
-
-  const nextStock = roundCurrency(product.currentStock + delta);
-
-  if (nextStock < 0) {
-    throw createHttpError(
-      400,
-      `Unable to reduce stock for "${product.name}" because it would become negative.`,
-    );
-  }
-
-  product.currentStock = nextStock;
-  await product.save();
-}
-
-async function syncSupplierOutstanding(supplierId) {
-  const normalizedSupplierId =
-    typeof supplierId === 'string' ? new mongoose.Types.ObjectId(supplierId) : supplierId;
-
-  const [aggregate] = await SupplierPayable.aggregate([
-    {
-      $match: {
-        supplier: normalizedSupplierId,
-      },
-    },
-    {
-      $group: {
-        _id: '$supplier',
-        total: { $sum: '$amount' },
-      },
-    },
-  ]);
-
-  await Supplier.findByIdAndUpdate(normalizedSupplierId, {
-    outstandingPayable: roundCurrency(aggregate?.total || 0),
-  });
 }
 
 function buildBillFromUpload(file) {
@@ -134,35 +83,55 @@ async function removeStoredBill(bill) {
   }
 }
 
-async function syncPayableForPurchase({ purchaseId, supplierId, paymentType, creditDueDate, dueAmount }) {
-  if (paymentType !== 'Credit') {
-    await SupplierPayable.findOneAndDelete({ purchase: purchaseId });
-    await syncSupplierOutstanding(supplierId);
-    return;
-  }
-
-  await SupplierPayable.findOneAndUpdate(
-    { purchase: purchaseId },
-    {
-      supplier: supplierId,
-      purchase: purchaseId,
-      amount: roundCurrency(dueAmount),
-      dueDate: creditDueDate,
-      status: dueAmount > 0 ? 'pending' : 'settled',
-    },
-    {
-      upsert: true,
-      new: true,
-      runValidators: true,
-      setDefaultsOnInsert: true,
-    },
-  );
-
-  await syncSupplierOutstanding(supplierId);
-}
-
 async function populatePurchase(purchaseId) {
   return Purchase.findById(purchaseId).populate('supplier').populate('product');
+}
+
+function buildFormattedRawMaterialStock(stock) {
+  if (!stock) {
+    return null;
+  }
+
+  return {
+    id: stock._id,
+    itemName: stock.itemName,
+    unit: stock.unit,
+    quantity: stock.quantity,
+  };
+}
+
+async function formatPurchaseResponse(purchase) {
+  const rawMaterialStock = await getRawMaterialStock(
+    purchase.itemName || purchase.product?.name || purchase.productName,
+    purchase.unit,
+  );
+
+  return formatPurchase({
+    ...(purchase.toObject ? purchase.toObject() : purchase),
+    rawMaterialStock: buildFormattedRawMaterialStock(rawMaterialStock),
+  });
+}
+
+async function formatPurchaseListResponse(purchases) {
+  return Promise.all(purchases.map((purchase) => formatPurchaseResponse(purchase)));
+}
+
+async function rollbackStockAdjustments(rollbackSteps) {
+  for (const step of rollbackSteps) {
+    try {
+      if (step.type === 'product') {
+        await adjustProductStock(step.productId, step.delta);
+      } else if (step.type === 'raw-material') {
+        await adjustRawMaterialStock({
+          itemName: step.itemName,
+          unit: step.unit,
+          delta: step.delta,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to rollback purchase stock adjustment:', error);
+    }
+  }
 }
 
 export async function getPurchaseFormOptions(req, res) {
@@ -196,8 +165,14 @@ export async function listPurchases(req, res) {
     const regex = new RegExp(search, 'i');
     filter.$or = [
       { supplierName: regex },
+      { supplierAddress: regex },
+      { supplierLocation: regex },
+      { gstNo: regex },
       { productName: regex },
+      { itemName: regex },
+      { unit: regex },
       { paymentType: regex },
+      { remarks: regex },
       { notes: regex },
     ];
   }
@@ -219,7 +194,7 @@ export async function listPurchases(req, res) {
   ]);
 
   return res.status(200).json({
-    items: items.map(formatPurchase),
+    items: await formatPurchaseListResponse(items),
     pagination: {
       page,
       limit,
@@ -237,7 +212,7 @@ export async function getPurchaseById(req, res) {
   }
 
   return res.status(200).json({
-    purchase: formatPurchase(purchase),
+    purchase: await formatPurchaseResponse(purchase),
   });
 }
 
@@ -254,14 +229,18 @@ export async function createPurchase(req, res) {
     resolveProductByName(payload.productName),
   ]);
 
-  await adjustProductStock(product._id, payload.quantity);
-
   const purchase = await Purchase.create({
     supplier: supplier._id,
     supplierName: supplier.name,
+    supplierAddress: payload.supplierAddress,
+    supplierLocation: payload.supplierLocation,
+    gstNo: payload.gstNo,
     product: product._id,
     productName: product.name,
+    itemName: payload.itemName,
+    unit: payload.unit,
     purchaseDate: payload.purchaseDate,
+    pricePerUnit: payload.pricePerUnit,
     quantity: payload.quantity,
     purchasePrice: payload.purchasePrice,
     basicAmount: amounts.basicAmount,
@@ -272,29 +251,81 @@ export async function createPurchase(req, res) {
     sgstAmount: amounts.sgstAmount,
     igstAmount: amounts.igstAmount,
     paymentType: payload.paymentType,
+    dueDate: payload.dueDate,
     creditDueDate: payload.creditDueDate,
     bill: buildBillFromUpload(req.file),
     totalAmount: amounts.totalAmount,
     paidAmount: amounts.paidAmount,
     dueAmount: amounts.dueAmount,
     notes: payload.notes,
+    remarks: payload.remarks,
     createdBy: req.user._id,
     updatedBy: req.user._id,
   });
 
-  await syncPayableForPurchase({
-    purchaseId: purchase._id,
-    supplierId: supplier._id,
-    paymentType: payload.paymentType,
-    creditDueDate: payload.creditDueDate,
-    dueAmount: amounts.dueAmount,
-  });
+  let productStockAdjusted = false;
+  let rawMaterialStockAdjusted = false;
+
+  try {
+    await adjustProductStock(product._id, payload.quantity);
+    productStockAdjusted = true;
+
+    await adjustRawMaterialStock({
+      itemName: payload.itemName,
+      unit: payload.unit,
+      delta: payload.quantity,
+    });
+    rawMaterialStockAdjusted = true;
+
+    await syncPayableForPurchase({
+      purchaseId: purchase._id,
+      supplierId: supplier._id,
+      paymentType: payload.paymentType,
+      dueDate: payload.dueDate,
+      dueAmount: amounts.dueAmount,
+    });
+  } catch (error) {
+    if (rawMaterialStockAdjusted) {
+      await rollbackStockAdjustments([
+        {
+          type: 'raw-material',
+          itemName: payload.itemName,
+          unit: payload.unit,
+          delta: -payload.quantity,
+        },
+      ]);
+    }
+
+    if (productStockAdjusted) {
+      await rollbackStockAdjustments([
+        {
+          type: 'product',
+          productId: product._id,
+          delta: -payload.quantity,
+        },
+      ]);
+    }
+
+    await SupplierPayable.findOneAndDelete({ purchase: purchase._id }).catch((rollbackError) => {
+      console.error('Failed to rollback purchase payable:', rollbackError);
+    });
+    await syncSupplierOutstanding(supplier._id).catch((rollbackError) => {
+      console.error('Failed to rollback supplier outstanding balance:', rollbackError);
+    });
+    await Purchase.findByIdAndDelete(purchase._id).catch((rollbackError) => {
+      console.error('Failed to rollback purchase record:', rollbackError);
+    });
+    await removeStoredBill(purchase.bill).catch((rollbackError) => {
+      console.error('Failed to rollback uploaded bill:', rollbackError);
+    });
+    throw error;
+  }
 
   const populatedPurchase = await populatePurchase(purchase._id);
 
   return res.status(201).json({
     message: 'Purchase created successfully.',
-    purchase: formatPurchase(populatedPurchase),
+    purchase: await formatPurchaseResponse(populatedPurchase),
   });
 }
 
@@ -320,20 +351,105 @@ export async function updatePurchase(req, res) {
   const billFromUpload = buildBillFromUpload(req.file);
   const oldSupplierId = String(purchase.supplier);
   const oldProductId = String(purchase.product);
+  const previousItemName = purchase.itemName || purchase.productName;
+  const previousUnit = purchase.unit || null;
   const oldBill = purchase.bill;
+  const rollbackSteps = [];
 
-  if (oldProductId === String(product._id)) {
-    await adjustProductStock(product._id, payload.quantity - purchase.quantity);
-  } else {
-    await adjustProductStock(purchase.product, -purchase.quantity);
-    await adjustProductStock(product._id, payload.quantity);
+  try {
+    if (oldProductId === String(product._id)) {
+      const delta = payload.quantity - purchase.quantity;
+
+      if (delta) {
+        await adjustProductStock(product._id, delta);
+        rollbackSteps.unshift({
+          type: 'product',
+          productId: product._id,
+          delta: -delta,
+        });
+      }
+    } else {
+      await adjustProductStock(purchase.product, -purchase.quantity);
+      rollbackSteps.unshift({
+        type: 'product',
+        productId: purchase.product,
+        delta: purchase.quantity,
+      });
+
+      await adjustProductStock(product._id, payload.quantity);
+      rollbackSteps.unshift({
+        type: 'product',
+        productId: product._id,
+        delta: -payload.quantity,
+      });
+    }
+
+    if (previousItemName && previousUnit && previousItemName === payload.itemName && previousUnit === payload.unit) {
+      const delta = payload.quantity - purchase.quantity;
+
+      if (delta) {
+        await adjustRawMaterialStock({
+          itemName: payload.itemName,
+          unit: payload.unit,
+          delta,
+        });
+        rollbackSteps.unshift({
+          type: 'raw-material',
+          itemName: payload.itemName,
+          unit: payload.unit,
+          delta: -delta,
+        });
+      }
+    } else {
+      if (previousItemName && previousUnit) {
+        await adjustRawMaterialStock({
+          itemName: previousItemName,
+          unit: previousUnit,
+          delta: -purchase.quantity,
+        });
+        rollbackSteps.unshift({
+          type: 'raw-material',
+          itemName: previousItemName,
+          unit: previousUnit,
+          delta: purchase.quantity,
+        });
+      }
+
+      await adjustRawMaterialStock({
+        itemName: payload.itemName,
+        unit: payload.unit,
+        delta: payload.quantity,
+      });
+      rollbackSteps.unshift({
+        type: 'raw-material',
+        itemName: payload.itemName,
+        unit: payload.unit,
+        delta: -payload.quantity,
+      });
+    }
+  } catch (error) {
+    await rollbackStockAdjustments(rollbackSteps);
+
+    if (billFromUpload) {
+      await removeStoredBill(billFromUpload).catch((rollbackError) => {
+        console.error('Failed to rollback newly uploaded bill:', rollbackError);
+      });
+    }
+
+    throw error;
   }
 
   purchase.supplier = supplier._id;
   purchase.supplierName = supplier.name;
+  purchase.supplierAddress = payload.supplierAddress;
+  purchase.supplierLocation = payload.supplierLocation;
+  purchase.gstNo = payload.gstNo;
   purchase.product = product._id;
   purchase.productName = product.name;
+  purchase.itemName = payload.itemName;
+  purchase.unit = payload.unit;
   purchase.purchaseDate = payload.purchaseDate;
+  purchase.pricePerUnit = payload.pricePerUnit;
   purchase.quantity = payload.quantity;
   purchase.purchasePrice = payload.purchasePrice;
   purchase.basicAmount = amounts.basicAmount;
@@ -344,11 +460,13 @@ export async function updatePurchase(req, res) {
   purchase.sgstAmount = amounts.sgstAmount;
   purchase.igstAmount = amounts.igstAmount;
   purchase.paymentType = payload.paymentType;
+  purchase.dueDate = payload.dueDate;
   purchase.creditDueDate = payload.creditDueDate;
   purchase.totalAmount = amounts.totalAmount;
   purchase.paidAmount = amounts.paidAmount;
   purchase.dueAmount = amounts.dueAmount;
   purchase.notes = payload.notes;
+  purchase.remarks = payload.remarks;
   purchase.updatedBy = req.user._id;
 
   if (billFromUpload) {
@@ -357,7 +475,19 @@ export async function updatePurchase(req, res) {
     purchase.bill = null;
   }
 
-  await purchase.save();
+  try {
+    await purchase.save();
+  } catch (error) {
+    await rollbackStockAdjustments(rollbackSteps);
+
+    if (billFromUpload) {
+      await removeStoredBill(billFromUpload).catch((rollbackError) => {
+        console.error('Failed to rollback newly uploaded bill:', rollbackError);
+      });
+    }
+
+    throw error;
+  }
 
   if (billFromUpload || payload.removeBill) {
     await removeStoredBill(oldBill);
@@ -367,7 +497,7 @@ export async function updatePurchase(req, res) {
     purchaseId: purchase._id,
     supplierId: supplier._id,
     paymentType: payload.paymentType,
-    creditDueDate: payload.creditDueDate,
+    dueDate: payload.dueDate,
     dueAmount: amounts.dueAmount,
   });
 
@@ -379,7 +509,7 @@ export async function updatePurchase(req, res) {
 
   return res.status(200).json({
     message: 'Purchase updated successfully.',
-    purchase: formatPurchase(populatedPurchase),
+    purchase: await formatPurchaseResponse(populatedPurchase),
   });
 }
 
@@ -388,6 +518,16 @@ export async function deletePurchase(req, res) {
 
   if (!purchase) {
     throw createHttpError(404, 'Purchase not found.');
+  }
+
+  const itemName = purchase.itemName || purchase.productName;
+
+  if (itemName && purchase.unit) {
+    await adjustRawMaterialStock({
+      itemName,
+      unit: purchase.unit,
+      delta: -purchase.quantity,
+    });
   }
 
   await adjustProductStock(purchase.product, -purchase.quantity);

@@ -14,6 +14,21 @@ const purchaseSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    supplierAddress: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    supplierLocation: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    gstNo: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     product: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Product',
@@ -26,9 +41,26 @@ const purchaseSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    itemName: {
+      type: String,
+      trim: true,
+      default: '',
+      index: true,
+    },
+    unit: {
+      type: String,
+      enum: ['Kg', 'PCS'],
+      default: undefined,
+      index: true,
+    },
     purchaseDate: {
       type: Date,
       required: true,
+      index: true,
+    },
+    recordedAt: {
+      type: Date,
+      default: Date.now,
       index: true,
     },
     quantity: {
@@ -40,6 +72,11 @@ const purchaseSchema = new mongoose.Schema(
       type: Number,
       required: true,
       min: 0,
+    },
+    pricePerUnit: {
+      type: Number,
+      min: 0,
+      default: null,
     },
     basicAmount: {
       type: Number,
@@ -80,11 +117,15 @@ const purchaseSchema = new mongoose.Schema(
     },
     paymentType: {
       type: String,
-      enum: ['Cash', 'Credit'],
+      enum: ['Cash', 'Cheque', 'Credit', 'Advance'],
       required: true,
       index: true,
     },
     creditDueDate: {
+      type: Date,
+      default: null,
+    },
+    dueDate: {
       type: Date,
       default: null,
     },
@@ -130,6 +171,11 @@ const purchaseSchema = new mongoose.Schema(
       min: 0,
     },
     notes: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    remarks: {
       type: String,
       trim: true,
       default: '',
