@@ -12,6 +12,11 @@ const PurchaseListPage = lazy(() => import('@/features/purchases/pages/PurchaseL
 const AddPurchasePage = lazy(() => import('@/features/purchases/pages/AddPurchasePage'));
 const EditPurchasePage = lazy(() => import('@/features/purchases/pages/EditPurchasePage'));
 const PurchaseDetailsPage = lazy(() => import('@/features/purchases/pages/PurchaseDetailsPage'));
+const SalesListPage = lazy(() => import('@/features/sales/pages/SalesListPage'));
+const AddSalePage = lazy(() => import('@/features/sales/pages/AddSalePage'));
+const EditSalePage = lazy(() => import('@/features/sales/pages/EditSalePage'));
+const SaleDetailsPage = lazy(() => import('@/features/sales/pages/SaleDetailsPage'));
+const SaleInvoicePreviewPage = lazy(() => import('@/features/sales/pages/SaleInvoicePreviewPage'));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
 const ForbiddenPage = lazy(() => import('@/routes/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/routes/NotFoundPage'));
@@ -42,6 +47,17 @@ function AppRouter() {
             </Route>
             <Route element={<ProtectedRoute permission={PERMISSIONS.canEditPurchase} />}>
               <Route path="/purchases/:purchaseId/edit" element={<EditPurchasePage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewSales} />}>
+              <Route path="/sales" element={<SalesListPage />} />
+              <Route path="/sales/:saleId" element={<SaleDetailsPage />} />
+              <Route path="/sales/:saleId/invoice" element={<SaleInvoicePreviewPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canCreateSales} />}>
+              <Route path="/sales/new" element={<AddSalePage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canEditSales} />}>
+              <Route path="/sales/:saleId/edit" element={<EditSalePage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
           </Route>

@@ -33,7 +33,7 @@ const foundationRows = [
   { area: 'Authentication', status: 'Ready', notes: 'JWT login, current-user API, logout flow' },
   { area: 'RBAC', status: 'Ready', notes: 'Role and permission-aware route protection' },
   { area: 'Purchase', status: 'Ready', notes: 'Supplier bills, stock mutation, and payable logic are active' },
-  { area: 'Sales', status: 'Locked', notes: 'Reserved for future phase' },
+  { area: 'Sales', status: 'Ready', notes: 'Invoices, stock mutation, and receivable logic are active' },
   { area: 'Stock', status: 'Locked', notes: 'Reserved for future phase' },
 ];
 
@@ -69,7 +69,7 @@ function DashboardPage() {
               Welcome back, {user?.name}
             </h1>
             <p className="mt-3 max-w-2xl text-sm text-body lg:text-base">
-              The platform now includes the system shell, secure authentication flow, reusable components, and the first transactional purchase workflow.
+              The platform now includes the system shell, secure authentication flow, reusable components, and live purchase and sales workflows.
             </p>
           </div>
 
@@ -83,8 +83,8 @@ function DashboardPage() {
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         <KpiCard title="Active Role" value={user?.role} change="Role aware" trend="info" />
         <KpiCard title="Permissions Granted" value={user?.permissions?.length || 0} change="RBAC ready" trend="success" />
-        <KpiCard title="Protected Screens" value="8" change="Auth guard" trend="warning" />
-        <KpiCard title="Locked Modules" value="4" change="Future phases" trend="danger" />
+        <KpiCard title="Protected Screens" value="11" change="Auth guard" trend="warning" />
+        <KpiCard title="Locked Modules" value="3" change="Future phases" trend="danger" />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
@@ -161,15 +161,15 @@ function DashboardPage() {
                 <FolderLock className="mt-0.5 h-5 w-5 text-warning" />
                 <div>
                   <p className="font-semibold text-heading">Business modules withheld</p>
-                  <p className="text-sm text-body">Sales, stock, payments, and reports are still withheld. Purchase is now active.</p>
+                  <p className="text-sm text-body">Stock, payments, and reports are still withheld. Purchases and sales are now active.</p>
                 </div>
               </div>
             </div>
           </div>
 
           <EmptyState
-            title="Purchase workflow is ready"
-            description="Use the purchase module to create supplier transactions, upload bills, and update stock."
+            title="Purchase and sales workflows are ready"
+            description="Use the purchase and sales modules to manage transactions, mutate stock, and track receivables."
             actionLabel="Review Foundation"
             onAction={() => setModalOpen(true)}
             icon={FolderLock}
@@ -211,8 +211,8 @@ function DashboardPage() {
         onClose={() => setModalOpen(false)}
       >
         <div className="space-y-4 text-sm text-body">
-          <p>Included: app shell, theme tokens, reusable UI primitives, protected routing, JWT login, current user hydration, logout, RBAC, boss seeding, and the purchase workflow.</p>
-          <p>Excluded: sales, stock management screens, payments, reports, and analytics beyond the current foundation plus purchase release.</p>
+          <p>Included: app shell, theme tokens, reusable UI primitives, protected routing, JWT login, current user hydration, logout, RBAC, boss seeding, and the purchase and sales workflows.</p>
+          <p>Excluded: stock management screens, payments, reports, and analytics beyond the current foundation plus purchase and sales release.</p>
           <div className="flex justify-end">
             <Button onClick={() => setModalOpen(false)}>Close</Button>
           </div>
