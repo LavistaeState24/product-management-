@@ -10,18 +10,30 @@ function appendField(formData, key, value) {
 
 function buildPurchaseFormData(values) {
   const formData = new FormData();
+  const itemName = values.itemName || values.productName;
+  const pricePerUnit = values.pricePerUnit || values.purchasePrice;
+  const dueDate = values.dueDate || values.creditDueDate;
+  const remarks = values.remarks || values.notes;
 
   appendField(formData, 'supplierName', values.supplierName);
-  appendField(formData, 'productName', values.productName);
+  appendField(formData, 'supplierAddress', values.supplierAddress);
+  appendField(formData, 'supplierLocation', values.supplierLocation);
+  appendField(formData, 'gstNo', values.gstNo);
+  appendField(formData, 'itemName', itemName);
+  appendField(formData, 'productName', itemName);
+  appendField(formData, 'unit', values.unit);
   appendField(formData, 'purchaseDate', values.purchaseDate);
   appendField(formData, 'quantity', values.quantity);
-  appendField(formData, 'purchasePrice', values.purchasePrice);
+  appendField(formData, 'pricePerUnit', pricePerUnit);
+  appendField(formData, 'purchasePrice', pricePerUnit);
   appendField(formData, 'gstType', values.gstType);
   appendField(formData, 'gstRate', values.gstRate);
   appendField(formData, 'paymentType', values.paymentType);
-  appendField(formData, 'creditDueDate', values.creditDueDate);
+  appendField(formData, 'dueDate', dueDate);
+  appendField(formData, 'creditDueDate', dueDate);
   appendField(formData, 'paidAmount', values.paidAmount);
-  appendField(formData, 'notes', values.notes);
+  appendField(formData, 'remarks', remarks);
+  appendField(formData, 'notes', remarks);
 
   if (values.removeBill) {
     formData.append('removeBill', 'true');

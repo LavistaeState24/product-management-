@@ -9,21 +9,30 @@ import {
 } from '@/features/purchases/services/purchaseService';
 import { useToast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
-import { resolveAssetUrl, toDateInputValue } from '@/features/purchases/utils/purchaseHelpers';
+import {
+  resolveAssetUrl,
+  toDateInputValue,
+  toDateTimeDisplayValue,
+} from '@/features/purchases/utils/purchaseHelpers';
 
 function mapPurchaseToFormValues(purchase) {
   return {
-    supplierName: purchase.supplier.name,
-    productName: purchase.product.name,
+    supplierName: purchase.supplierName || purchase.supplier.name,
+    supplierAddress: purchase.supplierAddress || '',
+    supplierLocation: purchase.supplierLocation || '',
+    gstNo: purchase.gstNo || '',
+    itemName: purchase.itemName || purchase.product.name,
+    unit: purchase.unit || 'Kg',
     purchaseDate: toDateInputValue(purchase.purchaseDate),
+    recordedAtDisplay: toDateTimeDisplayValue(purchase.recordedAt || purchase.createdAt),
     quantity: String(purchase.quantity),
-    purchasePrice: String(purchase.purchasePrice),
+    pricePerUnit: String(purchase.pricePerUnit ?? purchase.purchasePrice),
     gstType: purchase.gstType || 'None',
     gstRate: String(purchase.gstRate ?? 0),
     paymentType: purchase.paymentType,
-    creditDueDate: toDateInputValue(purchase.creditDueDate),
+    dueDate: toDateInputValue(purchase.dueDate || purchase.creditDueDate),
     paidAmount: String(purchase.paidAmount),
-    notes: purchase.notes || '',
+    remarks: purchase.remarks || purchase.notes || '',
     removeBill: false,
     billUpload: null,
     bill: purchase.bill
@@ -85,7 +94,7 @@ function EditPurchasePage() {
         ...values,
         billUpload: values.billUpload?.[0] || null,
       });
-      toast.success('Purchase updated', 'The stock and payable values were reconciled.');
+      toast.success('Purchase updated', 'The raw material stock and payable values were reconciled.');
       navigate(`/purchases/${response.purchase.id}`);
     } catch (error) {
       toast.error('Unable to update purchase', getApiErrorMessage(error));
@@ -100,9 +109,9 @@ function EditPurchasePage() {
 
   return (
     <PurchaseForm
-      title="Edit Purchase"
+      title="Edit Raw Material Purchase"
       description="Update the purchase record. Stock changes are recalculated automatically."
-      submitLabel="Update Purchase"
+      submitLabel="Update Raw Material Purchase"
       initialValues={initialValues}
       suppliers={options.suppliers}
       products={options.products}

@@ -9,11 +9,14 @@ import {
   formatCurrency,
   PURCHASE_GST_RATE_OPTIONS,
   PURCHASE_GST_TYPE_OPTIONS,
+  RAW_MATERIAL_UNIT_OPTIONS,
 } from '@/features/purchases/utils/purchaseHelpers';
 
 const paymentOptions = [
   { value: 'Cash', label: 'Cash' },
+  { value: 'Cheque', label: 'Cheque' },
   { value: 'Credit', label: 'Credit' },
+  { value: 'Advance', label: 'Advance' },
 ];
 
 function PurchaseForm({
@@ -42,11 +45,13 @@ function PurchaseForm({
 
   const paymentType = watch('paymentType');
   const quantity = watch('quantity');
-  const purchasePrice = watch('purchasePrice');
+  const pricePerUnit = watch('pricePerUnit');
   const gstType = watch('gstType');
   const gstRate = watch('gstRate');
   const paidAmount = watch('paidAmount');
   const removeBill = watch('removeBill');
+  const selectedUnit = watch('unit');
+  const recordedAtDisplay = watch('recordedAtDisplay');
 
   useEffect(() => {
     reset(initialValues);
@@ -56,19 +61,19 @@ function PurchaseForm({
     () =>
       calculatePurchasePreview({
         quantity,
-        purchasePrice,
+        purchasePrice: pricePerUnit,
         gstType,
         gstRate,
         paymentType,
         paidAmount,
       }),
-    [gstRate, gstType, paidAmount, paymentType, purchasePrice, quantity],
+    [gstRate, gstType, paidAmount, paymentType, pricePerUnit, quantity],
   );
 
   useEffect(() => {
-    if (paymentType === 'Cash') {
+    if (paymentType === 'Cash' || paymentType === 'Cheque') {
       setValue('paidAmount', String(preview.totalAmount));
-      setValue('creditDueDate', '');
+      setValue('dueDate', '');
     }
   }, [paymentType, preview.totalAmount, setValue]);
 
@@ -79,14 +84,18 @@ function PurchaseForm({
   }, [gstType, setValue]);
 
   const supplierNames = suppliers.map((supplier) => supplier.name);
-  const productNames = products.map((product) => product.name);
+  const itemNames = products.map((product) => product.name);
+  const dueDateRequired = paymentType === 'Credit' || paymentType === 'Advance';
+  const priceLabel = selectedUnit === 'PCS' ? 'Price per PCS' : 'Price per Kg';
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit((values) => onSubmit(values))}>
       <section className="panel p-6">
         <div className="flex flex-col gap-3 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-primary">Purchase Module</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-primary">
+              Raw Material Purchase Module
+            </p>
             <h1 className="mt-2 text-3xl font-bold text-heading">{title}</h1>
             <p className="mt-2 max-w-2xl text-sm text-body">{description}</p>
           </div>
@@ -99,20 +108,86 @@ function PurchaseForm({
         </div>
 
         <div className="mt-6 grid gap-5 md:grid-cols-2">
+          <input
+            type="hidden"
+            {...register('purchaseDate', { required: 'Purchase date is required.' })}
+          />
+
+          <Input label="Date & Time" readOnly value={recordedAtDisplay || ''} />
+
           <Input
-            label="Supplier"
+            label="Supplier Name"
             list={supplierListId}
             placeholder="Enter supplier name"
             error={errors.supplierName?.message}
-            {...register('supplierName', { required: 'Supplier is required.' })}
+            {...register('supplierName', { required: 'Supplier name is required.' })}
           />
 
           <Input
-            label="Product"
+            label="Address"
+            placeholder="Enter supplier address"
+            error={errors.supplierAddress?.message}
+            {...register('supplierAddress', { required: 'Address is required.' })}
+          />
+
+          <Input
+            label="Location"
+            placeholder="Enter supplier location"
+            error={errors.supplierLocation?.message}
+            {...register('supplierLocation', { required: 'Location is required.' })}
+          />
+
+          <Input
+            label="GST No."
+            placeholder="Enter supplier GST number"
+            error={errors.gstNo?.message}
+            {...register('gstNo', { required: 'GST number is required.' })}
+          />
+
+          <Input
+            label="Item Name"
             list={productListId}
-            placeholder="Enter product name"
-            error={errors.productName?.message}
-            {...register('productName', { required: 'Product is required.' })}
+            placeholder="Enter raw material item name"
+            error={errors.itemName?.message}
+            {...register('itemName', { required: 'Item name is required.' })}
+          />
+
+          <label className="flex w-full flex-col gap-2">
+            <span className="text-sm font-semibold text-heading">Unit</span>
+            <select
+              className="h-12 rounded-2xl border border-border bg-card px-4 text-sm text-heading focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-tint"
+              {...register('unit', { required: 'Unit is required.' })}
+            >
+              {RAW_MATERIAL_UNIT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            {errors.unit?.message ? (
+              <span className="text-xs font-medium text-danger">{errors.unit.message}</span>
+            ) : null}
+          </label>
+
+          <Input
+            label="Quantity"
+            type="number"
+            min="0.01"
+            step="0.01"
+            placeholder="0.00"
+            error={errors.quantity?.message}
+            {...register('quantity', { required: 'Quantity is required.' })}
+          />
+
+          <Input
+            label={priceLabel}
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            error={errors.pricePerUnit?.message}
+            {...register('pricePerUnit', { required: 'Price per unit is required.' })}
           />
 
           <datalist id={supplierListId}>
@@ -122,17 +197,10 @@ function PurchaseForm({
           </datalist>
 
           <datalist id={productListId}>
-            {productNames.map((name) => (
+            {itemNames.map((name) => (
               <option key={name} value={name} />
             ))}
           </datalist>
-
-          <Input
-            label="Purchase Date"
-            type="date"
-            error={errors.purchaseDate?.message}
-            {...register('purchaseDate', { required: 'Purchase date is required.' })}
-          />
 
           <label className="flex w-full flex-col gap-2">
             <span className="text-sm font-semibold text-heading">Payment Type</span>
@@ -153,26 +221,6 @@ function PurchaseForm({
               </span>
             ) : null}
           </label>
-
-          <Input
-            label="Quantity"
-            type="number"
-            min="0.01"
-            step="0.01"
-            placeholder="0.00"
-            error={errors.quantity?.message}
-            {...register('quantity', { required: 'Quantity is required.' })}
-          />
-
-          <Input
-            label="Purchase Price"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            error={errors.purchasePrice?.message}
-            {...register('purchasePrice', { required: 'Purchase price is required.' })}
-          />
 
           <label className="flex w-full flex-col gap-2">
             <span className="text-sm font-semibold text-heading">GST Type</span>
@@ -223,12 +271,16 @@ function PurchaseForm({
             min="0"
             step="0.01"
             placeholder="0.00"
-            disabled={paymentType === 'Cash'}
-            hint={paymentType === 'Cash' ? 'Cash purchases are treated as fully paid.' : null}
+            disabled={paymentType === 'Cash' || paymentType === 'Cheque'}
+            hint={
+              paymentType === 'Cash' || paymentType === 'Cheque'
+                ? `${paymentType} purchases are treated as fully paid.`
+                : null
+            }
             error={errors.paidAmount?.message}
             {...register('paidAmount', {
               validate: (value) => {
-                if (paymentType === 'Cash') {
+                if (paymentType === 'Cash' || paymentType === 'Cheque') {
                   return true;
                 }
 
@@ -241,13 +293,13 @@ function PurchaseForm({
             })}
           />
 
-          {paymentType === 'Credit' ? (
+          {dueDateRequired ? (
             <Input
-              label="Credit Due Date"
+              label="Due Date"
               type="date"
-              error={errors.creditDueDate?.message}
-              {...register('creditDueDate', {
-                required: 'Credit due date is required for credit purchases.',
+              error={errors.dueDate?.message}
+              {...register('dueDate', {
+                required: 'Due date is required for credit or advance purchases.',
               })}
             />
           ) : null}
@@ -260,9 +312,7 @@ function PurchaseForm({
               className="rounded-2xl border border-dashed border-border bg-card px-4 py-3 text-sm text-heading file:mr-4 file:rounded-2xl file:border-0 file:bg-primary file:px-4 file:py-2 file:font-semibold file:text-card"
               {...register('billUpload')}
             />
-            <span className="text-xs text-body">
-              PDF, JPG, PNG, or WEBP up to 5 MB.
-            </span>
+            <span className="text-xs text-body">PDF, JPG, PNG, or WEBP up to 5 MB.</span>
           </label>
 
           {initialValues.bill?.url ? (
@@ -291,11 +341,11 @@ function PurchaseForm({
           ) : null}
 
           <Textarea
-            label="Notes"
-            placeholder="Add any supplier or bill notes"
+            label="Remarks"
+            placeholder="Add any supplier or purchase remarks"
             className="md:col-span-2"
-            error={errors.notes?.message}
-            {...register('notes')}
+            error={errors.remarks?.message}
+            {...register('remarks', { required: 'Remarks are required.' })}
           />
         </div>
       </section>
@@ -369,8 +419,8 @@ function PurchaseForm({
         <div className="panel p-6">
           <h2 className="section-title">Submit</h2>
           <p className="section-copy mt-2">
-            Saving this purchase will update stock automatically and refresh the supplier payable
-            balance for credit purchases.
+            Saving this purchase will update raw material stock automatically and refresh the
+            supplier payable balance for credit or advance purchases.
           </p>
 
           <div className="mt-6 flex flex-col gap-3">

@@ -8,25 +8,38 @@ import {
 } from '@/features/purchases/services/purchaseService';
 import { useToast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
-import { toDateInputValue } from '@/features/purchases/utils/purchaseHelpers';
+import {
+  toDateInputValue,
+  toDateTimeDisplayValue,
+} from '@/features/purchases/utils/purchaseHelpers';
 
-const defaultValues = {
-  supplierName: '',
-  productName: '',
-  purchaseDate: toDateInputValue(new Date()),
-  quantity: '1',
-  purchasePrice: '',
-  gstType: 'None',
-  gstRate: '0',
-  paymentType: 'Cash',
-  creditDueDate: '',
-  paidAmount: '',
-  notes: '',
-  removeBill: false,
-  billUpload: null,
-};
+function buildDefaultValues() {
+  const now = new Date();
+
+  return {
+    supplierName: '',
+    supplierAddress: '',
+    supplierLocation: '',
+    gstNo: '',
+    itemName: '',
+    unit: 'Kg',
+    purchaseDate: toDateInputValue(now),
+    recordedAtDisplay: toDateTimeDisplayValue(now),
+    quantity: '1',
+    pricePerUnit: '',
+    gstType: 'None',
+    gstRate: '0',
+    paymentType: 'Cash',
+    dueDate: '',
+    paidAmount: '',
+    remarks: '',
+    removeBill: false,
+    billUpload: null,
+  };
+}
 
 function AddPurchasePage() {
+  const [defaultValues] = useState(() => buildDefaultValues());
   const [options, setOptions] = useState({ suppliers: [], products: [] });
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -69,7 +82,7 @@ function AddPurchasePage() {
         ...values,
         billUpload: values.billUpload?.[0] || null,
       });
-      toast.success('Purchase created', 'Stock and payable balances were updated.');
+      toast.success('Purchase created', 'Raw material stock and payable balances were updated.');
       navigate(`/purchases/${response.purchase.id}`);
     } catch (error) {
       toast.error('Unable to create purchase', getApiErrorMessage(error));
@@ -84,9 +97,9 @@ function AddPurchasePage() {
 
   return (
     <PurchaseForm
-      title="Add Purchase"
-      description="Create a new supplier purchase and record the bill against inventory."
-      submitLabel="Save Purchase"
+      title="Add Raw Material Purchase"
+      description="Create a raw material purchase and record the supplier bill against stock."
+      submitLabel="Save Raw Material Purchase"
       initialValues={defaultValues}
       suppliers={options.suppliers}
       products={options.products}

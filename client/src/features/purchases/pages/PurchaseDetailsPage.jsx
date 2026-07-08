@@ -12,6 +12,7 @@ import {
 import {
   formatCurrency,
   formatDate,
+  formatDateTime,
   formatGstTypeLabel,
   getPaymentBadgeVariant,
   resolveAssetUrl,
@@ -82,7 +83,7 @@ function PurchaseDetailsPage() {
 
     try {
       await deletePurchase(purchaseId);
-      toast.success('Purchase deleted', 'The purchase was removed and stock was reconciled.');
+      toast.success('Purchase deleted', 'The purchase was removed and raw material stock was reconciled.');
       navigate('/purchases');
     } catch (error) {
       toast.error('Unable to delete purchase', getApiErrorMessage(error));
@@ -100,10 +101,15 @@ function PurchaseDetailsPage() {
       <section className="panel p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-primary">Purchase Details</p>
-            <h1 className="mt-2 text-3xl font-bold text-heading">{purchase.product.name}</h1>
+            <p className="text-sm uppercase tracking-[0.24em] text-primary">
+              Raw Material Purchase Details
+            </p>
+            <h1 className="mt-2 text-3xl font-bold text-heading">
+              {purchase.itemName || purchase.product.name}
+            </h1>
             <p className="mt-2 text-sm text-body">
-              Supplier: {purchase.supplier.name} | Recorded on {formatDate(purchase.purchaseDate)}
+              Supplier: {purchase.supplierName || purchase.supplier.name} | Recorded on{' '}
+              {formatDateTime(purchase.recordedAt || purchase.createdAt)}
             </p>
           </div>
 
@@ -147,11 +153,22 @@ function PurchaseDetailsPage() {
             </div>
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <DetailCard label="Supplier" value={purchase.supplier.name} />
-              <DetailCard label="Product" value={purchase.product.name} />
+              <DetailCard label="Item Name" value={purchase.itemName || purchase.product.name} />
+              <DetailCard label="Unit" value={purchase.unit || 'Not available'} />
+              <DetailCard label="Supplier Name" value={purchase.supplierName || purchase.supplier.name} />
+              <DetailCard label="Address" value={purchase.supplierAddress || 'Not available'} />
+              <DetailCard label="Location" value={purchase.supplierLocation || 'Not available'} />
+              <DetailCard label="GST No." value={purchase.gstNo || 'Not available'} />
+              <DetailCard
+                label="Date & Time"
+                value={formatDateTime(purchase.recordedAt || purchase.createdAt)}
+              />
               <DetailCard label="Purchase Date" value={formatDate(purchase.purchaseDate)} />
               <DetailCard label="Quantity" value={String(purchase.quantity)} />
-              <DetailCard label="Purchase Price" value={formatCurrency(purchase.purchasePrice)} />
+              <DetailCard
+                label={`Price per ${purchase.unit || 'Unit'}`}
+                value={formatCurrency(purchase.pricePerUnit || purchase.purchasePrice)}
+              />
               <DetailCard label="Basic Amount" value={formatCurrency(purchase.basicAmount)} />
               <DetailCard label="GST Type" value={formatGstTypeLabel(purchase.gstType)} />
               <DetailCard label="GST Rate" value={`${purchase.gstRate}%`} />
@@ -163,16 +180,16 @@ function PurchaseDetailsPage() {
               <DetailCard label="Paid Amount" value={formatCurrency(purchase.paidAmount)} />
               <DetailCard label="Due Amount" value={formatCurrency(purchase.dueAmount)} />
               <DetailCard
-                label="Credit Due Date"
-                value={purchase.creditDueDate ? formatDate(purchase.creditDueDate) : 'Not applicable'}
+                label="Due Date"
+                value={purchase.dueDate ? formatDate(purchase.dueDate) : 'Not applicable'}
               />
             </div>
           </div>
 
           <div className="panel p-6">
-            <h2 className="section-title">Notes</h2>
+            <h2 className="section-title">Remarks</h2>
             <p className="mt-3 whitespace-pre-wrap text-sm text-body">
-              {purchase.notes || 'No notes were added to this purchase.'}
+              {purchase.remarks || purchase.notes || 'No remarks were added to this purchase.'}
             </p>
           </div>
         </div>
@@ -215,13 +232,14 @@ function PurchaseDetailsPage() {
           </div>
 
           <div className="panel p-6">
-            <h2 className="section-title">Current Product Stock</h2>
+            <h2 className="section-title">Current Raw Material Stock</h2>
             <p className="section-copy mt-2">
-              This reflects the product stock after the purchase impact has been applied.
+              This reflects the raw material stock after the purchase impact has been applied.
             </p>
             <p className="mt-4 text-3xl font-bold text-heading">
-              {purchase.product.currentStock ?? 'Not available'}
+              {purchase.rawMaterialStock?.quantity ?? 'Not available'}
             </p>
+            <p className="mt-2 text-sm text-body">{purchase.unit || 'Unit not available'}</p>
           </div>
         </div>
       </section>
@@ -229,12 +247,13 @@ function PurchaseDetailsPage() {
       <Modal
         open={deleteOpen}
         title="Delete purchase"
-        description="This action reverses stock and removes the linked supplier payable entry."
+        description="This action reverses raw material stock and removes the linked supplier payable entry."
         onClose={() => !deleteLoading && setDeleteOpen(false)}
       >
         <div className="space-y-4">
           <p className="text-sm text-body">
-            Delete the purchase for {purchase.product.name} from {purchase.supplier.name}?
+            Delete the purchase for {purchase.itemName || purchase.product.name} from{' '}
+            {purchase.supplierName || purchase.supplier.name}?
           </p>
           <div className="flex justify-end gap-3">
             <Button

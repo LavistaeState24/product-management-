@@ -14,6 +14,11 @@ export const PURCHASE_GST_RATE_OPTIONS = [
   { value: '28', label: '28%' },
 ];
 
+export const RAW_MATERIAL_UNIT_OPTIONS = [
+  { value: 'Kg', label: 'Kg' },
+  { value: 'PCS', label: 'PCS' },
+];
+
 function roundCurrency(value) {
   return Number((Number(value) || 0).toFixed(2));
 }
@@ -38,6 +43,20 @@ export function formatDate(value) {
   }).format(new Date(value));
 }
 
+export function formatDateTime(value) {
+  if (!value) {
+    return 'Not available';
+  }
+
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
 export function toDateInputValue(value) {
   if (!value) {
     return '';
@@ -48,6 +67,14 @@ export function toDateInputValue(value) {
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
   const day = `${date.getDate()}`.padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+export function toDateTimeDisplayValue(value) {
+  if (!value) {
+    return '';
+  }
+
+  return formatDateTime(value);
 }
 
 export function calculatePurchasePreview({
@@ -69,7 +96,7 @@ export function calculatePurchasePreview({
   const igstAmount = gstType === 'IGST' ? gstAmount : 0;
   const totalAmount = roundCurrency(basicAmount + gstAmount);
 
-  if (paymentType === 'Cash') {
+  if (paymentType === 'Cash' || paymentType === 'Cheque') {
     return {
       basicAmount,
       gstAmount,
@@ -101,7 +128,7 @@ export function formatGstTypeLabel(gstType) {
 }
 
 export function getPaymentBadgeVariant(paymentType, dueAmount) {
-  if (paymentType === 'Cash') {
+  if (paymentType === 'Cash' || paymentType === 'Cheque') {
     return 'success';
   }
 

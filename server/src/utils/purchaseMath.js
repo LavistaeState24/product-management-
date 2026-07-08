@@ -5,6 +5,7 @@ function toNumber(value, fallback = 0) {
 
 export const PURCHASE_GST_TYPES = ['None', 'CGST_SGST', 'IGST'];
 export const PURCHASE_GST_RATES = [0, 5, 12, 18, 28];
+export const PURCHASE_PAYMENT_TYPES = ['Cash', 'Cheque', 'Credit', 'Advance'];
 
 export function roundCurrency(value) {
   return Number(toNumber(value).toFixed(2));
@@ -36,7 +37,7 @@ export function calculatePurchaseAmounts({
   const igstAmount = normalizedGstType === 'IGST' ? gstAmount : 0;
   const totalAmount = roundCurrency(basicAmount + gstAmount);
 
-  if (paymentType === 'Cash') {
+  if (paymentType === 'Cash' || paymentType === 'Cheque') {
     return {
       basicAmount,
       gstAmount,
