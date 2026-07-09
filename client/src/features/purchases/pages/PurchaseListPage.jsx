@@ -34,6 +34,12 @@ const paymentTypeOptions = [
   { value: 'Advance', label: 'Advance' },
 ];
 
+const purchaseTypeOptions = [
+  { value: '', label: 'All Purchase Types' },
+  { value: 'Raw Material', label: 'Raw Material' },
+  { value: 'PU Chemical', label: 'PU Chemical' },
+];
+
 function PurchaseListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [state, setState] = useState({
@@ -51,6 +57,7 @@ function PurchaseListPage() {
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     paymentType: searchParams.get('paymentType') || '',
+    purchaseType: searchParams.get('purchaseType') || '',
   });
   const { hasPermission } = useAuth();
   const toast = useToast();
@@ -60,6 +67,7 @@ function PurchaseListPage() {
     setFilters({
       search: searchParams.get('search') || '',
       paymentType: searchParams.get('paymentType') || '',
+      purchaseType: searchParams.get('purchaseType') || '',
     });
   }, [searchParams]);
 
@@ -74,6 +82,7 @@ function PurchaseListPage() {
           page: Number(searchParams.get('page') || 1),
           search: searchParams.get('search') || undefined,
           paymentType: searchParams.get('paymentType') || undefined,
+          purchaseType: searchParams.get('purchaseType') || undefined,
         });
 
         if (!ignore) {
@@ -110,6 +119,15 @@ function PurchaseListPage() {
               {row.supplierLocation || 'Location not available'} | GST {row.gstNo || 'N/A'}
             </p>
           </div>
+        ),
+      },
+      {
+        key: 'purchaseType',
+        title: 'Type',
+        render: (value) => (
+          <Badge variant={value === 'PU Chemical' ? 'warning' : 'neutral'}>
+            {value || 'Raw Material'}
+          </Badge>
         ),
       },
       {
@@ -214,12 +232,17 @@ function PurchaseListPage() {
       nextParams.set('paymentType', filters.paymentType);
     }
 
+    // NEW
+    if (filters.purchaseType) {
+      nextParams.set('purchaseType', filters.purchaseType);
+    }
+
     nextParams.set('page', '1');
     setSearchParams(nextParams);
   }
 
   function resetFilters() {
-    setFilters({ search: '', paymentType: '' });
+    setFilters({ search: '', paymentType: '', purchaseType: '' });
     setSearchParams({ page: '1' });
   }
 
@@ -232,7 +255,7 @@ function PurchaseListPage() {
 
     try {
       await deletePurchase(deleteTarget.id);
-      toast.success('Purchase deleted', 'Raw material stock and payables were adjusted successfully.');
+      toast.success('Purchase deleted', 'Stock and payables were adjusted successfully.');
       const deletedId = deleteTarget.id;
       setState((current) => ({
         ...current,
@@ -262,11 +285,11 @@ function PurchaseListPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-primary">
-              Raw Material Purchase Module
+              Purchase Module
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-heading">Raw Material Purchases</h1>
+            <h1 className="mt-2 text-3xl font-bold text-heading">Purchases</h1>
             <p className="mt-2 max-w-2xl text-sm text-body">
-              Track supplier raw material purchases, stock impact, bills, and pending balances.
+              Track raw material and PU chemical purchases, stock impact, bills, and pending balances.
             </p>
           </div>
           {hasPermission(PERMISSIONS.canCreatePurchase) ? (
@@ -280,7 +303,7 @@ function PurchaseListPage() {
         </div>
 
         <form
-          className="mt-6 grid gap-4 rounded-3xl border border-border bg-background p-4 lg:grid-cols-[1fr_220px_auto_auto]"
+          className="mt-6 grid gap-4 rounded-3xl border border-border bg-background p-4 lg:grid-cols-[1fr_220px_220px_auto_auto]"
           onSubmit={applyFilters}
         >
           <SearchBox
@@ -298,6 +321,18 @@ function PurchaseListPage() {
             options={paymentTypeOptions.filter((option) => option.value)}
             placeholder="All Types"
             aria-label="Payment type"
+          />
+          <Select
+            value={filters.purchaseType}
+            onChange={(event) =>
+              setFilters((current) => ({
+                ...current,
+                purchaseType: event.target.value,
+              }))
+            }
+            options={purchaseTypeOptions.filter((option) => option.value)}
+            placeholder="All Purchase Types"
+            aria-label="Purchase type"
           />
           <Button type="submit">Apply</Button>
           <Button type="button" variant="outline" onClick={resetFilters}>
@@ -366,7 +401,7 @@ function PurchaseListPage() {
       <Modal
         open={Boolean(deleteTarget)}
         title="Delete purchase"
-        description="This will reverse the raw material stock impact for the purchase and remove its payable entry."
+        description="This will reverse the stock impact for the purchase and remove its payable entry."
         onClose={() => !deleteLoading && setDeleteTarget(null)}
       >
         <div className="space-y-4">

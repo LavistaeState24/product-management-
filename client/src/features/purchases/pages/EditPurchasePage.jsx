@@ -17,6 +17,7 @@ import {
 
 function mapPurchaseToFormValues(purchase) {
   return {
+    purchaseType: purchase.purchaseType || 'Raw Material',
     supplierName: purchase.supplierName || purchase.supplier.name,
     supplierAddress: purchase.supplierAddress || '',
     supplierLocation: purchase.supplierLocation || '',
@@ -94,7 +95,13 @@ function EditPurchasePage() {
         ...values,
         billUpload: values.billUpload?.[0] || null,
       });
-      toast.success('Purchase updated', 'The raw material stock and payable values were reconciled.');
+
+      const stockMessage =
+        values.purchaseType === 'PU Chemical'
+          ? 'PU Chemical stock and payable values were reconciled.'
+          : 'Raw material stock and payable values were reconciled.';
+
+      toast.success('Purchase updated', stockMessage);
       navigate(`/purchases/${response.purchase.id}`);
     } catch (error) {
       toast.error('Unable to update purchase', getApiErrorMessage(error));
@@ -109,9 +116,9 @@ function EditPurchasePage() {
 
   return (
     <PurchaseForm
-      title="Edit Raw Material Purchase"
+      title="Edit Purchase"
       description="Update the purchase record. Stock changes are recalculated automatically."
-      submitLabel="Update Raw Material Purchase"
+      submitLabel="Update Purchase"
       initialValues={initialValues}
       suppliers={options.suppliers}
       products={options.products}

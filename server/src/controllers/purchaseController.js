@@ -5,9 +5,10 @@ import Supplier from '../models/Supplier.js';
 import SupplierPayable from '../models/SupplierPayable.js';
 import Product from '../models/Product.js';
 import {
-  adjustProductStock,
   adjustRawMaterialStock,
+  adjustPuChemicalStock,
   getRawMaterialStock,
+  getPuChemicalStock,
   resolveProductByName,
   resolveSupplierByName,
   syncPayableForPurchase,
@@ -27,6 +28,7 @@ function parsePurchasePayload(body) {
   const purchaseDateValue = body.purchaseDate || new Date().toISOString();
 
   return {
+    purchaseType: body.purchaseType || 'Raw Material',
     supplierName: body.supplierName?.trim(),
     supplierAddress: body.supplierAddress?.trim() || '',
     supplierLocation: body.supplierLocation?.trim() || '',
@@ -53,9 +55,7 @@ function parsePurchasePayload(body) {
 }
 
 function buildBillFromUpload(file) {
-  if (!file) {
-    return null;
-  }
+  if (!file) return null;
 
   const storagePath = path.join('uploads', 'bills', file.filename);
 
@@ -70,16 +70,12 @@ function buildBillFromUpload(file) {
 }
 
 async function removeStoredBill(bill) {
-  if (!bill?.storagePath) {
-    return;
-  }
+  if (!bill?.storagePath) return;
 
   try {
     await fs.unlink(path.resolve(process.cwd(), bill.storagePath));
   } catch (error) {
-    if (error.code !== 'ENOENT') {
-      throw error;
-    }
+    if (error.code !== 'ENOENT') throw error;
   }
 }
 
@@ -87,10 +83,8 @@ async function populatePurchase(purchaseId) {
   return Purchase.findById(purchaseId).populate('supplier').populate('product');
 }
 
-function buildFormattedRawMaterialStock(stock) {
-  if (!stock) {
-    return null;
-  }
+function buildFormattedStock(stock) {
+  if (!stock) return null;
 
   return {
     id: stock._id,
@@ -100,15 +94,32 @@ function buildFormattedRawMaterialStock(stock) {
   };
 }
 
+async function getPurchaseRelatedStock(purchase) {
+  const itemName = purchase.itemName || purchase.product?.name || purchase.productName;
+  const purchaseType = purchase.purchaseType || 'Raw Material';
+
+  if (purchaseType === 'PU Chemical') {
+    return getPuChemicalStock(itemName, purchase.unit);
+  }
+
+  return getRawMaterialStock(itemName, purchase.unit);
+}
+
+async function adjustPurchaseStock({ purchaseType, itemName, unit, delta }) {
+  if (purchaseType === 'PU Chemical') {
+    return adjustPuChemicalStock({ itemName, unit, delta });
+  }
+
+  return adjustRawMaterialStock({ itemName, unit, delta });
+}
+
 async function formatPurchaseResponse(purchase) {
-  const rawMaterialStock = await getRawMaterialStock(
-    purchase.itemName || purchase.product?.name || purchase.productName,
-    purchase.unit,
-  );
+  const stock = await getPurchaseRelatedStock(purchase);
 
   return formatPurchase({
     ...(purchase.toObject ? purchase.toObject() : purchase),
-    rawMaterialStock: buildFormattedRawMaterialStock(rawMaterialStock),
+    rawMaterialStock: buildFormattedStock(stock),
+    purchaseStock: buildFormattedStock(stock),
   });
 }
 
@@ -119,10 +130,9 @@ async function formatPurchaseListResponse(purchases) {
 async function rollbackStockAdjustments(rollbackSteps) {
   for (const step of rollbackSteps) {
     try {
-      if (step.type === 'product') {
-        await adjustProductStock(step.productId, step.delta);
-      } else if (step.type === 'raw-material') {
-        await adjustRawMaterialStock({
+      if (step.type === 'purchase-stock') {
+        await adjustPurchaseStock({
+          purchaseType: step.purchaseType,
           itemName: step.itemName,
           unit: step.unit,
           delta: step.delta,
@@ -159,6 +169,7 @@ export async function listPurchases(req, res) {
   const limit = req.query.limit || 10;
   const search = req.query.search?.trim();
   const paymentType = req.query.paymentType?.trim();
+  const purchaseType = req.query.purchaseType?.trim();
   const filter = {};
 
   if (search) {
@@ -172,14 +183,14 @@ export async function listPurchases(req, res) {
       { itemName: regex },
       { unit: regex },
       { paymentType: regex },
+      { purchaseType: regex },
       { remarks: regex },
       { notes: regex },
     ];
   }
 
-  if (paymentType) {
-    filter.paymentType = paymentType;
-  }
+  if (paymentType) filter.paymentType = paymentType;
+  if (purchaseType) filter.purchaseType = purchaseType;
 
   const skip = (page - 1) * limit;
 
@@ -237,6 +248,7 @@ export async function createPurchase(req, res) {
     gstNo: payload.gstNo,
     product: product._id,
     productName: product.name,
+    purchaseType: payload.purchaseType,
     itemName: payload.itemName,
     unit: payload.unit,
     purchaseDate: payload.purchaseDate,
@@ -263,19 +275,22 @@ export async function createPurchase(req, res) {
     updatedBy: req.user._id,
   });
 
-  let productStockAdjusted = false;
-  let rawMaterialStockAdjusted = false;
+  const rollbackSteps = [];
 
   try {
-    await adjustProductStock(product._id, payload.quantity);
-    productStockAdjusted = true;
-
-    await adjustRawMaterialStock({
+    await adjustPurchaseStock({
+      purchaseType: payload.purchaseType,
       itemName: payload.itemName,
       unit: payload.unit,
       delta: payload.quantity,
     });
-    rawMaterialStockAdjusted = true;
+    rollbackSteps.unshift({
+      type: 'purchase-stock',
+      purchaseType: payload.purchaseType,
+      itemName: payload.itemName,
+      unit: payload.unit,
+      delta: -payload.quantity,
+    });
 
     await syncPayableForPurchase({
       purchaseId: purchase._id,
@@ -285,39 +300,13 @@ export async function createPurchase(req, res) {
       dueAmount: amounts.dueAmount,
     });
   } catch (error) {
-    if (rawMaterialStockAdjusted) {
-      await rollbackStockAdjustments([
-        {
-          type: 'raw-material',
-          itemName: payload.itemName,
-          unit: payload.unit,
-          delta: -payload.quantity,
-        },
-      ]);
-    }
+    await rollbackStockAdjustments(rollbackSteps);
 
-    if (productStockAdjusted) {
-      await rollbackStockAdjustments([
-        {
-          type: 'product',
-          productId: product._id,
-          delta: -payload.quantity,
-        },
-      ]);
-    }
+    await SupplierPayable.findOneAndDelete({ purchase: purchase._id }).catch(console.error);
+    await syncSupplierOutstanding(supplier._id).catch(console.error);
+    await Purchase.findByIdAndDelete(purchase._id).catch(console.error);
+    await removeStoredBill(purchase.bill).catch(console.error);
 
-    await SupplierPayable.findOneAndDelete({ purchase: purchase._id }).catch((rollbackError) => {
-      console.error('Failed to rollback purchase payable:', rollbackError);
-    });
-    await syncSupplierOutstanding(supplier._id).catch((rollbackError) => {
-      console.error('Failed to rollback supplier outstanding balance:', rollbackError);
-    });
-    await Purchase.findByIdAndDelete(purchase._id).catch((rollbackError) => {
-      console.error('Failed to rollback purchase record:', rollbackError);
-    });
-    await removeStoredBill(purchase.bill).catch((rollbackError) => {
-      console.error('Failed to rollback uploaded bill:', rollbackError);
-    });
     throw error;
   }
 
@@ -350,51 +339,33 @@ export async function updatePurchase(req, res) {
 
   const billFromUpload = buildBillFromUpload(req.file);
   const oldSupplierId = String(purchase.supplier);
-  const oldProductId = String(purchase.product);
+  const previousPurchaseType = purchase.purchaseType || 'Raw Material';
   const previousItemName = purchase.itemName || purchase.productName;
   const previousUnit = purchase.unit || null;
   const oldBill = purchase.bill;
   const rollbackSteps = [];
 
   try {
-    if (oldProductId === String(product._id)) {
+    if (
+      previousPurchaseType === payload.purchaseType &&
+      previousItemName &&
+      previousUnit &&
+      previousItemName === payload.itemName &&
+      previousUnit === payload.unit
+    ) {
       const delta = payload.quantity - purchase.quantity;
 
       if (delta) {
-        await adjustProductStock(product._id, delta);
-        rollbackSteps.unshift({
-          type: 'product',
-          productId: product._id,
-          delta: -delta,
-        });
-      }
-    } else {
-      await adjustProductStock(purchase.product, -purchase.quantity);
-      rollbackSteps.unshift({
-        type: 'product',
-        productId: purchase.product,
-        delta: purchase.quantity,
-      });
-
-      await adjustProductStock(product._id, payload.quantity);
-      rollbackSteps.unshift({
-        type: 'product',
-        productId: product._id,
-        delta: -payload.quantity,
-      });
-    }
-
-    if (previousItemName && previousUnit && previousItemName === payload.itemName && previousUnit === payload.unit) {
-      const delta = payload.quantity - purchase.quantity;
-
-      if (delta) {
-        await adjustRawMaterialStock({
+        await adjustPurchaseStock({
+          purchaseType: payload.purchaseType,
           itemName: payload.itemName,
           unit: payload.unit,
           delta,
         });
+
         rollbackSteps.unshift({
-          type: 'raw-material',
+          type: 'purchase-stock',
+          purchaseType: payload.purchaseType,
           itemName: payload.itemName,
           unit: payload.unit,
           delta: -delta,
@@ -402,26 +373,32 @@ export async function updatePurchase(req, res) {
       }
     } else {
       if (previousItemName && previousUnit) {
-        await adjustRawMaterialStock({
+        await adjustPurchaseStock({
+          purchaseType: previousPurchaseType,
           itemName: previousItemName,
           unit: previousUnit,
           delta: -purchase.quantity,
         });
+
         rollbackSteps.unshift({
-          type: 'raw-material',
+          type: 'purchase-stock',
+          purchaseType: previousPurchaseType,
           itemName: previousItemName,
           unit: previousUnit,
           delta: purchase.quantity,
         });
       }
 
-      await adjustRawMaterialStock({
+      await adjustPurchaseStock({
+        purchaseType: payload.purchaseType,
         itemName: payload.itemName,
         unit: payload.unit,
         delta: payload.quantity,
       });
+
       rollbackSteps.unshift({
-        type: 'raw-material',
+        type: 'purchase-stock',
+        purchaseType: payload.purchaseType,
         itemName: payload.itemName,
         unit: payload.unit,
         delta: -payload.quantity,
@@ -431,9 +408,7 @@ export async function updatePurchase(req, res) {
     await rollbackStockAdjustments(rollbackSteps);
 
     if (billFromUpload) {
-      await removeStoredBill(billFromUpload).catch((rollbackError) => {
-        console.error('Failed to rollback newly uploaded bill:', rollbackError);
-      });
+      await removeStoredBill(billFromUpload).catch(console.error);
     }
 
     throw error;
@@ -446,6 +421,7 @@ export async function updatePurchase(req, res) {
   purchase.gstNo = payload.gstNo;
   purchase.product = product._id;
   purchase.productName = product.name;
+  purchase.purchaseType = payload.purchaseType;
   purchase.itemName = payload.itemName;
   purchase.unit = payload.unit;
   purchase.purchaseDate = payload.purchaseDate;
@@ -481,9 +457,7 @@ export async function updatePurchase(req, res) {
     await rollbackStockAdjustments(rollbackSteps);
 
     if (billFromUpload) {
-      await removeStoredBill(billFromUpload).catch((rollbackError) => {
-        console.error('Failed to rollback newly uploaded bill:', rollbackError);
-      });
+      await removeStoredBill(billFromUpload).catch(console.error);
     }
 
     throw error;
@@ -521,16 +495,17 @@ export async function deletePurchase(req, res) {
   }
 
   const itemName = purchase.itemName || purchase.productName;
+  const purchaseType = purchase.purchaseType || 'Raw Material';
 
   if (itemName && purchase.unit) {
-    await adjustRawMaterialStock({
+    await adjustPurchaseStock({
+      purchaseType,
       itemName,
       unit: purchase.unit,
       delta: -purchase.quantity,
     });
   }
 
-  await adjustProductStock(purchase.product, -purchase.quantity);
   await SupplierPayable.findOneAndDelete({ purchase: purchase._id });
   await syncSupplierOutstanding(purchase.supplier);
   await removeStoredBill(purchase.bill);
