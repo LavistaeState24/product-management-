@@ -6,6 +6,7 @@ import {
   PURCHASE_PAYMENT_TYPES,
 } from '../utils/purchaseMath.js';
 
+const PURCHASE_TYPES = ['Raw Material', 'PU Chemical'];
 function calculateRawTotal(req) {
   return calculatePurchaseAmounts({
     quantity: req.body.quantity,
@@ -23,6 +24,12 @@ const supplierValidator = body('supplierName')
   .withMessage('Supplier name is required.')
   .isLength({ max: 120 })
   .withMessage('Supplier name must be 120 characters or fewer.');
+
+const purchaseTypeValidator = body('purchaseType')
+  .optional({ values: 'falsy' })
+  .default('Raw Material')
+  .isIn(PURCHASE_TYPES)
+  .withMessage('Purchase type must be Raw Material or PU Chemical.');
 
 const itemValidator = body('itemName')
   .customSanitizer((value, { req }) => value ?? req.body.productName)
@@ -111,27 +118,27 @@ const paymentTypeValidator = body('paymentType')
 const dueDateValidator = body('dueDate')
   .customSanitizer((value, { req }) => value ?? req.body.creditDueDate)
   .custom((value, { req }) => {
-  const paymentType = req.body.paymentType;
-  const normalizedValue = value;
+    const paymentType = req.body.paymentType;
+    const normalizedValue = value;
 
-  if (paymentType === 'Credit' || paymentType === 'Advance') {
-    if (!normalizedValue) {
-      throw new Error('Due date is required for credit or advance purchases.');
+    if (paymentType === 'Credit' || paymentType === 'Advance') {
+      if (!normalizedValue) {
+        throw new Error('Due date is required for credit or advance purchases.');
+      }
+
+      const isValidDate = !Number.isNaN(Date.parse(normalizedValue));
+
+      if (!isValidDate) {
+        throw new Error('Due date must be a valid date.');
+      }
     }
 
-    const isValidDate = !Number.isNaN(Date.parse(normalizedValue));
-
-    if (!isValidDate) {
-      throw new Error('Due date must be a valid date.');
+    if ((paymentType === 'Cash' || paymentType === 'Cheque') && normalizedValue) {
+      throw new Error('Due date is only allowed for credit or advance purchases.');
     }
-  }
 
-  if ((paymentType === 'Cash' || paymentType === 'Cheque') && normalizedValue) {
-    throw new Error('Due date is only allowed for credit or advance purchases.');
-  }
-
-  return true;
-});
+    return true;
+  });
 
 const paidAmountValidator = body('paidAmount')
   .optional({ values: 'falsy' })
@@ -171,6 +178,7 @@ export const createPurchaseValidator = [
   supplierAddressValidator,
   supplierLocationValidator,
   gstNoValidator,
+  purchaseTypeValidator,
   itemValidator,
   unitValidator,
   purchaseDateValidator,
@@ -208,6 +216,10 @@ export const listPurchaseValidator = [
     .optional({ values: 'falsy' })
     .isIn(PURCHASE_PAYMENT_TYPES)
     .withMessage('Payment type must be Cash, Cheque, Credit, or Advance.'),
+  query('purchaseType')
+    .optional({ values: 'falsy' })
+    .isIn(PURCHASE_TYPES)
+    .withMessage('Purchase type must be Raw Material or PU Chemical.'),
 ];
 
 export const purchaseIdParamValidator = [

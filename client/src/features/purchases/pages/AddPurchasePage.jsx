@@ -17,6 +17,7 @@ function buildDefaultValues() {
   const now = new Date();
 
   return {
+    purchaseType: 'Raw Material',
     supplierName: '',
     supplierAddress: '',
     supplierLocation: '',
@@ -82,7 +83,13 @@ function AddPurchasePage() {
         ...values,
         billUpload: values.billUpload?.[0] || null,
       });
-      toast.success('Purchase created', 'Raw material stock and payable balances were updated.');
+
+      const stockMessage =
+        values.purchaseType === 'PU Chemical'
+          ? 'PU Chemical stock and payable balances were updated.'
+          : 'Raw material stock and payable balances were updated.';
+
+      toast.success('Purchase created', stockMessage);
       navigate(`/purchases/${response.purchase.id}`);
     } catch (error) {
       toast.error('Unable to create purchase', getApiErrorMessage(error));
@@ -97,9 +104,9 @@ function AddPurchasePage() {
 
   return (
     <PurchaseForm
-      title="Add Raw Material Purchase"
-      description="Create a raw material purchase and record the supplier bill against stock."
-      submitLabel="Save Raw Material Purchase"
+      title="Add Purchase"
+      description="Create a raw material or PU chemical purchase and record the supplier bill against stock."
+      submitLabel="Save Purchase"
       initialValues={defaultValues}
       suppliers={options.suppliers}
       products={options.products}

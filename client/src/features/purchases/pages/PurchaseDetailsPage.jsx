@@ -83,7 +83,7 @@ function PurchaseDetailsPage() {
 
     try {
       await deletePurchase(purchaseId);
-      toast.success('Purchase deleted', 'The purchase was removed and raw material stock was reconciled.');
+      toast.success('Purchase deleted', 'The purchase was removed and stock was reconciled.');
       navigate('/purchases');
     } catch (error) {
       toast.error('Unable to delete purchase', getApiErrorMessage(error));
@@ -96,13 +96,17 @@ function PurchaseDetailsPage() {
     return <PurchasePageSkeleton />;
   }
 
+  const purchaseType = purchase.purchaseType || 'Raw Material';
+  const currentStock =
+    purchase.purchaseStock?.quantity ?? purchase.rawMaterialStock?.quantity ?? 'Not available';
+
   return (
     <div className="space-y-6">
       <section className="panel p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-primary">
-              Raw Material Purchase Details
+              Purchase Details
             </p>
             <h1 className="mt-2 text-3xl font-bold text-heading">
               {purchase.itemName || purchase.product.name}
@@ -154,6 +158,7 @@ function PurchaseDetailsPage() {
 
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <DetailCard label="Item Name" value={purchase.itemName || purchase.product.name} />
+              <DetailCard label="Purchase Type" value={purchaseType} />
               <DetailCard label="Unit" value={purchase.unit || 'Not available'} />
               <DetailCard label="Supplier Name" value={purchase.supplierName || purchase.supplier.name} />
               <DetailCard label="Address" value={purchase.supplierAddress || 'Not available'} />
@@ -232,12 +237,12 @@ function PurchaseDetailsPage() {
           </div>
 
           <div className="panel p-6">
-            <h2 className="section-title">Current Raw Material Stock</h2>
+            <h2 className="section-title">Current Stock</h2>
             <p className="section-copy mt-2">
-              This reflects the raw material stock after the purchase impact has been applied.
+              This reflects the latest stock after the purchase impact has been applied.
             </p>
             <p className="mt-4 text-3xl font-bold text-heading">
-              {purchase.rawMaterialStock?.quantity ?? 'Not available'}
+              {currentStock}
             </p>
             <p className="mt-2 text-sm text-body">{purchase.unit || 'Unit not available'}</p>
           </div>
@@ -247,7 +252,7 @@ function PurchaseDetailsPage() {
       <Modal
         open={deleteOpen}
         title="Delete purchase"
-        description="This action reverses raw material stock and removes the linked supplier payable entry."
+        description="This action reverses the purchase stock and removes the linked supplier payable entry."
         onClose={() => !deleteLoading && setDeleteOpen(false)}
       >
         <div className="space-y-4">

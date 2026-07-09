@@ -19,6 +19,11 @@ const paymentOptions = [
   { value: 'Advance', label: 'Advance' },
 ];
 
+const purchaseTypeOptions = [
+  { value: 'Raw Material', label: 'Raw Material' },
+  { value: 'PU Chemical', label: 'PU Chemical' },
+];
+
 function PurchaseForm({
   title,
   description,
@@ -40,7 +45,10 @@ function PurchaseForm({
     watch,
     formState: { errors },
   } = useForm({
-    defaultValues: initialValues,
+    defaultValues: {
+      purchaseType: 'Raw Material',
+      ...initialValues,
+    },
   });
 
   const paymentType = watch('paymentType');
@@ -52,9 +60,13 @@ function PurchaseForm({
   const removeBill = watch('removeBill');
   const selectedUnit = watch('unit');
   const recordedAtDisplay = watch('recordedAtDisplay');
+  const purchaseType = watch('purchaseType') || 'Raw Material';
 
   useEffect(() => {
-    reset(initialValues);
+    reset({
+      purchaseType: 'Raw Material',
+      ...initialValues,
+    });
   }, [initialValues, reset]);
 
   const preview = useMemo(
@@ -88,13 +100,23 @@ function PurchaseForm({
   const dueDateRequired = paymentType === 'Credit' || paymentType === 'Advance';
   const priceLabel = selectedUnit === 'PCS' ? 'Price per PCS' : 'Price per Kg';
 
+  const itemPlaceholder =
+    purchaseType === 'PU Chemical'
+      ? 'Enter PU chemical item name'
+      : 'Enter raw material item name';
+
+  const submitDescription =
+    purchaseType === 'PU Chemical'
+      ? 'Saving this purchase will update PU Chemical stock automatically.'
+      : 'Saving this purchase will update raw material stock automatically.';
+
   return (
     <form className="space-y-6" onSubmit={handleSubmit((values) => onSubmit(values))}>
       <section className="panel p-6">
         <div className="flex flex-col gap-3 border-b border-border pb-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-primary">
-              Raw Material Purchase Module
+              Purchase Module
             </p>
             <h1 className="mt-2 text-3xl font-bold text-heading">{title}</h1>
             <p className="mt-2 max-w-2xl text-sm text-body">{description}</p>
@@ -114,6 +136,26 @@ function PurchaseForm({
           />
 
           <Input label="Date & Time" readOnly value={recordedAtDisplay || ''} />
+
+          <label className="flex w-full flex-col gap-2">
+            <span className="text-sm font-semibold text-heading">Purchase Type</span>
+            <select
+              className="h-12 rounded-2xl border border-border bg-card px-4 text-sm text-heading focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-tint"
+              {...register('purchaseType', { required: 'Purchase type is required.' })}
+            >
+              {purchaseTypeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+
+            {errors.purchaseType?.message ? (
+              <span className="text-xs font-medium text-danger">
+                {errors.purchaseType.message}
+              </span>
+            ) : null}
+          </label>
 
           <Input
             label="Supplier Name"
@@ -147,7 +189,7 @@ function PurchaseForm({
           <Input
             label="Item Name"
             list={productListId}
-            placeholder="Enter raw material item name"
+            placeholder={itemPlaceholder}
             error={errors.itemName?.message}
             {...register('itemName', { required: 'Item name is required.' })}
           />
@@ -418,10 +460,7 @@ function PurchaseForm({
 
         <div className="panel p-6">
           <h2 className="section-title">Submit</h2>
-          <p className="section-copy mt-2">
-            Saving this purchase will update raw material stock automatically and refresh the
-            supplier payable balance for credit or advance purchases.
-          </p>
+          <p className="section-copy mt-2">{submitDescription}</p>
 
           <div className="mt-6 flex flex-col gap-3">
             <Button type="submit" loading={loading}>

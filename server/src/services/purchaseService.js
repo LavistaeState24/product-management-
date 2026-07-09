@@ -5,6 +5,7 @@ import Supplier from '../models/Supplier.js';
 import SupplierPayable from '../models/SupplierPayable.js';
 import { roundCurrency } from '../utils/purchaseMath.js';
 import { createHttpError } from '../utils/httpError.js';
+import PuChemicalStock from '../models/PuChemicalStock.js';
 
 export function normalizeName(name = '') {
   return name.trim().toLowerCase();
@@ -115,6 +116,63 @@ export async function getRawMaterialStock(itemName, unit) {
   }
 
   return RawMaterialStock.findOne({
+    normalizedItemName: normalizeName(itemName),
+    unit,
+  }).lean();
+}
+
+export async function adjustPuChemicalStock({ itemName, unit, delta }) {
+  if (!itemName || !unit || !delta) {
+    return null;
+  }
+
+  const normalizedItemName = normalizeName(itemName);
+
+  let stock = await PuChemicalStock.findOne({
+    normalizedItemName,
+    unit,
+  });
+
+  if (!stock) {
+    if (delta < 0) {
+      throw createHttpError(
+        400,
+        `Unable to reduce PU chemical stock for "${itemName}" (${unit}) because it does not exist.`,
+      );
+    }
+
+    stock = await PuChemicalStock.create({
+      itemName,
+      normalizedItemName,
+      unit,
+      quantity: roundCurrency(delta),
+    });
+
+    return stock;
+  }
+
+  const nextQuantity = roundCurrency(stock.quantity + delta);
+
+  if (nextQuantity < 0) {
+    throw createHttpError(
+      400,
+      `Unable to reduce PU chemical stock for "${stock.itemName}" (${stock.unit}) because it would become negative.`,
+    );
+  }
+
+  stock.itemName = itemName;
+  stock.quantity = nextQuantity;
+  await stock.save();
+
+  return stock;
+}
+
+export async function getPuChemicalStock(itemName, unit) {
+  if (!itemName || !unit) {
+    return null;
+  }
+
+  return PuChemicalStock.findOne({
     normalizedItemName: normalizeName(itemName),
     unit,
   }).lean();

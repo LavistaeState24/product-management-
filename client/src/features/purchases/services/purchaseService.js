@@ -19,6 +19,7 @@ function buildPurchaseFormData(values) {
   appendField(formData, 'supplierAddress', values.supplierAddress);
   appendField(formData, 'supplierLocation', values.supplierLocation);
   appendField(formData, 'gstNo', values.gstNo);
+  appendField(formData, 'purchaseType', values.purchaseType);
   appendField(formData, 'itemName', itemName);
   appendField(formData, 'productName', itemName);
   appendField(formData, 'unit', values.unit);

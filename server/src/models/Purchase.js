@@ -41,6 +41,13 @@ const purchaseSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    purchaseType: {
+      type: String,
+      enum: ['Raw Material', 'PU Chemical'],
+      required: true,
+      default: 'Raw Material',
+      index: true,
+    },
     itemName: {
       type: String,
       trim: true,
