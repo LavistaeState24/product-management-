@@ -1,4 +1,4 @@
-import { LayoutDashboard, ReceiptText, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { Boxes, LayoutDashboard, ReceiptText, ShieldCheck, ShoppingCart } from 'lucide-react';
 import { PERMISSIONS } from '@/constants/permissions';
 
 export const SIDEBAR_ITEMS = [
@@ -25,5 +25,11 @@ export const SIDEBAR_ITEMS = [
     path: '/sales',
     icon: ShoppingCart,
     permission: PERMISSIONS.canViewSales,
+  },
+  {
+    label: 'Stock',
+    path: '/stock',
+    icon: Boxes,
+    permission: PERMISSIONS.canViewStock,
   },
 ];
