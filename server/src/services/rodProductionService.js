@@ -200,11 +200,15 @@ export async function createRodProductionBatch({ payload, createdBy }) {
           productionDate: payload.dateTime,
           productionBatchId: batch._id,
         })),
-        { session },
+        {
+          session,
+          ordered: true,
+        },
+
       );
     });
   } catch (error) {
-    await session.abortTransaction().catch(() => {});
+    await session.abortTransaction().catch(() => { });
 
     if (error.code === 11000) {
       throw createHttpError(409, 'Rod production contains a duplicate unique value.');

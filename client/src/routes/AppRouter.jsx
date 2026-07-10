@@ -18,6 +18,8 @@ const EditSalePage = lazy(() => import('@/features/sales/pages/EditSalePage'));
 const SaleDetailsPage = lazy(() => import('@/features/sales/pages/SaleDetailsPage'));
 const SaleInvoicePreviewPage = lazy(() => import('@/features/sales/pages/SaleInvoicePreviewPage'));
 const StockManagementPage = lazy(() => import('@/features/stock/pages/StockManagementPage'));
+const RodProductionPage = lazy(() => import('@/features/rod-productions/pages/RodProductionPage'));
+const RodStockPage = lazy(() => import('@/features/rod-productions/pages/RodStockPage'));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
 const ForbiddenPage = lazy(() => import('@/routes/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/routes/NotFoundPage'));
@@ -62,6 +64,10 @@ function AppRouter() {
             </Route>
             <Route element={<ProtectedRoute permission={PERMISSIONS.canViewStock} />}>
               <Route path="/stock" element={<StockManagementPage />} />
+              <Route path="/rod-stocks" element={<RodStockPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canManageStock} />}>
+              <Route path="/rod-productions" element={<RodProductionPage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
           </Route>
