@@ -1,4 +1,12 @@
-import { Boxes, LayoutDashboard, ReceiptText, ShieldCheck, ShoppingCart } from 'lucide-react';
+import {
+  Boxes,
+  Factory,
+  LayoutDashboard,
+  PackageSearch,
+  ReceiptText,
+  ShieldCheck,
+  ShoppingCart,
+} from 'lucide-react';
 import { PERMISSIONS } from '@/constants/permissions';
 
 export const SIDEBAR_ITEMS = [
@@ -30,6 +38,18 @@ export const SIDEBAR_ITEMS = [
     label: 'Stock',
     path: '/stock',
     icon: Boxes,
+    permission: PERMISSIONS.canViewStock,
+  },
+  {
+    label: 'Rod Production',
+    path: '/rod-productions',
+    icon: Factory,
+    permission: PERMISSIONS.canManageStock,
+  },
+  {
+    label: 'Rod Stock',
+    path: '/rod-stocks',
+    icon: PackageSearch,
     permission: PERMISSIONS.canViewStock,
   },
 ];
