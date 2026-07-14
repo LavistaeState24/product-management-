@@ -17,7 +17,11 @@ const rawMaterialConsumptionSchema = new mongoose.Schema(
     rodProductionBatchId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'RodProductionBatch',
-      required: true,
+      index: true,
+    },
+    sheetProductionBatchId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SheetProductionBatch',
       index: true,
     },
     quantityUsed: {
@@ -45,6 +49,15 @@ const rawMaterialConsumptionSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+rawMaterialConsumptionSchema.pre('validate', function requireProductionBatchReference(next) {
+  if (!this.rodProductionBatchId && !this.sheetProductionBatchId) {
+    next(new Error('Raw material consumption must reference a production batch.'));
+    return;
+  }
+
+  next();
+});
 
 const RawMaterialConsumption = mongoose.model(
   'RawMaterialConsumption',

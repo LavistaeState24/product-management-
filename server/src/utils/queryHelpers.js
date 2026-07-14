@@ -15,6 +15,24 @@ export function buildSearchFilter(search, fields) {
   const regex = new RegExp(search, 'i');
 
   return {
-    $or: fields.map((field) => ({ [field]: regex })),
+    $or: fields.map((fieldConfig) => {
+      if (typeof fieldConfig === 'string') {
+        return { [fieldConfig]: regex };
+      }
+
+      if (fieldConfig.type === 'number') {
+        return {
+          $expr: {
+            $regexMatch: {
+              input: { $toString: `$${fieldConfig.field}` },
+              regex: search,
+              options: 'i',
+            },
+          },
+        };
+      }
+
+      return { [fieldConfig.field]: regex };
+    }),
   };
 }
