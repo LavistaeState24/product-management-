@@ -5,6 +5,7 @@ import {
   formatRodProductionBatch,
   formatRodStock,
 } from '../services/rodProductionService.js';
+import { buildPagination, buildSearchFilter } from '../utils/queryHelpers.js';
 
 function parseRodProductionPayload(body) {
   return {
@@ -21,15 +22,6 @@ function parseRodProductionPayload(body) {
       itemNumber: rod.itemNumber?.trim(),
       isManualItemNumber: rod.isManualItemNumber === true || rod.isManualItemNumber === 'true',
     })),
-  };
-}
-
-function buildPagination({ page, limit, totalItems }) {
-  return {
-    page,
-    limit,
-    totalItems,
-    totalPages: Math.max(1, Math.ceil(totalItems / limit)),
   };
 }
 
@@ -52,21 +44,16 @@ export async function listRodProductions(req, res) {
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
   const search = req.query.search?.trim();
-  const filter = {};
-
-  if (search) {
-    const regex = new RegExp(search, 'i');
-    filter.$or = [
-      { rawMaterialItem: regex },
-      { batchNumber: regex },
-      { batchId: regex },
-      { remarks: regex },
-      { 'rods.item': regex },
-      { 'rods.size': regex },
-      { 'rods.colour': regex },
-      { 'rods.itemNumber': regex },
-    ];
-  }
+  const filter = buildSearchFilter(search, [
+    'rawMaterialItem',
+    'batchNumber',
+    'batchId',
+    'remarks',
+    'rods.item',
+    'rods.size',
+    'rods.colour',
+    'rods.itemNumber',
+  ]);
 
   const skip = (page - 1) * limit;
   const [items, totalItems] = await Promise.all([
@@ -89,17 +76,7 @@ export async function listRodStocks(req, res) {
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
   const search = req.query.search?.trim();
-  const filter = {};
-
-  if (search) {
-    const regex = new RegExp(search, 'i');
-    filter.$or = [
-      { itemNumber: regex },
-      { item: regex },
-      { size: regex },
-      { colour: regex },
-    ];
-  }
+  const filter = buildSearchFilter(search, ['itemNumber', 'item', 'size', 'colour']);
 
   const skip = (page - 1) * limit;
   const [items, totalItems] = await Promise.all([
@@ -120,17 +97,7 @@ export async function listRodStocks(req, res) {
 export async function searchRodStocks(req, res) {
   const search = req.query.q?.trim() || req.query.search?.trim();
   const limit = req.query.limit || 20;
-  const filter = {};
-
-  if (search) {
-    const regex = new RegExp(search, 'i');
-    filter.$or = [
-      { itemNumber: regex },
-      { item: regex },
-      { size: regex },
-      { colour: regex },
-    ];
-  }
+  const filter = buildSearchFilter(search, ['itemNumber', 'item', 'size', 'colour']);
 
   const items = await RodStock.find(filter)
     .sort({ itemNumber: 1 })

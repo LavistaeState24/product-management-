@@ -1,82 +1,60 @@
-import mongoose from 'mongoose';
-import RawMaterialStock from '../models/RawMaterialStock.js';
-import RawMaterialConsumption from '../models/RawMaterialConsumption.js';
 import RodProductionBatch from '../models/RodProductionBatch.js';
 import RodStock from '../models/RodStock.js';
 import { createHttpError } from '../utils/httpError.js';
-import { roundCurrency } from '../utils/purchaseMath.js';
-
-function formatDateSegment(value) {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const day = `${date.getDate()}`.padStart(2, '0');
-  return `${year}${month}${day}`;
-}
+import {
+  assertFinishedItemNumbersAvailable,
+  assertPositiveQuantity,
+  assertProductionItems,
+  assertUniqueValues,
+  createFinishedStockItems,
+  createProductionBatch,
+  createRawMaterialConsumption,
+  deductRawMaterialStock,
+  findRawMaterialStockOrThrow,
+  generateProductionNumber,
+  runProductionTransaction,
+} from './productionInventoryService.js';
 
 async function generateBatchNumber(dateTime, session) {
-  const dateSegment = formatDateSegment(dateTime);
-  const prefix = `RPB-${dateSegment}`;
-  const count = await RodProductionBatch.countDocuments({
-    batchNumber: new RegExp(`^${prefix}-`),
-  }).session(session);
-
-  return `${prefix}-${String(count + 1).padStart(4, '0')}`;
+  return generateProductionNumber({
+    Model: RodProductionBatch,
+    dateTime,
+    prefix: 'RPB',
+    session,
+  });
 }
 
 function assertUniqueItemNumbers(itemNumbers) {
-  const seen = new Set();
-
-  for (const itemNumber of itemNumbers) {
-    if (seen.has(itemNumber)) {
-      throw createHttpError(409, `Duplicate rod item number "${itemNumber}" in this batch.`);
-    }
-
-    seen.add(itemNumber);
-  }
+  assertUniqueValues(
+    itemNumbers,
+    (itemNumber) => `Duplicate rod item number "${itemNumber}" in this batch.`,
+  );
 }
 
 async function assertItemNumbersAvailable(itemNumbers, session) {
-  const existing = await RodStock.findOne({ itemNumber: { $in: itemNumbers } })
-    .session(session)
-    .lean();
-
-  if (existing) {
-    throw createHttpError(409, `Rod item number "${existing.itemNumber}" already exists.`);
-  }
+  await assertFinishedItemNumbersAvailable({
+    StockModel: RodStock,
+    itemNumbers,
+    session,
+    buildMessage: (itemNumber) => `Rod item number "${itemNumber}" already exists.`,
+  });
 }
 
 function assertRodPayload(rods) {
-  if (!Array.isArray(rods) || rods.length === 0) {
-    throw createHttpError(422, 'At least one rod item is required.');
-  }
-
-  rods.forEach((rod, index) => {
-    const position = index + 1;
-
-    if (!rod.item) {
-      throw createHttpError(422, `Rod ${position}: item is required.`);
-    }
-
-    if (!rod.size) {
-      throw createHttpError(422, `Rod ${position}: size is required.`);
-    }
-
-    if (!rod.colour) {
-      throw createHttpError(422, `Rod ${position}: colour is required.`);
-    }
-
-    if (!rod.itemNumber) {
-      throw createHttpError(422, `Rod ${position}: item number is required.`);
-    }
-
-    if (!Number.isFinite(rod.weightKg) || rod.weightKg <= 0) {
-      throw createHttpError(422, `Rod ${position}: weight must be greater than 0.`);
-    }
-
-    if (!Number.isFinite(rod.quantity) || rod.quantity <= 0) {
-      throw createHttpError(422, `Rod ${position}: quantity must be greater than 0.`);
-    }
+  assertProductionItems({
+    items: rods,
+    itemLabel: 'Rod',
+    emptyMessage: 'At least one rod item is required.',
+    requiredStringFields: [
+      { key: 'item', label: 'item' },
+      { key: 'size', label: 'size' },
+      { key: 'colour', label: 'colour' },
+      { key: 'itemNumber', label: 'item number' },
+    ],
+    positiveNumberFields: [
+      { key: 'weightKg', label: 'weight' },
+      { key: 'quantity', label: 'quantity' },
+    ],
   });
 }
 
@@ -114,83 +92,62 @@ export function formatRodProductionBatch(batch) {
 }
 
 export async function createRodProductionBatch({ payload, createdBy }) {
-  if (!Number.isFinite(payload.quantityUsed) || payload.quantityUsed <= 0) {
-    throw createHttpError(422, 'Quantity used must be greater than 0.');
-  }
+  assertPositiveQuantity(payload.quantityUsed, 'Quantity used must be greater than 0.');
 
   assertRodPayload(payload.rods);
 
   const itemNumbers = payload.rods.map((rod) => rod.itemNumber);
   assertUniqueItemNumbers(itemNumbers);
 
-  const session = await mongoose.startSession();
-  let batch = null;
-  let consumption = null;
-  let rodStocks = [];
-
   try {
-    await session.withTransaction(async () => {
-      const rawMaterialStock = await RawMaterialStock.findById(payload.rawMaterialStockId).session(
+    return await runProductionTransaction(async (session) => {
+      const rawMaterialStock = await findRawMaterialStockOrThrow(
+        payload.rawMaterialStockId,
         session,
       );
-
-      if (!rawMaterialStock) {
-        throw createHttpError(404, 'Raw material stock not found.');
-      }
-
-      const nextRawMaterialQuantity = roundCurrency(
-        rawMaterialStock.quantity - payload.quantityUsed,
-      );
-
-      if (nextRawMaterialQuantity < 0) {
-        throw createHttpError(
-          400,
-          `Insufficient raw material stock for "${rawMaterialStock.itemName}". Available: ${rawMaterialStock.quantity}, required: ${payload.quantityUsed}.`,
-        );
-      }
 
       await assertItemNumbersAvailable(itemNumbers, session);
 
       const batchNumber = await generateBatchNumber(payload.dateTime, session);
-      const [createdBatch] = await RodProductionBatch.create(
-        [
-          {
-            rawMaterialItem: rawMaterialStock.itemName,
-            rawMaterialStockId: rawMaterialStock._id,
-            quantityUsed: payload.quantityUsed,
-            dateTime: payload.dateTime,
-            remarks: payload.remarks,
-            rods: payload.rods,
-            batchNumber,
-            batchId: batchNumber,
-            createdBy,
-          },
-        ],
-        { session },
-      );
-      batch = createdBatch;
 
-      const [createdConsumption] = await RawMaterialConsumption.create(
-        [
-          {
-            rawMaterialItem: rawMaterialStock.itemName,
-            rawMaterialStockId: rawMaterialStock._id,
-            rodProductionBatchId: batch._id,
-            quantityUsed: payload.quantityUsed,
-            dateTime: payload.dateTime,
-            remarks: payload.remarks,
-            createdBy,
-          },
-        ],
-        { session },
-      );
-      consumption = createdConsumption;
+      const batch = await createProductionBatch({
+        BatchModel: RodProductionBatch,
+        batchDocument: {
+          rawMaterialItem: rawMaterialStock.itemName,
+          rawMaterialStockId: rawMaterialStock._id,
+          quantityUsed: payload.quantityUsed,
+          dateTime: payload.dateTime,
+          remarks: payload.remarks,
+          rods: payload.rods,
+          batchNumber,
+          batchId: batchNumber,
+          createdBy,
+        },
+        session,
+      });
 
-      rawMaterialStock.quantity = nextRawMaterialQuantity;
-      await rawMaterialStock.save({ session });
+      const consumption = await createRawMaterialConsumption({
+        consumptionDocument: {
+          rawMaterialItem: rawMaterialStock.itemName,
+          rawMaterialStockId: rawMaterialStock._id,
+          rodProductionBatchId: batch._id,
+          quantityUsed: payload.quantityUsed,
+          dateTime: payload.dateTime,
+          remarks: payload.remarks,
+          createdBy,
+        },
+        session,
+      });
 
-      rodStocks = await RodStock.create(
-        payload.rods.map((rod) => ({
+      await deductRawMaterialStock({
+        rawMaterialStock,
+        quantityUsed: payload.quantityUsed,
+        session,
+      });
+
+      const rodStocks = await createFinishedStockItems({
+        StockModel: RodStock,
+        stockDocuments: payload.rods.map((rod) => ({
           itemNumber: rod.itemNumber,
           item: rod.item,
           size: rod.size,
@@ -200,28 +157,20 @@ export async function createRodProductionBatch({ payload, createdBy }) {
           productionDate: payload.dateTime,
           productionBatchId: batch._id,
         })),
-        {
-          session,
-          ordered: true,
-        },
+        session,
+      });
 
-      );
+      return {
+        batch,
+        consumption,
+        rodStocks,
+      };
     });
   } catch (error) {
-    await session.abortTransaction().catch(() => { });
-
     if (error.code === 11000) {
       throw createHttpError(409, 'Rod production contains a duplicate unique value.');
     }
 
     throw error;
-  } finally {
-    await session.endSession();
   }
-
-  return {
-    batch,
-    consumption,
-    rodStocks,
-  };
 }
