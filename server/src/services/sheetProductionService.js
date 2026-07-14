@@ -38,7 +38,7 @@ function parseSheetItemNumberSequence(itemNumber = '') {
   return match ? Number(match[1]) : 0;
 }
 
-async function getNextSheetItemNumbers(count, session) {
+async function getNextSheetItemNumbers(count, session, reservedItemNumbers = []) {
   if (count <= 0) {
     return [];
   }
@@ -49,14 +49,26 @@ async function getNextSheetItemNumbers(count, session) {
     .sort({ itemNumber: -1 })
     .session(session)
     .lean();
-  const start = parseSheetItemNumberSequence(latestStock?.itemNumber) + 1;
+  const latestSequence = parseSheetItemNumberSequence(latestStock?.itemNumber);
+  const reservedSequence = Math.max(
+    0,
+    ...reservedItemNumbers.map((itemNumber) => parseSheetItemNumberSequence(itemNumber)),
+  );
+  const start = Math.max(latestSequence, reservedSequence) + 1;
 
   return Array.from({ length: count }, (_, index) => formatSheetItemNumber(start + index));
 }
 
 async function assignSheetItemNumbers(sheets, session) {
   const missingCount = sheets.filter((sheet) => !sheet.itemNumber).length;
-  const generatedItemNumbers = await getNextSheetItemNumbers(missingCount, session);
+  const reservedItemNumbers = sheets
+    .map((sheet) => sheet.itemNumber)
+    .filter(Boolean);
+  const generatedItemNumbers = await getNextSheetItemNumbers(
+    missingCount,
+    session,
+    reservedItemNumbers,
+  );
   let generatedIndex = 0;
 
   return sheets.map((sheet) => {

@@ -105,8 +105,8 @@ export async function getSheetProduction(req, res) {
 }
 
 export async function listSheetProductions(req, res) {
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 10;
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
   const search = req.query.search?.trim();
   const filter = buildSearchFilter(search, sheetProductionSearchFields);
 
@@ -145,8 +145,8 @@ export async function getSheetStock(req, res) {
 }
 
 export async function listSheetStocks(req, res) {
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 10;
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 10);
   const search = req.query.search?.trim();
   const filter = buildSearchFilter(search, sheetStockSearchFields);
 
@@ -168,8 +168,8 @@ export async function listSheetStocks(req, res) {
 }
 
 export async function searchSheetStocks(req, res) {
-  const page = req.query.page || 1;
-  const limit = req.query.limit || 20;
+  const page = Number(req.query.page || 1);
+  const limit = Number(req.query.limit || 20);
   const search = req.query.q?.trim() || req.query.search?.trim();
   const filter = buildSearchFilter(search, sheetStockSearchFields);
 

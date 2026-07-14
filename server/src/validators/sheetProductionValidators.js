@@ -105,6 +105,11 @@ export const listSheetProductionValidator = [
 export const listSheetStockValidator = [...listSheetProductionValidator];
 
 export const searchSheetStockValidator = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer.')
+    .toInt(),
   query('q')
     .optional()
     .trim()
