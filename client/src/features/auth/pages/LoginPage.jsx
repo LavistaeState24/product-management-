@@ -100,12 +100,6 @@ function LoginPage() {
                 Sign In
               </Button>
             </form>
-
-            <div className="mt-6 rounded-3xl border border-border bg-background p-4">
-              <p className="text-sm font-semibold text-heading">Seed credentials</p>
-              <p className="mt-2 text-sm text-body">Email: boss@operationscrm.com</p>
-              <p className="text-sm text-body">Password: Boss@12345</p>
-            </div>
           </div>
         </section>
       </div>
