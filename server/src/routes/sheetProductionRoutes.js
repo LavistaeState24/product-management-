@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createSheetProduction,
   deleteSheetProduction,
+  getSheetProduction,
   listSheetProductions,
   updateSheetProduction,
 } from '../controllers/sheetProductionController.js';
@@ -12,6 +13,7 @@ import { PERMISSIONS } from '../utils/permissions.js';
 import {
   createSheetProductionValidator,
   deleteSheetProductionValidator,
+  getSheetProductionValidator,
   listSheetProductionValidator,
   updateSheetProductionValidator,
 } from '../validators/sheetProductionValidators.js';
@@ -26,6 +28,14 @@ router.get(
   listSheetProductionValidator,
   validateRequest,
   listSheetProductions,
+);
+
+router.get(
+  '/:id',
+  requirePermission(PERMISSIONS.canViewSheetProduction),
+  getSheetProductionValidator,
+  validateRequest,
+  getSheetProduction,
 );
 
 router.post(

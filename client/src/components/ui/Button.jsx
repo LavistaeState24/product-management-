@@ -16,6 +16,7 @@ const sizes = {
 };
 
 function Button({
+  as: Component = 'button',
   className,
   variant = 'primary',
   size = 'md',
@@ -25,7 +26,7 @@ function Button({
   ...props
 }) {
   return (
-    <button
+    <Component
       className={cn(
         'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60',
         variants[variant],
@@ -37,7 +38,7 @@ function Button({
     >
       {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
       <span>{children}</span>
-    </button>
+    </Component>
   );
 }
 

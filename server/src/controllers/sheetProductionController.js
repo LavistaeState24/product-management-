@@ -87,6 +87,23 @@ export async function deleteSheetProduction(req, res) {
   });
 }
 
+export async function getSheetProduction(req, res) {
+  const batch = await SheetProductionBatch.findById(req.params.id)
+    .populate('rawMaterialStockId')
+    .populate('createdBy', 'name email role')
+    .populate('updatedBy', 'name email role');
+
+  if (!batch) {
+    return res.status(404).json({
+      message: 'Sheet production batch not found.',
+    });
+  }
+
+  return res.status(200).json({
+    batch: formatSheetProductionBatch(batch),
+  });
+}
+
 export async function listSheetProductions(req, res) {
   const page = req.query.page || 1;
   const limit = req.query.limit || 10;
@@ -108,6 +125,22 @@ export async function listSheetProductions(req, res) {
   return res.status(200).json({
     items: items.map(formatSheetProductionBatch),
     pagination: buildPagination({ page, limit, totalItems }),
+  });
+}
+
+export async function getSheetStock(req, res) {
+  const stock = await SheetStock.findById(req.params.id)
+    .populate('productionBatchId')
+    .populate('createdBy', 'name email role');
+
+  if (!stock) {
+    return res.status(404).json({
+      message: 'Sheet stock not found.',
+    });
+  }
+
+  return res.status(200).json({
+    stock: formatSheetStock(stock),
   });
 }
 

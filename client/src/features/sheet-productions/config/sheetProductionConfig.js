@@ -1,0 +1,95 @@
+import { Factory } from 'lucide-react';
+
+export function createEmptySheet(index) {
+  return {
+    id: crypto.randomUUID(),
+    itemNumber: '',
+    itemName: '',
+    size: '',
+    colour: '',
+    weight: '',
+    quantity: '1',
+    isManualItemNumber: false,
+  };
+}
+
+export const sheetProductionFormConfig = {
+  moduleLabel: 'Module 2',
+  title: 'Sheet Production',
+  description: 'Consume raw material stock and create finished sheet inventory in one production batch.',
+  producedTitle: 'Sheet Production',
+  producedDescription: 'Add each sheet item produced in this batch before finishing production.',
+  collectionKey: 'sheets',
+  emptyRowsMessage: 'At least one sheet row is required.',
+  icon: Factory,
+  submitButtonLabel: 'Finish Production',
+  updateButtonLabel: 'Update Production',
+  submitErrorTitle: 'Unable to finish production',
+  successTitle: 'Production finished',
+  successDescription: 'Sheet stock and raw material consumption were updated.',
+  generateItemNumber: () => '',
+  createEmptyRow: createEmptySheet,
+  normalizeInitialRow: (row) => ({
+    itemNumber: row.itemNumber || '',
+    itemName: row.itemName || '',
+    size: row.size || '',
+    colour: row.colour || '',
+    weight: String(row.weight || ''),
+    quantity: String(row.quantity || '1'),
+  }),
+  mapRowToPayload: (sheet) => ({
+    itemNumber: sheet.itemNumber.trim(),
+    itemName: sheet.itemName.trim(),
+    size: sheet.size.trim(),
+    colour: sheet.colour.trim(),
+    weight: Number(sheet.weight),
+    quantity: Number(sheet.quantity),
+  }),
+  fields: [
+    {
+      key: 'itemNumber',
+      heading: 'Item Number',
+      placeholder: 'Auto-generated',
+      validationLabel: 'Item number',
+    },
+    {
+      key: 'itemName',
+      heading: 'Item Name',
+      placeholder: 'Sheet item',
+      required: true,
+      validationLabel: 'Item name',
+    },
+    {
+      key: 'size',
+      heading: 'Size',
+      placeholder: 'Size',
+      required: true,
+      validationLabel: 'Size',
+    },
+    {
+      key: 'colour',
+      heading: 'Colour',
+      placeholder: 'Colour',
+      required: true,
+      validationLabel: 'Colour',
+    },
+    {
+      key: 'weight',
+      heading: 'Weight (Kg)',
+      placeholder: '0.00',
+      type: 'number',
+      min: '0.01',
+      step: '0.01',
+      validationLabel: 'Weight',
+    },
+    {
+      key: 'quantity',
+      heading: 'Quantity',
+      placeholder: '1',
+      type: 'number',
+      min: '1',
+      step: '1',
+      validationLabel: 'Quantity',
+    },
+  ],
+};

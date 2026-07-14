@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  getSheetStock,
   listSheetStocks,
   searchSheetStocks,
 } from '../controllers/sheetProductionController.js';
@@ -8,6 +9,7 @@ import { requirePermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import { PERMISSIONS } from '../utils/permissions.js';
 import {
+  getSheetStockValidator,
   listSheetStockValidator,
   searchSheetStockValidator,
 } from '../validators/sheetProductionValidators.js';
@@ -30,6 +32,14 @@ router.get(
   listSheetStockValidator,
   validateRequest,
   listSheetStocks,
+);
+
+router.get(
+  '/:id',
+  requirePermission(PERMISSIONS.canViewSheetStock),
+  getSheetStockValidator,
+  validateRequest,
+  getSheetStock,
 );
 
 export default router;
