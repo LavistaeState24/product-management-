@@ -20,6 +20,22 @@ const SaleInvoicePreviewPage = lazy(() => import('@/features/sales/pages/SaleInv
 const StockManagementPage = lazy(() => import('@/features/stock/pages/StockManagementPage'));
 const RodProductionPage = lazy(() => import('@/features/rod-productions/pages/RodProductionPage'));
 const RodStockPage = lazy(() => import('@/features/rod-productions/pages/RodStockPage'));
+const SheetProductionListPage = lazy(
+  () => import('@/features/sheet-productions/pages/SheetProductionListPage'),
+);
+const AddSheetProductionPage = lazy(
+  () => import('@/features/sheet-productions/pages/AddSheetProductionPage'),
+);
+const SheetProductionDetailsPage = lazy(
+  () => import('@/features/sheet-productions/pages/SheetProductionDetailsPage'),
+);
+const EditSheetProductionPage = lazy(
+  () => import('@/features/sheet-productions/pages/EditSheetProductionPage'),
+);
+const SheetStockPage = lazy(() => import('@/features/sheet-productions/pages/SheetStockPage'));
+const SheetStockDetailsPage = lazy(
+  () => import('@/features/sheet-productions/pages/SheetStockDetailsPage'),
+);
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
 const ForbiddenPage = lazy(() => import('@/routes/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/routes/NotFoundPage'));
@@ -68,6 +84,20 @@ function AppRouter() {
             </Route>
             <Route element={<ProtectedRoute permission={PERMISSIONS.canManageStock} />}>
               <Route path="/rod-productions" element={<RodProductionPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewSheetProduction} />}>
+              <Route path="/sheet-productions" element={<SheetProductionListPage />} />
+              <Route path="/sheet-productions/:productionId" element={<SheetProductionDetailsPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canCreateSheetProduction} />}>
+              <Route path="/sheet-productions/new" element={<AddSheetProductionPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canUpdateSheetProduction} />}>
+              <Route path="/sheet-productions/:productionId/edit" element={<EditSheetProductionPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewSheetStock} />}>
+              <Route path="/sheet-stock" element={<SheetStockPage />} />
+              <Route path="/sheet-stock/:stockId" element={<SheetStockDetailsPage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
           </Route>

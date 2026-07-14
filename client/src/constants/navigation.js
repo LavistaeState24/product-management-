@@ -52,4 +52,16 @@ export const SIDEBAR_ITEMS = [
     icon: PackageSearch,
     permission: PERMISSIONS.canViewStock,
   },
+  {
+    label: 'Sheet Production',
+    path: '/sheet-productions',
+    icon: Factory,
+    permission: PERMISSIONS.canViewSheetProduction,
+  },
+  {
+    label: 'Sheet Stock',
+    path: '/sheet-stock',
+    icon: PackageSearch,
+    permission: PERMISSIONS.canViewSheetStock,
+  },
 ];

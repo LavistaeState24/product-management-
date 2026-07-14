@@ -85,6 +85,14 @@ export const deleteSheetProductionValidator = [
   param('id').isMongoId().withMessage('Sheet production id must be a valid identifier.'),
 ];
 
+export const getSheetProductionValidator = [
+  param('id').isMongoId().withMessage('Sheet production id must be a valid identifier.'),
+];
+
+export const getSheetStockValidator = [
+  param('id').isMongoId().withMessage('Sheet stock id must be a valid identifier.'),
+];
+
 export const listSheetProductionValidator = [
   ...listPaginationValidators,
   query('search')
