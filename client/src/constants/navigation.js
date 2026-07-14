@@ -59,6 +59,12 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewSheetProduction,
   },
   {
+    label: 'Add Sheet Production',
+    path: '/sheet-productions/new',
+    icon: Factory,
+    permission: PERMISSIONS.canCreateSheetProduction,
+  },
+  {
     label: 'Sheet Stock',
     path: '/sheet-stock',
     icon: PackageSearch,
