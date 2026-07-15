@@ -126,29 +126,90 @@ export async function findRawMaterialStockOrThrow(rawMaterialStockId, session) {
   return rawMaterialStock;
 }
 
-export function validateRawMaterialAvailability(rawMaterialStock, quantityUsed) {
-  const nextRawMaterialQuantity = roundCurrency(rawMaterialStock.quantity - quantityUsed);
+export async function findStockByIdOrThrow({
+  StockModel,
+  stockId,
+  session,
+  notFoundMessage,
+}) {
+  const stock = await StockModel.findById(stockId).session(session);
 
-  if (nextRawMaterialQuantity < 0) {
+  if (!stock) {
+    throw createHttpError(404, notFoundMessage);
+  }
+
+  return stock;
+}
+
+export function validateStockAvailability({
+  stock,
+  quantityUsed,
+  itemLabel = 'stock',
+  quantityField = 'quantity',
+}) {
+  const nextQuantity = roundCurrency(stock[quantityField] - quantityUsed);
+
+  if (nextQuantity < 0) {
     throw createHttpError(
       400,
-      `Insufficient raw material stock for "${rawMaterialStock.itemName}". Available: ${rawMaterialStock.quantity}, required: ${quantityUsed}.`,
+      `Insufficient ${itemLabel} for "${stock.itemName}". Available: ${stock[quantityField]}, required: ${quantityUsed}.`,
     );
   }
 
-  return nextRawMaterialQuantity;
+  return nextQuantity;
+}
+
+export function validateRawMaterialAvailability(rawMaterialStock, quantityUsed) {
+  return validateStockAvailability({
+    stock: rawMaterialStock,
+    quantityUsed,
+    itemLabel: 'raw material stock',
+  });
+}
+
+export async function deductStock({
+  stock,
+  quantityUsed,
+  session,
+  itemLabel = 'stock',
+  quantityField = 'quantity',
+}) {
+  stock[quantityField] = validateStockAvailability({
+    stock,
+    quantityUsed,
+    itemLabel,
+    quantityField,
+  });
+  await stock.save({ session });
+  return stock;
 }
 
 export async function deductRawMaterialStock({ rawMaterialStock, quantityUsed, session }) {
-  rawMaterialStock.quantity = validateRawMaterialAvailability(rawMaterialStock, quantityUsed);
-  await rawMaterialStock.save({ session });
-  return rawMaterialStock;
+  return deductStock({
+    stock: rawMaterialStock,
+    quantityUsed,
+    session,
+    itemLabel: 'raw material stock',
+  });
+}
+
+export async function restoreStock({
+  stock,
+  quantity,
+  session,
+  quantityField = 'quantity',
+}) {
+  stock[quantityField] = roundCurrency(stock[quantityField] + quantity);
+  await stock.save({ session });
+  return stock;
 }
 
 export async function restoreRawMaterialStock({ rawMaterialStock, quantity, session }) {
-  rawMaterialStock.quantity = roundCurrency(rawMaterialStock.quantity + quantity);
-  await rawMaterialStock.save({ session });
-  return rawMaterialStock;
+  return restoreStock({
+    stock: rawMaterialStock,
+    quantity,
+    session,
+  });
 }
 
 export async function createProductionBatch({ BatchModel, batchDocument, session }) {

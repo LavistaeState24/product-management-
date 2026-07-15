@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import authRoutes from './authRoutes.js';
 import purchaseRoutes from './purchaseRoutes.js';
+import puProductManufacturingRoutes from './puProductManufacturingRoutes.js';
+import puProductStockRoutes from './puProductStockRoutes.js';
 import rodProductionRoutes from './rodProductionRoutes.js';
 import rodStockRoutes from './rodStockRoutes.js';
 import saleRoutes from './saleRoutes.js';
@@ -18,6 +20,8 @@ router.get('/health', (req, res) => {
 
 router.use('/auth', authRoutes);
 router.use('/purchases', purchaseRoutes);
+router.use('/pu-product-manufacturing', puProductManufacturingRoutes);
+router.use('/pu-product-stock', puProductStockRoutes);
 router.use('/rod-productions', rodProductionRoutes);
 router.use('/rod-stocks', rodStockRoutes);
 router.use('/sales', saleRoutes);
