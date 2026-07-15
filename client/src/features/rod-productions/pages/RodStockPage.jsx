@@ -12,7 +12,10 @@ const rodStockConfig = {
   itemFilterPlaceholder: 'Item',
   itemColumnTitle: 'Item',
   itemNameKey: 'item',
-  weightKey: 'weightKg',
+  metricKey: 'weightKg',
+  metricParam: 'weight',
+  metricColumnTitle: 'Weight (Kg)',
+  metricFilterPlaceholder: 'Weight',
   headerIcon: Warehouse,
   emptyIcon: PackageSearch,
   loadingText: 'Loading rod stock...',
@@ -23,7 +26,7 @@ const rodStockConfig = {
   emptyDescription: 'Finished rods appear here after rod production is completed.',
   fetchStock: fetchRodStocks,
   getItemName: (item) => item.item || '',
-  getWeight: (item) => item.weightKg,
+  getMetricValue: (item) => item.weightKg,
 };
 
 function RodStockPage() {

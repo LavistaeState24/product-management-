@@ -70,4 +70,22 @@ export const SIDEBAR_ITEMS = [
     icon: PackageSearch,
     permission: PERMISSIONS.canViewSheetStock,
   },
+  {
+    label: 'PU Manufacturing',
+    path: '/pu-product-manufacturing',
+    icon: Factory,
+    permission: PERMISSIONS.canViewStock,
+  },
+  {
+    label: 'Add PU Manufacturing',
+    path: '/pu-product-manufacturing/new',
+    icon: Factory,
+    permission: PERMISSIONS.canManageStock,
+  },
+  {
+    label: 'PU Product Stock',
+    path: '/pu-product-stock',
+    icon: PackageSearch,
+    permission: PERMISSIONS.canViewStock,
+  },
 ];
