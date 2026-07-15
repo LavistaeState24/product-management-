@@ -36,6 +36,24 @@ const SheetStockPage = lazy(() => import('@/features/sheet-productions/pages/She
 const SheetStockDetailsPage = lazy(
   () => import('@/features/sheet-productions/pages/SheetStockDetailsPage'),
 );
+const PUProductManufacturingListPage = lazy(
+  () => import('@/features/pu-product-manufacturing/pages/PUProductManufacturingListPage'),
+);
+const AddPUProductManufacturingPage = lazy(
+  () => import('@/features/pu-product-manufacturing/pages/AddPUProductManufacturingPage'),
+);
+const PUProductManufacturingDetailsPage = lazy(
+  () => import('@/features/pu-product-manufacturing/pages/PUProductManufacturingDetailsPage'),
+);
+const EditPUProductManufacturingPage = lazy(
+  () => import('@/features/pu-product-manufacturing/pages/EditPUProductManufacturingPage'),
+);
+const PUProductStockPage = lazy(
+  () => import('@/features/pu-product-manufacturing/pages/PUProductStockPage'),
+);
+const PUProductStockDetailsPage = lazy(
+  () => import('@/features/pu-product-manufacturing/pages/PUProductStockDetailsPage'),
+);
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
 const ForbiddenPage = lazy(() => import('@/routes/ForbiddenPage'));
 const NotFoundPage = lazy(() => import('@/routes/NotFoundPage'));
@@ -98,6 +116,16 @@ function AppRouter() {
             <Route element={<ProtectedRoute permission={PERMISSIONS.canViewSheetStock} />}>
               <Route path="/sheet-stock" element={<SheetStockPage />} />
               <Route path="/sheet-stock/:stockId" element={<SheetStockDetailsPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewStock} />}>
+              <Route path="/pu-product-manufacturing" element={<PUProductManufacturingListPage />} />
+              <Route path="/pu-product-manufacturing/:manufacturingId" element={<PUProductManufacturingDetailsPage />} />
+              <Route path="/pu-product-stock" element={<PUProductStockPage />} />
+              <Route path="/pu-product-stock/:stockId" element={<PUProductStockDetailsPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canManageStock} />}>
+              <Route path="/pu-product-manufacturing/new" element={<AddPUProductManufacturingPage />} />
+              <Route path="/pu-product-manufacturing/:manufacturingId/edit" element={<EditPUProductManufacturingPage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
           </Route>

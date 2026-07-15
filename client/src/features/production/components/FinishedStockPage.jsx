@@ -6,6 +6,7 @@ import EmptyState from '@/components/ui/EmptyState';
 import Input from '@/components/ui/Input';
 import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
+import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import { formatDateTime } from '@/features/purchases/utils/purchaseHelpers';
 import { useToast } from '@/hooks/useToast';
@@ -30,7 +31,8 @@ function buildInitialFilters(searchParams) {
     item: searchParams.get('item') || '',
     size: searchParams.get('size') || '',
     colour: searchParams.get('colour') || '',
-    weight: searchParams.get('weight') || '',
+    metric: searchParams.get('metric') || searchParams.get('weight') || searchParams.get('sellingUnit') || '',
+    sort: searchParams.get('sort') || '',
   };
 }
 
@@ -62,7 +64,7 @@ function FinishedStockPage({ config }) {
       setLoading(true);
 
       try {
-        const hasColumnFilters = ['itemNumber', 'item', 'size', 'colour', 'weight'].some((key) =>
+        const hasColumnFilters = ['itemNumber', 'item', 'size', 'colour', 'metric', 'weight', 'sellingUnit'].some((key) =>
           searchParams.get(key),
         );
         const data = await config.fetchStock({
@@ -93,7 +95,7 @@ function FinishedStockPage({ config }) {
   }, [config, searchParams, toast]);
 
   const visibleItems = useMemo(() => {
-    return state.items.filter((item) => {
+    const filteredItems = state.items.filter((item) => {
       const itemNumberMatch = item.itemNumber
         .toLowerCase()
         .includes(filters.itemNumber.trim().toLowerCase());
@@ -101,11 +103,35 @@ function FinishedStockPage({ config }) {
       const itemMatch = itemName.toLowerCase().includes(filters.item.trim().toLowerCase());
       const sizeMatch = item.size.toLowerCase().includes(filters.size.trim().toLowerCase());
       const colourMatch = item.colour.toLowerCase().includes(filters.colour.trim().toLowerCase());
-      const weightMatch = filters.weight.trim()
-        ? String(config.getWeight(item)).includes(filters.weight.trim())
+      const metricMatch = filters.metric.trim()
+        ? String(config.getMetricValue(item)).toLowerCase().includes(filters.metric.trim().toLowerCase())
         : true;
 
-      return itemNumberMatch && itemMatch && sizeMatch && colourMatch && weightMatch;
+      return itemNumberMatch && itemMatch && sizeMatch && colourMatch && metricMatch;
+    });
+
+    if (!filters.sort) return filteredItems;
+
+    const [field, direction = 'asc'] = filters.sort.split(':');
+    const sortConfig = config.sortOptions?.find((option) => option.value === filters.sort);
+
+    if (!sortConfig) return filteredItems;
+
+    return [...filteredItems].sort((left, right) => {
+      const leftValue = sortConfig.getValue ? sortConfig.getValue(left) : left[field];
+      const rightValue = sortConfig.getValue ? sortConfig.getValue(right) : right[field];
+      const leftComparable =
+        leftValue instanceof Date || typeof leftValue === 'number'
+          ? Number(leftValue)
+          : String(leftValue ?? '').toLowerCase();
+      const rightComparable =
+        rightValue instanceof Date || typeof rightValue === 'number'
+          ? Number(rightValue)
+          : String(rightValue ?? '').toLowerCase();
+
+      if (leftComparable < rightComparable) return direction === 'asc' ? -1 : 1;
+      if (leftComparable > rightComparable) return direction === 'asc' ? 1 : -1;
+      return 0;
     });
   }, [config, filters, state.items]);
 
@@ -139,9 +165,9 @@ function FinishedStockPage({ config }) {
         render: (value) => value || 'Not available',
       },
       {
-        key: config.weightKey,
-        title: 'Weight (Kg)',
-        render: (value) => formatStockNumber(value),
+        key: config.metricKey,
+        title: config.metricColumnTitle,
+        render: (value) => (config.formatMetric ? config.formatMetric(value) : formatStockNumber(value)),
       },
       {
         key: 'quantity',
@@ -149,13 +175,13 @@ function FinishedStockPage({ config }) {
         render: (value) => formatStockNumber(value),
       },
       {
-        key: 'productionDate',
-        title: 'Production Date',
+        key: config.dateKey || 'productionDate',
+        title: config.dateColumnTitle || 'Production Date',
         render: (value) => formatDateTime(value),
       },
       {
-        key: 'productionBatchId',
-        title: 'Production Batch ID',
+        key: config.batchKey || 'productionBatchId',
+        title: config.batchColumnTitle || 'Production Batch ID',
         render: (value) => resolveBatchId(value),
       },
     ],
@@ -171,7 +197,10 @@ function FinishedStockPage({ config }) {
     if (filters.item.trim()) nextParams.set('item', filters.item.trim());
     if (filters.size.trim()) nextParams.set('size', filters.size.trim());
     if (filters.colour.trim()) nextParams.set('colour', filters.colour.trim());
-    if (filters.weight.trim()) nextParams.set('weight', filters.weight.trim());
+    if (filters.metric.trim()) {
+      nextParams.set(config.metricParam || 'metric', filters.metric.trim());
+    }
+    if (filters.sort) nextParams.set('sort', filters.sort);
 
     nextParams.set('page', '1');
     setSearchParams(nextParams);
@@ -184,7 +213,8 @@ function FinishedStockPage({ config }) {
       item: '',
       size: '',
       colour: '',
-      weight: '',
+      metric: '',
+      sort: '',
     });
     setSearchParams({ page: '1' });
   }
@@ -195,7 +225,8 @@ function FinishedStockPage({ config }) {
       filters.item ||
       filters.size ||
       filters.colour ||
-      filters.weight,
+      filters.metric ||
+      filters.sort,
   );
 
   return (
@@ -252,12 +283,22 @@ function FinishedStockPage({ config }) {
             placeholder="Colour"
           />
           <Input
-            value={filters.weight}
+            value={filters.metric}
             onChange={(event) =>
-              setFilters((current) => ({ ...current, weight: event.target.value }))
+              setFilters((current) => ({ ...current, metric: event.target.value }))
             }
-            placeholder="Weight"
+            placeholder={config.metricFilterPlaceholder}
           />
+          {config.sortOptions?.length ? (
+            <Select
+              value={filters.sort}
+              onChange={(event) =>
+                setFilters((current) => ({ ...current, sort: event.target.value }))
+              }
+              options={config.sortOptions}
+              placeholder="Sort"
+            />
+          ) : null}
           <Button type="submit">Apply</Button>
           <Button type="button" variant="outline" onClick={resetFilters}>
             Reset

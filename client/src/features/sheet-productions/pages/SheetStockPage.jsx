@@ -15,7 +15,10 @@ const sheetStockConfig = {
   itemFilterPlaceholder: 'Item name',
   itemColumnTitle: 'Item Name',
   itemNameKey: 'itemName',
-  weightKey: 'weight',
+  metricKey: 'weight',
+  metricParam: 'weight',
+  metricColumnTitle: 'Weight (Kg)',
+  metricFilterPlaceholder: 'Weight',
   headerIcon: Warehouse,
   emptyIcon: PackageSearch,
   loadingText: 'Loading sheet stock...',
@@ -26,7 +29,7 @@ const sheetStockConfig = {
   emptyDescription: 'Finished sheets appear here after sheet production is completed.',
   fetchStock: (params) => (params?.search ? searchSheetStocks(params) : fetchSheetStocks(params)),
   getItemName: (item) => item.itemName || '',
-  getWeight: (item) => item.weight,
+  getMetricValue: (item) => item.weight,
   getItemLink: (item) => `/sheet-stock/${item.id}`,
 };
 
