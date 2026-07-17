@@ -6,6 +6,7 @@ import {
   ReceiptText,
   ShieldCheck,
   ShoppingCart,
+  Warehouse,
 } from 'lucide-react';
 import { PERMISSIONS } from '@/constants/permissions';
 
@@ -38,6 +39,12 @@ export const SIDEBAR_ITEMS = [
     label: 'Stock',
     path: '/stock',
     icon: Boxes,
+    permission: PERMISSIONS.canViewStock,
+  },
+  {
+    label: 'Finished Goods',
+    path: '/finished-goods-stock',
+    icon: Warehouse,
     permission: PERMISSIONS.canViewStock,
   },
   {
