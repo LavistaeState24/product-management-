@@ -1,7 +1,7 @@
-import Product from '../models/Product.js';
 import PUProductStock from '../models/PUProductStock.js';
 import RodStock from '../models/RodStock.js';
 import SheetStock from '../models/SheetStock.js';
+import { createHttpError } from '../utils/httpError.js';
 import { buildPagination, buildSearchFilter } from '../utils/queryHelpers.js';
 
 const LOW_STOCK_THRESHOLD = 10;
@@ -22,7 +22,7 @@ const TYPE_ALIASES = {
   'pu-product': 'puProduct',
 };
 
-const DEFAULT_TYPES = ['rod', 'sheet', 'puProduct'];
+const DEFAULT_TYPES = ['rod', 'sheet', 'rodProduct', 'sheetProduct', 'puProduct'];
 
 const TYPE_CONFIGS = {
   rod: {
@@ -50,16 +50,10 @@ const TYPE_CONFIGS = {
     normalize: normalizeSheetStock,
   },
   rodProduct: {
-    Model: Product,
-    searchFields: ['name', { field: 'currentStock', type: 'number' }],
-    filter: { isActive: true },
-    normalize: (stock) => normalizeProductStock(stock, 'rodProduct'),
+    missing: true,
   },
   sheetProduct: {
-    Model: Product,
-    searchFields: ['name', { field: 'currentStock', type: 'number' }],
-    filter: { isActive: true },
-    normalize: (stock) => normalizeProductStock(stock, 'sheetProduct'),
+    missing: true,
   },
   puProduct: {
     Model: PUProductStock,
@@ -117,25 +111,6 @@ function normalizeSheetStock(stock) {
   };
 }
 
-function normalizeProductStock(stock, type) {
-  return {
-    id: `${type}:${stock._id}`,
-    stockId: stock._id,
-    type: type === 'rodProduct' ? 'rod-product' : 'sheet-product',
-    itemNumber: '',
-    productName: stock.name,
-    size: '',
-    colour: '',
-    weight: null,
-    quantity: stock.currentStock,
-    sellingUnit: null,
-    productionBatch: null,
-    productionDate: stock.updatedAt,
-    stockType: STOCK_TYPES[type],
-    updatedAt: stock.updatedAt,
-  };
-}
-
 function normalizePUProductStock(stock) {
   return {
     id: `pu-product:${stock._id}`,
@@ -165,7 +140,15 @@ function getRequestedTypes(type) {
   }
 
   const normalizedType = normalizeType(type);
-  return normalizedType ? [normalizedType] : [];
+
+  if (!normalizedType) {
+    throw createHttpError(
+      400,
+      'Type must be rod, sheet, rod-product, sheet-product, or pu-product.',
+    );
+  }
+
+  return [normalizedType];
 }
 
 function buildTypeFilter({ config, search }) {
@@ -177,6 +160,11 @@ function buildTypeFilter({ config, search }) {
 
 async function fetchTypeData({ type, search }) {
   const config = TYPE_CONFIGS[type];
+
+  if (config.missing) {
+    return [];
+  }
+
   let query = config.Model.find(buildTypeFilter({ config, search }));
 
   (config.populate || []).forEach((populateConfig) => {
@@ -232,17 +220,51 @@ function sortStockItems(items, { sortBy = 'productionDate', sortOrder = 'desc' }
   });
 }
 
+function createEmptyTypeSummary() {
+  return {
+    rod: {
+      stockType: STOCK_TYPES.rod,
+      totalItems: 0,
+      totalQuantity: 0,
+      lowStock: 0,
+      outOfStock: 0,
+    },
+    sheet: {
+      stockType: STOCK_TYPES.sheet,
+      totalItems: 0,
+      totalQuantity: 0,
+      lowStock: 0,
+      outOfStock: 0,
+    },
+    'rod-product': {
+      stockType: STOCK_TYPES.rodProduct,
+      totalItems: 0,
+      totalQuantity: 0,
+      lowStock: 0,
+      outOfStock: 0,
+    },
+    'sheet-product': {
+      stockType: STOCK_TYPES.sheetProduct,
+      totalItems: 0,
+      totalQuantity: 0,
+      lowStock: 0,
+      outOfStock: 0,
+    },
+    'pu-product': {
+      stockType: STOCK_TYPES.puProduct,
+      totalItems: 0,
+      totalQuantity: 0,
+      lowStock: 0,
+      outOfStock: 0,
+    },
+  };
+}
+
 function buildTypeSummary(items) {
-  return items.reduce((summary, item) => {
-    if (!summary[item.type]) {
-      summary[item.type] = {
-        stockType: item.stockType,
-        totalItems: 0,
-        totalQuantity: 0,
-        lowStock: 0,
-        outOfStock: 0,
-      };
-    }
+  const summary = createEmptyTypeSummary();
+
+  items.forEach((item) => {
+    if (!summary[item.type]) return;
 
     summary[item.type].totalItems += 1;
     summary[item.type].totalQuantity += Number(item.quantity || 0);
@@ -253,11 +275,13 @@ function buildTypeSummary(items) {
       summary[item.type].lowStock += 1;
     }
 
-    return summary;
-  }, {});
+  });
+
+  return summary;
 }
 
 function buildSummary(items) {
+  const byType = buildTypeSummary(items);
   const outOfStock = items.filter((item) => Number(item.quantity || 0) === 0).length;
   const lowStock = items.filter(
     (item) => Number(item.quantity || 0) > 0 && Number(item.quantity || 0) <= LOW_STOCK_THRESHOLD,
@@ -266,10 +290,15 @@ function buildSummary(items) {
   return {
     totalItems: items.length,
     totalQuantity: items.reduce((total, item) => total + Number(item.quantity || 0), 0),
+    totalRodStock: byType.rod.totalItems,
+    totalSheetStock: byType.sheet.totalItems,
+    totalRodProductStock: byType['rod-product'].totalItems,
+    totalSheetProductStock: byType['sheet-product'].totalItems,
+    totalPUProductStock: byType['pu-product'].totalItems,
     lowStock,
     outOfStock,
     lowStockThreshold: LOW_STOCK_THRESHOLD,
-    byType: buildTypeSummary(items),
+    byType,
   };
 }
 
@@ -284,16 +313,20 @@ export async function listFinishedGoodsStock({
   const normalizedPage = Number(page) || 1;
   const normalizedLimit = Number(limit) || 10;
   const requestedTypes = getRequestedTypes(type);
-  const typeData = await Promise.all(
-    requestedTypes.map((stockType) => fetchTypeData({ type: stockType, search })),
+  const allTypeData = await Promise.all(
+    DEFAULT_TYPES.map((stockType) => fetchTypeData({ type: stockType, search })),
   );
-  const allItems = dedupeByTypeAndStockId(typeData.flat());
+  const allItems = dedupeByTypeAndStockId(allTypeData.flat());
+  const dataItems = allItems.filter((item) => {
+    if (!type) return true;
+    return requestedTypes.includes(TYPE_ALIASES[item.type]);
+  });
 
   if (allItems.some(hasInvalidQuantity)) {
     throw new Error('Finished goods stock contains a negative quantity.');
   }
 
-  const sortedItems = sortStockItems(allItems, { sortBy, sortOrder });
+  const sortedItems = sortStockItems(dataItems, { sortBy, sortOrder });
   const totalItems = sortedItems.length;
   const skip = (normalizedPage - 1) * normalizedLimit;
 
