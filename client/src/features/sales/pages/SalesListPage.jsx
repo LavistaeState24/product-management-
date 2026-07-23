@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FileText, PackageSearch, Pencil, Plus, ReceiptText, Trash2 } from 'lucide-react';
+import { Ban, FileText, PackageSearch, Pencil, Plus, ReceiptText } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -9,9 +9,10 @@ import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
+import Textarea from '@/components/ui/Textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
-import { deleteSale, fetchSales } from '@/features/sales/services/saleService';
+import { cancelSale, fetchSales } from '@/features/sales/services/saleService';
 import {
   formatCurrency,
   formatDate,
@@ -47,8 +48,9 @@ function SalesListPage() {
     },
   });
   const [loading, setLoading] = useState(true);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     paymentType: searchParams.get('paymentType') || '',
@@ -105,22 +107,17 @@ function SalesListPage() {
     () => [
       {
         key: 'invoiceNumber',
-        title: 'Invoice',
+        title: 'Invoice Number',
       },
       {
         key: 'customer',
-        title: 'Customer',
-        render: (value) => value?.name,
+        title: 'Party',
+        render: (value, row) => row.customerName || value?.name || '-',
       },
       {
-        key: 'product',
-        title: 'Product',
-        render: (value, row) => (
-          <div>
-            <p className="font-semibold text-heading">{value?.name}</p>
-            <p className="text-xs text-body">Qty {row.quantity}</p>
-          </div>
-        ),
+        key: 'customerMobile',
+        title: 'Mobile',
+        render: (value, row) => value || row.customer?.mobile || '-',
       },
       {
         key: 'invoiceDate',
@@ -128,24 +125,37 @@ function SalesListPage() {
         render: (value) => formatDate(value),
       },
       {
-        key: 'paymentType',
-        title: 'Payment',
-        render: (value) => <Badge variant={getPaymentBadgeVariant(value)}>{value}</Badge>,
-      },
-      {
-        key: 'invoiceStatus',
-        title: 'Status',
-        render: (value) => <Badge variant={getInvoiceStatusBadgeVariant(value)}>{value}</Badge>,
-      },
-      {
         key: 'totalAmount',
         title: 'Total',
-        render: (value) => formatCurrency(value),
+        render: (value, row) => formatCurrency(value ?? row.grandTotal),
+      },
+      {
+        key: 'paidAmount',
+        title: 'Paid',
+        render: (value, row) => formatCurrency(value ?? row.paid),
       },
       {
         key: 'outstandingAmount',
         title: 'Outstanding',
-        render: (value) => formatCurrency(value),
+        render: (value, row) => formatCurrency(value ?? row.outstanding),
+      },
+      {
+        key: 'paymentStatus',
+        title: 'Payment Status',
+        render: (value, row) => (
+          <Badge variant={getPaymentBadgeVariant(row.paymentType)}>
+            {value || row.paymentType || '-'}
+          </Badge>
+        ),
+      },
+      {
+        key: 'invoiceStatus',
+        title: 'Invoice Status',
+        render: (value) => (
+          <Badge variant={getInvoiceStatusBadgeVariant(value)}>
+            {value || '-'}
+          </Badge>
+        ),
       },
       {
         key: 'actions',
@@ -160,7 +170,7 @@ function SalesListPage() {
             <Link to={`/sales/${row.id}/invoice`}>
               <Button type="button" size="sm" variant="ghost">
                 <ReceiptText className="h-4 w-4" />
-                Invoice
+                Print
               </Button>
             </Link>
             {hasPermission(PERMISSIONS.canEditSales) ? (
@@ -171,15 +181,18 @@ function SalesListPage() {
                 </Button>
               </Link>
             ) : null}
-            {hasPermission(PERMISSIONS.canDeleteSales) ? (
+            {hasPermission(PERMISSIONS.canDeleteSales) && row.invoiceStatus !== 'Cancelled' ? (
               <Button
                 type="button"
                 size="sm"
                 variant="danger"
-                onClick={() => setDeleteTarget(row)}
+                onClick={() => {
+                  setCancelTarget(row);
+                  setCancelReason('');
+                }}
               >
-                <Trash2 className="h-4 w-4" />
-                Delete
+                <Ban className="h-4 w-4" />
+                Cancel
               </Button>
             ) : null}
           </div>
@@ -219,30 +232,39 @@ function SalesListPage() {
     setSearchParams({ page: '1' });
   }
 
-  async function handleDeleteSale() {
-    if (!deleteTarget) {
+  async function handleCancelSale() {
+    if (!cancelTarget) {
       return;
     }
 
-    setDeleteLoading(true);
+    const reason = cancelReason.trim();
+
+    if (!reason) {
+      toast.error('Cancellation reason required', 'Enter a reason before cancelling this sale.');
+      return;
+    }
+
+    setCancelLoading(true);
 
     try {
-      await deleteSale(deleteTarget.id);
-      toast.success('Sale deleted', 'Stock and receivables were adjusted successfully.');
-      const deletedId = deleteTarget.id;
+      const data = await cancelSale(cancelTarget.id, reason);
+      toast.success('Sale cancelled', 'Stock and receivables were adjusted successfully.');
+      const cancelledId = cancelTarget.id;
+      const updatedSale = data.sale;
       setState((current) => ({
         ...current,
-        items: current.items.filter((item) => item.id !== deletedId),
-        pagination: {
-          ...current.pagination,
-          totalItems: Math.max(current.pagination.totalItems - 1, 0),
-        },
+        items: current.items.map((item) =>
+          item.id === cancelledId
+            ? { ...item, ...updatedSale }
+            : item,
+        ),
       }));
-      setDeleteTarget(null);
+      setCancelTarget(null);
+      setCancelReason('');
     } catch (error) {
-      toast.error('Unable to delete sale', getApiErrorMessage(error));
+      toast.error('Unable to cancel sale', getApiErrorMessage(error));
     } finally {
-      setDeleteLoading(false);
+      setCancelLoading(false);
     }
   }
 
@@ -260,7 +282,7 @@ function SalesListPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.24em] text-primary">Sales Module</p>
-            <h1 className="mt-2 text-3xl font-bold text-heading">Sales</h1>
+            <h1 className="mt-2 text-3xl font-bold text-heading">Sales & Billing</h1>
             <p className="mt-2 max-w-2xl text-sm text-body">
               Track invoices, reduce stock automatically, and monitor outstanding customer balances.
             </p>
@@ -369,28 +391,37 @@ function SalesListPage() {
       </section>
 
       <Modal
-        open={Boolean(deleteTarget)}
-        title="Delete sale"
-        description="This will restore stock for the sold quantity and remove any linked receivable."
-        onClose={() => !deleteLoading && setDeleteTarget(null)}
+        open={Boolean(cancelTarget)}
+        title="Cancel sale"
+        description="This keeps the invoice history and restores stock through the backend transaction."
+        onClose={() => !cancelLoading && setCancelTarget(null)}
       >
         <div className="space-y-4">
           <p className="text-sm text-body">
-            {deleteTarget
-              ? `Delete invoice ${deleteTarget.invoiceNumber} for ${deleteTarget.customer.name}?`
+            {cancelTarget
+              ? `Cancel invoice ${cancelTarget.invoiceNumber} for ${
+                  cancelTarget.customerName || cancelTarget.customer?.name || 'this party'
+                }?`
               : ''}
           </p>
+          <Textarea
+            label="Cancellation Reason"
+            value={cancelReason}
+            onChange={(event) => setCancelReason(event.target.value)}
+            rows={4}
+            placeholder="Enter reason"
+          />
           <div className="flex justify-end gap-3">
             <Button
               type="button"
               variant="outline"
-              onClick={() => setDeleteTarget(null)}
-              disabled={deleteLoading}
+              onClick={() => setCancelTarget(null)}
+              disabled={cancelLoading}
             >
-              Cancel
+              Close
             </Button>
-            <Button type="button" variant="danger" loading={deleteLoading} onClick={handleDeleteSale}>
-              Delete Sale
+            <Button type="button" variant="danger" loading={cancelLoading} onClick={handleCancelSale}>
+              Cancel Sale
             </Button>
           </div>
         </div>

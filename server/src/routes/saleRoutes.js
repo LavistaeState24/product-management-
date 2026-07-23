@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import {
+  cancelSale,
   createSale,
   deleteSale,
   getSaleById,
   getSaleFormOptions,
   listSales,
+  recordSalePayment,
   updateSale,
 } from '../controllers/saleController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
@@ -13,7 +15,9 @@ import { validateRequest } from '../middleware/validateRequest.js';
 import { PERMISSIONS } from '../utils/permissions.js';
 import {
   createSaleValidator,
+  cancelSaleValidator,
   listSaleValidator,
+  recordSalePaymentValidator,
   saleIdParamValidator,
   updateSaleValidator,
 } from '../validators/saleValidators.js';
@@ -59,6 +63,24 @@ router.put(
   updateSaleValidator,
   validateRequest,
   updateSale,
+);
+
+router.patch(
+  '/:saleId/cancel',
+  requirePermission(PERMISSIONS.canDeleteSales),
+  saleIdParamValidator,
+  cancelSaleValidator,
+  validateRequest,
+  cancelSale,
+);
+
+router.post(
+  '/:saleId/payments',
+  requirePermission(PERMISSIONS.canEditSales),
+  saleIdParamValidator,
+  recordSalePaymentValidator,
+  validateRequest,
+  recordSalePayment,
 );
 
 router.delete(
