@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import authRoutes from './authRoutes.js';
+import dashboardRoutes from './dashboardRoutes.js';
 import finishedGoodsStockRoutes from './finishedGoodsStockRoutes.js';
 import paymentManagementRoutes from './paymentManagementRoutes.js';
 import paymentHistoryRoutes from './paymentHistoryRoutes.js';
@@ -22,6 +23,7 @@ router.get('/health', (req, res) => {
 });
 
 router.use('/auth', authRoutes);
+router.use('/dashboard', dashboardRoutes);
 router.use('/finished-goods-stock', finishedGoodsStockRoutes);
 router.use('/payment-management', paymentManagementRoutes);
 router.use('/payments', paymentHistoryRoutes);
