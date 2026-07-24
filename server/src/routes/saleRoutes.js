@@ -6,9 +6,9 @@ import {
   getSaleById,
   getSaleFormOptions,
   listSales,
-  recordSalePayment,
   updateSale,
 } from '../controllers/saleController.js';
+import { recordSalePaymentController } from '../controllers/paymentHistoryController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import { requirePermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
@@ -17,10 +17,10 @@ import {
   createSaleValidator,
   cancelSaleValidator,
   listSaleValidator,
-  recordSalePaymentValidator,
   saleIdParamValidator,
   updateSaleValidator,
 } from '../validators/saleValidators.js';
+import { recordPaymentValidator } from '../validators/paymentHistoryValidators.js';
 
 const router = Router();
 
@@ -76,11 +76,11 @@ router.patch(
 
 router.post(
   '/:saleId/payments',
-  requirePermission(PERMISSIONS.canEditSales),
+  requirePermission(PERMISSIONS.canManagePayments),
   saleIdParamValidator,
-  recordSalePaymentValidator,
+  recordPaymentValidator,
   validateRequest,
-  recordSalePayment,
+  recordSalePaymentController,
 );
 
 router.delete(

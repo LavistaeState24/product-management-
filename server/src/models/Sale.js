@@ -282,7 +282,7 @@ const saleSchema = new mongoose.Schema(
           },
           paymentType: {
             type: String,
-            enum: ['Cash', 'Credit'],
+            enum: ['Cash', 'Cheque'],
             default: 'Cash',
           },
           notes: {

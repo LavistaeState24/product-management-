@@ -223,28 +223,6 @@ export const cancelSaleValidator = [
     .withMessage('Cancellation reason must be 1000 characters or fewer.'),
 ];
 
-export const recordSalePaymentValidator = [
-  body('amount')
-    .notEmpty()
-    .withMessage('Payment amount is required.')
-    .isFloat({ gt: 0 })
-    .withMessage('Payment amount must be greater than 0.')
-    .toFloat(),
-  body('paymentDate')
-    .optional({ values: 'falsy' })
-    .isISO8601()
-    .withMessage('Payment date must be a valid date.'),
-  body('paymentType')
-    .optional({ values: 'falsy' })
-    .isIn(SALE_PAYMENT_TYPES)
-    .withMessage('Payment type must be Cash or Credit.'),
-  body('notes')
-    .optional()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Payment notes must be 1000 characters or fewer.'),
-];
-
 export const listSaleValidator = [
   query('page')
     .optional()

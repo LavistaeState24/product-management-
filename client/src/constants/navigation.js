@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   ShoppingCart,
   Warehouse,
+  WalletCards,
 } from 'lucide-react';
 import { PERMISSIONS } from '@/constants/permissions';
 
@@ -34,6 +35,12 @@ export const SIDEBAR_ITEMS = [
     path: '/sales',
     icon: ShoppingCart,
     permission: PERMISSIONS.canViewSales,
+  },
+  {
+    label: 'Payment Management',
+    path: '/payment-management',
+    icon: WalletCards,
+    permission: PERMISSIONS.canViewPayments,
   },
   {
     label: 'Stock',

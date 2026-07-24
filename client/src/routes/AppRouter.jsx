@@ -17,6 +17,9 @@ const AddSalePage = lazy(() => import('@/features/sales/pages/AddSalePage'));
 const EditSalePage = lazy(() => import('@/features/sales/pages/EditSalePage'));
 const SaleDetailsPage = lazy(() => import('@/features/sales/pages/SaleDetailsPage'));
 const SaleInvoicePreviewPage = lazy(() => import('@/features/sales/pages/SaleInvoicePreviewPage'));
+const PaymentManagementPage = lazy(
+  () => import('@/features/payment-management/pages/PaymentManagementPage'),
+);
 const StockManagementPage = lazy(() => import('@/features/stock/pages/StockManagementPage'));
 const FinishedGoodsStockPage = lazy(
   () => import('@/features/finished-goods-stock/pages/FinishedGoodsStockPage'),
@@ -98,6 +101,9 @@ function AppRouter() {
             </Route>
             <Route element={<ProtectedRoute permission={PERMISSIONS.canEditSales} />}>
               <Route path="/sales/:saleId/edit" element={<EditSalePage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewPayments} />}>
+              <Route path="/payment-management" element={<PaymentManagementPage />} />
             </Route>
             <Route element={<ProtectedRoute permission={PERMISSIONS.canViewStock} />}>
               <Route path="/stock" element={<StockManagementPage />} />

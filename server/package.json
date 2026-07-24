@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "test": "node --test",
     "seed:boss": "node src/seed/seedBossUser.js"
   },
   "dependencies": {
