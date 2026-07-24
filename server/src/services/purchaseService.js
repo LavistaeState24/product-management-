@@ -178,11 +178,11 @@ export async function getPuChemicalStock(itemName, unit) {
   }).lean();
 }
 
-export async function syncSupplierOutstanding(supplierId) {
+export async function syncSupplierOutstanding(supplierId, session) {
   const normalizedSupplierId =
     typeof supplierId === 'string' ? new mongoose.Types.ObjectId(supplierId) : supplierId;
 
-  const [aggregate] = await SupplierPayable.aggregate([
+  const aggregateQuery = SupplierPayable.aggregate([
     {
       $match: {
         supplier: normalizedSupplierId,
@@ -196,9 +196,18 @@ export async function syncSupplierOutstanding(supplierId) {
     },
   ]);
 
-  await Supplier.findByIdAndUpdate(normalizedSupplierId, {
+  if (session) {
+    aggregateQuery.session(session);
+  }
+
+  const [aggregate] = await aggregateQuery;
+
+  const update = {
     outstandingPayable: roundCurrency(aggregate?.total || 0),
-  });
+  };
+  const options = session ? { session } : {};
+
+  await Supplier.findByIdAndUpdate(normalizedSupplierId, update, options);
 }
 
 function shouldTrackPayable(paymentType) {

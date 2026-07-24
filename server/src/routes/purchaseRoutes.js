@@ -7,6 +7,7 @@ import {
   listPurchases,
   updatePurchase,
 } from '../controllers/purchaseController.js';
+import { recordPurchasePaymentController } from '../controllers/paymentHistoryController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import { requirePermission } from '../middleware/rbacMiddleware.js';
 import { uploadBill } from '../middleware/uploadMiddleware.js';
@@ -18,6 +19,7 @@ import {
   purchaseIdParamValidator,
   updatePurchaseValidator,
 } from '../validators/purchaseValidators.js';
+import { recordPaymentValidator } from '../validators/paymentHistoryValidators.js';
 
 const router = Router();
 
@@ -62,6 +64,15 @@ router.put(
   updatePurchaseValidator,
   validateRequest,
   updatePurchase,
+);
+
+router.post(
+  '/:purchaseId/payments',
+  requirePermission(PERMISSIONS.canManagePayments),
+  purchaseIdParamValidator,
+  recordPaymentValidator,
+  validateRequest,
+  recordPurchasePaymentController,
 );
 
 router.delete(

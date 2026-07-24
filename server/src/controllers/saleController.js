@@ -608,69 +608,6 @@ export async function cancelSale(req, res) {
   });
 }
 
-export async function recordSalePayment(req, res) {
-  const paymentAmount = parseNumber(req.body.amount);
-
-  if (paymentAmount <= 0) {
-    throw createHttpError(422, 'Payment amount must be greater than 0.');
-  }
-
-  const sale = await runSalesTransaction(async (session) => {
-    const existingSale = await Sale.findById(req.params.saleId).session(session);
-
-    if (!existingSale) {
-      throw createHttpError(404, 'Sale not found.');
-    }
-
-    ensureMutableSale(existingSale);
-
-    const nextPaid = roundCurrency(Number(existingSale.paidAmount || 0) + paymentAmount);
-    const grandTotal = roundCurrency(existingSale.grandTotal || existingSale.totalAmount);
-
-    if (nextPaid > grandTotal) {
-      throw createHttpError(422, 'Payment amount cannot exceed outstanding amount.');
-    }
-
-    const outstanding = roundCurrency(grandTotal - nextPaid);
-    existingSale.paidAmount = nextPaid;
-    existingSale.paid = nextPaid;
-    existingSale.outstandingAmount = outstanding;
-    existingSale.outstanding = outstanding;
-    existingSale.invoiceStatus = outstanding === 0
-      ? 'Paid'
-      : nextPaid > 0
-        ? 'Partially Paid'
-        : 'Unpaid';
-    existingSale.paymentStatus = existingSale.invoiceStatus;
-    existingSale.payments.push({
-      amount: paymentAmount,
-      paymentDate: parseDate(req.body.paymentDate),
-      paymentType: req.body.paymentType || 'Cash',
-      notes: parseText(req.body.notes),
-      createdBy: req.user._id,
-    });
-    existingSale.updatedBy = req.user._id;
-    await existingSale.save({ session });
-
-    await syncReceivableForSale({
-      saleId: existingSale._id,
-      customerId: existingSale.customer,
-      paymentType: existingSale.paymentType,
-      outstandingAmount: outstanding,
-      session,
-    });
-
-    return existingSale;
-  });
-
-  const populatedSale = await populateSale(sale._id);
-
-  return res.status(200).json({
-    message: 'Payment recorded successfully.',
-    sale: formatSale(populatedSale),
-  });
-}
-
 export async function deleteSale(req, res) {
   await runSalesTransaction(async (session) => {
     const sale = await Sale.findById(req.params.saleId).session(session);
