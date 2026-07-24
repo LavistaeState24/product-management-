@@ -10,9 +10,9 @@ const variants = {
 };
 
 const sizes = {
-  sm: 'h-10 px-4 text-sm',
-  md: 'h-11 px-5 text-sm',
-  lg: 'h-12 px-6 text-base',
+  sm: 'py-2 px-4 text-sm',
+  md: 'py-2.5 px-5 text-sm',
+  lg: 'py-3 px-6 text-base',
 };
 
 function Button({
