@@ -1,6 +1,5 @@
 import { query } from 'express-validator';
 
-const FINISHED_GOODS_TYPES = ['rod', 'sheet', 'rod-product', 'sheet-product', 'pu-product'];
 const SORT_FIELDS = [
   'itemNumber',
   'productName',
@@ -35,8 +34,9 @@ export const listFinishedGoodsStockValidator = [
     .withMessage('Search must be 120 characters or fewer.'),
   query('type')
     .optional({ values: 'falsy' })
-    .isIn(FINISHED_GOODS_TYPES)
-    .withMessage('Type must be rod, sheet, rod-product, sheet-product, or pu-product.'),
+    .trim()
+    .isLength({ max: 40 })
+    .withMessage('Type must be 40 characters or fewer.'),
   query('sortBy')
     .optional({ values: 'falsy' })
     .isIn(SORT_FIELDS)

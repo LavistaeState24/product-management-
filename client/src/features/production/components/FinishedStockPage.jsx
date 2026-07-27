@@ -21,7 +21,7 @@ export function formatStockNumber(value) {
 export function resolveBatchId(value) {
   if (!value) return 'Not available';
   if (typeof value === 'string') return value;
-  return value.batchId || value.batchNumber || value._id || 'Not available';
+  return value.batchId || value.batchNumber || value._id || value.id || 'Not available';
 }
 
 function buildInitialFilters(searchParams) {
