@@ -3,6 +3,7 @@ import {
   Factory,
   LayoutDashboard,
   PackageSearch,
+  BarChart3,
   ReceiptText,
   ShieldCheck,
   ShoppingCart,
@@ -41,6 +42,12 @@ export const SIDEBAR_ITEMS = [
     path: '/payment-management',
     icon: WalletCards,
     permission: PERMISSIONS.canViewPayments,
+  },
+  {
+    label: 'Reports',
+    path: '/reports',
+    icon: BarChart3,
+    permission: PERMISSIONS.canViewReports,
   },
   {
     label: 'Stock',
