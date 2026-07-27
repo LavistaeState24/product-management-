@@ -10,8 +10,8 @@ import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import Textarea from '@/components/ui/Textarea';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useAuth } from '@/hooks/useAuth';
+import { PERMISSION_GROUPS } from '@/constants/permissions';
+import { useCan } from '@/hooks/useCan';
 import { useToast } from '@/hooks/useToast';
 import { formatCurrency, formatDate } from '@/features/sales/utils/saleHelpers';
 import {
@@ -151,10 +151,10 @@ function PaymentManagementPage() {
   const [historyTarget, setHistoryTarget] = useState(null);
   const [historyItems, setHistoryItems] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const { hasPermission } = useAuth();
+  const can = useCan();
   const toast = useToast();
 
-  const canManagePayments = hasPermission(PERMISSIONS.canManagePayments);
+  const canManagePayments = can(PERMISSION_GROUPS.createPayments);
   const currentState = activeTab === 'purchases' ? purchaseState : customerState;
 
   useEffect(() => {

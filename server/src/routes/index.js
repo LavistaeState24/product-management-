@@ -14,6 +14,7 @@ import saleRoutes from './saleRoutes.js';
 import sheetProductionRoutes from './sheetProductionRoutes.js';
 import sheetStockRoutes from './sheetStockRoutes.js';
 import stockRoutes from './stockRoutes.js';
+import userRoutes from './userRoutes.js';
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use('/sales', saleRoutes);
 router.use('/sheet-production', sheetProductionRoutes);
 router.use('/sheet-stock', sheetStockRoutes);
 router.use('/stocks', stockRoutes);
+router.use('/users', userRoutes);
 
 export default router;

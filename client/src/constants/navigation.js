@@ -10,7 +10,7 @@ import {
   Warehouse,
   WalletCards,
 } from 'lucide-react';
-import { PERMISSIONS } from '@/constants/permissions';
+import { PERMISSION_GROUPS, PERMISSIONS } from '@/constants/permissions';
 
 export const SIDEBAR_ITEMS = [
   {
@@ -65,7 +65,7 @@ export const SIDEBAR_ITEMS = [
     label: 'Rod Production',
     path: '/rod-productions',
     icon: Factory,
-    permission: PERMISSIONS.canManageStock,
+    permission: PERMISSION_GROUPS.viewRodProduction,
   },
   {
     label: 'Rod Stock',
@@ -77,13 +77,13 @@ export const SIDEBAR_ITEMS = [
     label: 'Sheet Production',
     path: '/sheet-productions',
     icon: Factory,
-    permission: PERMISSIONS.canViewSheetProduction,
+    permission: PERMISSION_GROUPS.viewProduction,
   },
   {
     label: 'Add Sheet Production',
     path: '/sheet-productions/new',
     icon: Factory,
-    permission: PERMISSIONS.canCreateSheetProduction,
+    permission: PERMISSION_GROUPS.createProduction,
   },
   {
     label: 'Sheet Stock',
@@ -95,13 +95,13 @@ export const SIDEBAR_ITEMS = [
     label: 'PU Manufacturing',
     path: '/pu-product-manufacturing',
     icon: Factory,
-    permission: PERMISSIONS.canViewStock,
+    permission: PERMISSION_GROUPS.viewPuProduction,
   },
   {
     label: 'Add PU Manufacturing',
     path: '/pu-product-manufacturing/new',
     icon: Factory,
-    permission: PERMISSIONS.canManageStock,
+    permission: PERMISSION_GROUPS.createPuProduction,
   },
   {
     label: 'PU Product Stock',

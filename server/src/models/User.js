@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
-import { ROLE_PERMISSIONS, ROLES } from '../utils/permissions.js';
+import { getDefaultPermissionsForRole, normalizePermissions, ROLES } from '../utils/permissions.js';
 
 const userSchema = new mongoose.Schema(
   {
@@ -26,12 +26,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: Object.values(ROLES),
       required: true,
-      default: ROLES.Staff,
+      default: ROLES.User,
     },
     permissions: {
       type: [String],
       default: function getPermissions() {
-        return ROLE_PERMISSIONS[this.role] || [];
+        return getDefaultPermissionsForRole(this.role);
       },
     },
     isActive: {
@@ -45,8 +45,12 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre('save', async function syncRolePermissions(next) {
-  if (this.isModified('role') || this.isNew) {
-    this.permissions = ROLE_PERMISSIONS[this.role] || [];
+  if ((this.isModified('role') || this.isNew) && !this.isModified('permissions')) {
+    this.permissions = getDefaultPermissionsForRole(this.role);
+  }
+
+  if (this.isModified('permissions')) {
+    this.permissions = normalizePermissions(this.permissions);
   }
 
   if (!this.isModified('password')) {
