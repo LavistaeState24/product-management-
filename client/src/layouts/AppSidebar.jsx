@@ -2,10 +2,10 @@ import { X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { SIDEBAR_ITEMS } from "@/constants/navigation";
 import { cn } from "@/utils/cn";
-import { useAuth } from "@/hooks/useAuth";
+import { useCan } from "@/hooks/useCan";
 
 function AppSidebar({ open, onClose, collapsed, }) {
-  const { hasPermission } = useAuth();
+  const can = useCan();
 
   return (
     <>
@@ -55,7 +55,7 @@ function AppSidebar({ open, onClose, collapsed, }) {
         </div>
 
         <nav className="flex-1 space-y-2 px-4 py-6">
-          {SIDEBAR_ITEMS.filter((item) => hasPermission(item.permission)).map(
+          {SIDEBAR_ITEMS.filter((item) => can(item.permission)).map(
             (item) => {
               const Icon = item.icon;
 

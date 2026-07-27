@@ -9,7 +9,7 @@ import {
   recordSalePaymentController,
 } from '../controllers/paymentHistoryController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
-import { requirePermission } from '../middleware/rbacMiddleware.js';
+import { requireAnyPermission, requirePermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import { PERMISSIONS } from '../utils/permissions.js';
 import {
@@ -39,7 +39,7 @@ router.get(
 
 router.post(
   '/purchases/:purchaseId/payments',
-  requirePermission(PERMISSIONS.canManagePayments),
+  requireAnyPermission([PERMISSIONS.canCreatePayments, PERMISSIONS.canManagePayments]),
   purchasePaymentParamValidator,
   recordPaymentValidator,
   validateRequest,
@@ -64,7 +64,7 @@ router.get(
 
 router.post(
   '/sales/:saleId/payments',
-  requirePermission(PERMISSIONS.canManagePayments),
+  requireAnyPermission([PERMISSIONS.canCreatePayments, PERMISSIONS.canManagePayments]),
   salePaymentParamValidator,
   recordPaymentValidator,
   validateRequest,

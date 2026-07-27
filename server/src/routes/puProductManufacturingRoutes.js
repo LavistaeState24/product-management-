@@ -7,7 +7,7 @@ import {
   updatePUProductManufacturing,
 } from '../controllers/puProductManufacturingController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
-import { requirePermission } from '../middleware/rbacMiddleware.js';
+import { requireAnyPermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import { PERMISSIONS } from '../utils/permissions.js';
 import {
@@ -24,7 +24,7 @@ router.use(requireAuth);
 
 router.get(
   '/',
-  requirePermission(PERMISSIONS.canViewStock),
+  requireAnyPermission([PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock]),
   listPUProductManufacturingValidator,
   validateRequest,
   listPUProductManufacturing,
@@ -32,7 +32,7 @@ router.get(
 
 router.get(
   '/:id',
-  requirePermission(PERMISSIONS.canViewStock),
+  requireAnyPermission([PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock]),
   getPUProductManufacturingValidator,
   validateRequest,
   getPUProductManufacturing,
@@ -40,7 +40,7 @@ router.get(
 
 router.post(
   '/',
-  requirePermission(PERMISSIONS.canManageStock),
+  requireAnyPermission([PERMISSIONS.canCreateProduction, PERMISSIONS.canManageStock]),
   createPUProductManufacturingValidator,
   validateRequest,
   createPUProductManufacturing,
@@ -48,7 +48,7 @@ router.post(
 
 router.put(
   '/:id',
-  requirePermission(PERMISSIONS.canManageStock),
+  requireAnyPermission([PERMISSIONS.canEditProduction, PERMISSIONS.canManageStock]),
   updatePUProductManufacturingValidator,
   validateRequest,
   updatePUProductManufacturing,
@@ -56,7 +56,7 @@ router.put(
 
 router.delete(
   '/:id',
-  requirePermission(PERMISSIONS.canManageStock),
+  requireAnyPermission([PERMISSIONS.canDeleteProduction, PERMISSIONS.canManageStock]),
   deletePUProductManufacturingValidator,
   validateRequest,
   deletePUProductManufacturing,

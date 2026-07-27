@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/AppLayout';
 import LoadingPage from '@/components/LoadingPage';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import PublicRoute from '@/routes/PublicRoute';
-import { PERMISSIONS } from '@/constants/permissions';
+import { PERMISSION_GROUPS, PERMISSIONS } from '@/constants/permissions';
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'));
@@ -114,31 +114,33 @@ function AppRouter() {
               <Route path="/finished-goods-stock" element={<FinishedGoodsStockPage />} />
               <Route path="/rod-stocks" element={<RodStockPage />} />
             </Route>
-            <Route element={<ProtectedRoute permission={PERMISSIONS.canManageStock} />}>
+            <Route element={<ProtectedRoute permission={PERMISSION_GROUPS.viewRodProduction} />}>
               <Route path="/rod-productions" element={<RodProductionPage />} />
             </Route>
-            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewSheetProduction} />}>
+            <Route element={<ProtectedRoute permission={PERMISSION_GROUPS.viewProduction} />}>
               <Route path="/sheet-productions" element={<SheetProductionListPage />} />
               <Route path="/sheet-productions/:productionId" element={<SheetProductionDetailsPage />} />
             </Route>
-            <Route element={<ProtectedRoute permission={PERMISSIONS.canCreateSheetProduction} />}>
+            <Route element={<ProtectedRoute permission={PERMISSION_GROUPS.createProduction} />}>
               <Route path="/sheet-productions/new" element={<AddSheetProductionPage />} />
             </Route>
-            <Route element={<ProtectedRoute permission={PERMISSIONS.canUpdateSheetProduction} />}>
+            <Route element={<ProtectedRoute permission={PERMISSION_GROUPS.editProduction} />}>
               <Route path="/sheet-productions/:productionId/edit" element={<EditSheetProductionPage />} />
             </Route>
             <Route element={<ProtectedRoute permission={PERMISSIONS.canViewSheetStock} />}>
               <Route path="/sheet-stock" element={<SheetStockPage />} />
               <Route path="/sheet-stock/:stockId" element={<SheetStockDetailsPage />} />
             </Route>
-            <Route element={<ProtectedRoute permission={PERMISSIONS.canViewStock} />}>
+            <Route element={<ProtectedRoute permission={PERMISSION_GROUPS.viewPuProduction} />}>
               <Route path="/pu-product-manufacturing" element={<PUProductManufacturingListPage />} />
               <Route path="/pu-product-manufacturing/:manufacturingId" element={<PUProductManufacturingDetailsPage />} />
               <Route path="/pu-product-stock" element={<PUProductStockPage />} />
               <Route path="/pu-product-stock/:stockId" element={<PUProductStockDetailsPage />} />
             </Route>
-            <Route element={<ProtectedRoute permission={PERMISSIONS.canManageStock} />}>
+            <Route element={<ProtectedRoute permission={PERMISSION_GROUPS.createPuProduction} />}>
               <Route path="/pu-product-manufacturing/new" element={<AddPUProductManufacturingPage />} />
+            </Route>
+            <Route element={<ProtectedRoute permission={PERMISSION_GROUPS.editPuProduction} />}>
               <Route path="/pu-product-manufacturing/:manufacturingId/edit" element={<EditPUProductManufacturingPage />} />
             </Route>
             <Route path="/403" element={<ForbiddenPage />} />
