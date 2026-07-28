@@ -27,6 +27,7 @@ const purchaseSchema = new mongoose.Schema(
     gstNo: {
       type: String,
       trim: true,
+      uppercase: true,
       default: '',
     },
     product: {
@@ -137,30 +138,48 @@ const purchaseSchema = new mongoose.Schema(
       default: null,
     },
     bill: {
-      originalName: {
-        type: String,
-        default: null,
+      type: {
+        originalName: {
+          type: String,
+          trim: true,
+          default: null,
+        },
+        filename: {
+          type: String,
+          trim: true,
+          default: null,
+        },
+        mimeType: {
+          type: String,
+          enum: [
+            'application/pdf',
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+          ],
+          default: null,
+        },
+        size: {
+          type: Number,
+          min: 0,
+          max: 10 * 1024 * 1024,
+          default: null,
+        },
+        storagePath: {
+          type: String,
+          trim: true,
+          default: null,
+        },
+        url: {
+          type: String,
+          default: null,
+        },
+        uploadedAt: {
+          type: Date,
+          default: null,
+        },
       },
-      filename: {
-        type: String,
-        default: null,
-      },
-      mimeType: {
-        type: String,
-        default: null,
-      },
-      size: {
-        type: Number,
-        default: null,
-      },
-      storagePath: {
-        type: String,
-        default: null,
-      },
-      url: {
-        type: String,
-        default: null,
-      },
+      default: null,
     },
     totalAmount: {
       type: Number,
@@ -202,6 +221,17 @@ const purchaseSchema = new mongoose.Schema(
     timestamps: true,
   },
 );
+
+purchaseSchema.index({
+  supplierName: 1,
+  productName: 1,
+  purchaseDate: -1,
+});
+
+purchaseSchema.index({
+  purchaseType: 1,
+  purchaseDate: -1,
+});
 
 const Purchase = mongoose.model('Purchase', purchaseSchema);
 

@@ -10,7 +10,6 @@ import {
 import { useToast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
 import {
-  resolveAssetUrl,
   toDateInputValue,
   toDateTimeDisplayValue,
 } from '@/features/purchases/utils/purchaseHelpers';
@@ -18,29 +17,72 @@ import {
 function mapPurchaseToFormValues(purchase) {
   return {
     purchaseType: purchase.purchaseType || 'Raw Material',
-    supplierName: purchase.supplierName || purchase.supplier.name,
+
+    supplierName:
+      purchase.supplierName ||
+      purchase.supplier?.name ||
+      '',
+
     supplierAddress: purchase.supplierAddress || '',
     supplierLocation: purchase.supplierLocation || '',
     gstNo: purchase.gstNo || '',
-    itemName: purchase.itemName || purchase.product.name,
+
+    itemName:
+      purchase.itemName ||
+      purchase.product?.name ||
+      '',
+
     unit: purchase.unit || 'Kg',
-    purchaseDate: toDateInputValue(purchase.purchaseDate),
-    recordedAtDisplay: toDateTimeDisplayValue(purchase.recordedAt || purchase.createdAt),
-    quantity: String(purchase.quantity),
-    pricePerUnit: String(purchase.pricePerUnit ?? purchase.purchasePrice),
+
+    purchaseDate: toDateInputValue(
+      purchase.purchaseDate || purchase.createdAt,
+    ),
+
+    recordedAtDisplay: toDateTimeDisplayValue(
+      purchase.recordedAt ||
+      purchase.createdAt ||
+      purchase.purchaseDate,
+    ),
+
+    quantity: String(purchase.quantity ?? ''),
+
+    pricePerUnit: String(
+      purchase.pricePerUnit ??
+      purchase.purchasePrice ??
+      '',
+    ),
+
     gstType: purchase.gstType || 'None',
     gstRate: String(purchase.gstRate ?? 0),
-    paymentType: purchase.paymentType,
-    dueDate: toDateInputValue(purchase.dueDate || purchase.creditDueDate),
-    paidAmount: String(purchase.paidAmount),
-    remarks: purchase.remarks || purchase.notes || '',
+
+    paymentType: purchase.paymentType || 'Cash',
+
+    dueDate: toDateInputValue(
+      purchase.dueDate || purchase.creditDueDate,
+    ),
+
+    paidAmount: String(purchase.paidAmount ?? 0),
+
+    remarks:
+      purchase.remarks ||
+      purchase.notes ||
+      '',
+
     removeBill: false,
     billUpload: null,
-    bill: purchase.bill
+
+    bill: purchase.bill?.storagePath
       ? {
-          ...purchase.bill,
-          url: resolveAssetUrl(purchase.bill.url),
-        }
+        originalName:
+          purchase.bill.originalName ||
+          'Uploaded purchase bill',
+
+        filename: purchase.bill.filename || '',
+        mimeType: purchase.bill.mimeType || '',
+        size: purchase.bill.size ?? 0,
+        storagePath: purchase.bill.storagePath,
+        uploadedAt: purchase.bill.uploadedAt || null,
+      }
       : null,
   };
 }
