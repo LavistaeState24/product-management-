@@ -19,7 +19,4 @@ export const env = {
   jwtSecret: required('JWT_SECRET', 'super-secret-change-me'),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
-  bossName: process.env.BOSS_NAME || 'Operations Boss',
-  bossEmail: process.env.BOSS_EMAIL || 'boss@operationscrm.com',
-  bossPassword: process.env.BOSS_PASSWORD || 'Boss@12345',
 };

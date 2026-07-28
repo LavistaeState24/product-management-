@@ -23,7 +23,7 @@ export function errorHandler(error, req, res, next) {
 
   if (error.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
-      message: 'Bill upload must be 5 MB or smaller.',
+      message: 'Bill upload must be 10 MB or smaller.',
     });
   }
 

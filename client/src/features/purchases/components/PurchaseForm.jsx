@@ -47,7 +47,7 @@ function PurchaseForm({
   } = useForm({
     defaultValues: {
       purchaseType: 'Raw Material',
-      ...initialValues,
+      ...(initialValues || {}),
     },
   });
 
@@ -65,7 +65,7 @@ function PurchaseForm({
   useEffect(() => {
     reset({
       purchaseType: 'Raw Material',
-      ...initialValues,
+      ...(initialValues || {}),
     });
   }, [initialValues, reset]);
 
@@ -95,8 +95,13 @@ function PurchaseForm({
     }
   }, [gstType, setValue]);
 
-  const supplierNames = suppliers.map((supplier) => supplier.name);
-  const itemNames = products.map((product) => product.name);
+  const supplierNames = (suppliers || [])
+    .map((supplier) => supplier?.name)
+    .filter(Boolean);
+
+  const itemNames = (products || [])
+    .map((product) => product?.name)
+    .filter(Boolean);
   const dueDateRequired = paymentType === 'Credit' || paymentType === 'Advance';
   const priceLabel = selectedUnit === 'PCS' ? 'Price per PCS' : 'Price per Kg';
 
@@ -182,8 +187,20 @@ function PurchaseForm({
           <Input
             label="GST No."
             placeholder="Enter supplier GST number"
+            maxLength={15}
             error={errors.gstNo?.message}
-            {...register('gstNo', { required: 'GST number is required.' })}
+            {...register('gstNo', {
+              required: 'GST number is required.',
+              setValueAs: (value) =>
+                String(value || '')
+                  .trim()
+                  .toUpperCase(),
+              pattern: {
+                value: /^[0-9A-Z]{15}$/,
+                message:
+                  'Enter a valid 15-character GST number.',
+              },
+            })}
           />
 
           <Input
@@ -219,7 +236,13 @@ function PurchaseForm({
             step="0.01"
             placeholder="0.00"
             error={errors.quantity?.message}
-            {...register('quantity', { required: 'Quantity is required.' })}
+            {...register('quantity', {
+              required: 'Quantity is required.',
+              min: {
+                value: 0.01,
+                message: 'Quantity must be greater than zero.',
+              },
+            })}
           />
 
           <Input
@@ -229,7 +252,13 @@ function PurchaseForm({
             step="0.01"
             placeholder="0.00"
             error={errors.pricePerUnit?.message}
-            {...register('pricePerUnit', { required: 'Price per unit is required.' })}
+            {...register('pricePerUnit', {
+              required: 'Price per unit is required.',
+              min: {
+                value: 0,
+                message: 'Price cannot be negative.',
+              },
+            })}
           />
 
           <datalist id={supplierListId}>
@@ -313,20 +342,33 @@ function PurchaseForm({
             min="0"
             step="0.01"
             placeholder="0.00"
-            disabled={paymentType === 'Cash' || paymentType === 'Cheque'}
+            readOnly={
+              paymentType === 'Cash' ||
+              paymentType === 'Cheque'
+            }
             hint={
-              paymentType === 'Cash' || paymentType === 'Cheque'
+              paymentType === 'Cash' ||
+                paymentType === 'Cheque'
                 ? `${paymentType} purchases are treated as fully paid.`
                 : null
             }
             error={errors.paidAmount?.message}
             {...register('paidAmount', {
               validate: (value) => {
-                if (paymentType === 'Cash' || paymentType === 'Cheque') {
+                if (
+                  paymentType === 'Cash' ||
+                  paymentType === 'Cheque'
+                ) {
                   return true;
                 }
 
-                if ((Number(value) || 0) > preview.totalAmount) {
+                const paid = Number(value) || 0;
+
+                if (paid < 0) {
+                  return 'Paid amount cannot be negative.';
+                }
+
+                if (paid > preview.totalAmount) {
                   return 'Paid amount cannot exceed total amount.';
                 }
 
@@ -348,35 +390,113 @@ function PurchaseForm({
 
           <label className="flex w-full flex-col gap-2 md:col-span-2">
             <span className="text-sm font-semibold text-heading">Bill Upload</span>
+
             <input
               type="file"
-              accept=".pdf,image/png,image/jpeg,image/webp"
+              accept=".pdf,.jpg,.jpeg,.png,.webp"
               className="rounded-2xl border border-dashed border-border bg-card px-4 py-3 text-sm text-heading file:mr-4 file:rounded-2xl file:border-0 file:bg-primary file:px-4 file:py-2 file:font-semibold file:text-card"
-              {...register('billUpload')}
+              {...register('billUpload', {
+                validate: {
+                  fileSize: (files) => {
+                    if (!files?.length) {
+                      return true;
+                    }
+
+                    return (
+                      files[0].size <=
+                      10 * 1024 * 1024 ||
+                      'Maximum file size is 10 MB.'
+                    );
+                  },
+
+                  fileType: (files) => {
+                    if (!files?.length) {
+                      return true;
+                    }
+
+                    const file = files[0];
+
+                    const allowedTypes = [
+                      'application/pdf',
+                      'image/jpeg',
+                      'image/png',
+                      'image/webp',
+                    ];
+
+                    const allowedExtensions = [
+                      '.pdf',
+                      '.jpg',
+                      '.jpeg',
+                      '.png',
+                      '.webp',
+                    ];
+
+                    const fileName =
+                      file.name?.toLowerCase() || '';
+
+                    const hasValidExtension =
+                      allowedExtensions.some(
+                        (extension) =>
+                          fileName.endsWith(extension),
+                      );
+
+                    const hasValidMimeType =
+                      !file.type ||
+                      allowedTypes.includes(file.type);
+
+                    return (
+                      (hasValidExtension &&
+                        hasValidMimeType) ||
+                      'Only PDF, JPG, JPEG, PNG, and WEBP files are allowed.'
+                    );
+                  },
+                },
+
+                onChange: (event) => {
+                  if (event.target.files?.length) {
+                    setValue('removeBill', false, {
+                      shouldDirty: true,
+                    });
+                  }
+                },
+              })}
             />
-            <span className="text-xs text-body">PDF, JPG, PNG, or WEBP up to 5 MB.</span>
+
+            <span className="text-xs text-body">
+              Supported formats: PDF, JPG, PNG, WEBP. Maximum size: 10 MB.
+            </span>
+
+            {errors.billUpload?.message ? (
+              <span className="text-xs font-medium text-danger">
+                {errors.billUpload.message}
+              </span>
+            ) : null}
           </label>
 
-          {initialValues.bill?.url ? (
+          {initialValues?.bill?.storagePath ? (
             <div className="rounded-3xl border border-border bg-background p-4 md:col-span-2">
-              <p className="text-sm font-semibold text-heading">Current Bill</p>
-              <a
-                href={initialValues.bill.url}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 inline-flex text-sm font-medium text-primary underline-offset-4 hover:underline"
-              >
-                {initialValues.bill.originalName}
-              </a>
+              <p className="text-sm font-semibold text-heading">
+                Current Purchase Bill
+              </p>
+
+              <p className="mt-2 text-sm font-medium text-heading">
+                {initialValues?.bill?.originalName ||
+                  initialValues?.bill?.filename ||
+                  'Uploaded purchase bill'}
+              </p>
+
+              <p className="mt-1 text-xs text-body">
+                The bill is stored securely. Use the purchase details page to view it.
+              </p>
 
               <label className="mt-4 flex items-center gap-3 text-sm text-body">
                 <input type="checkbox" {...register('removeBill')} />
-                Remove current bill on save
+                Remove current bill when saving
               </label>
 
               {removeBill ? (
                 <p className="mt-2 text-xs font-medium text-warning">
-                  The current bill will be removed after you save this purchase.
+                  The current bill will be deleted after this purchase is saved.
                 </p>
               ) : null}
             </div>

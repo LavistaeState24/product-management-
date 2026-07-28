@@ -1,7 +1,7 @@
 import { calculatePurchaseAmounts } from './purchaseMath.js';
 
 function formatBill(bill) {
-  if (!bill?.url) {
+  if (!bill?.storagePath) {
     return null;
   }
 
@@ -10,7 +10,9 @@ function formatBill(bill) {
     filename: bill.filename,
     mimeType: bill.mimeType,
     size: bill.size,
-    url: bill.url,
+    storagePath: bill.storagePath,
+    url: null,
+    uploadedAt: bill.uploadedAt,
   };
 }
 

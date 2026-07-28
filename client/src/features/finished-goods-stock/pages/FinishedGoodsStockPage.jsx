@@ -336,7 +336,7 @@ function FinishedGoodsStockPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-7 lg:grid-cols-6">
         {summaryCards.map((card) => (
           <div key={card.label} className="panel p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-body">

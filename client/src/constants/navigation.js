@@ -19,20 +19,84 @@ export const SIDEBAR_ITEMS = [
     icon: LayoutDashboard,
     permission: PERMISSIONS.canViewDashboard,
   },
+
+  // Inventory
   {
-    label: 'Users',
-    path: '/users',
-    icon: ShieldCheck,
-    permission: PERMISSIONS.canManageUsers,
-  },
-  {
-    label: 'Purchases',
+    label: 'Purchase Management',
     path: '/purchases',
     icon: ReceiptText,
     permission: PERMISSIONS.canViewPurchase,
   },
   {
-    label: 'Sales',
+    label: 'Raw Material Stock',
+    path: '/stock',
+    icon: Boxes,
+    permission: PERMISSIONS.canViewStock,
+  },
+
+  // Rod
+  {
+    label: 'Rod Production',
+    path: '/rod-productions',
+    icon: Factory,
+    permission: PERMISSION_GROUPS.viewRodProduction,
+  },
+  {
+    label: 'Rod Inventory',
+    path: '/rod-stocks',
+    icon: PackageSearch,
+    permission: PERMISSIONS.canViewStock,
+  },
+
+  // Sheet
+  {
+    label: 'Sheet Production',
+    path: '/sheet-productions',
+    icon: Factory,
+    permission: PERMISSION_GROUPS.viewProduction,
+  },
+  {
+    label: 'New Sheet Production',
+    path: '/sheet-productions/new',
+    icon: Factory,
+    permission: PERMISSION_GROUPS.createProduction,
+  },
+  {
+    label: 'Sheet Inventory',
+    path: '/sheet-stock',
+    icon: PackageSearch,
+    permission: PERMISSIONS.canViewSheetStock,
+  },
+
+  // PU
+  {
+    label: 'PU Manufacturing',
+    path: '/pu-product-manufacturing',
+    icon: Factory,
+    permission: PERMISSION_GROUPS.viewPuProduction,
+  },
+  {
+    label: 'New PU Manufacturing',
+    path: '/pu-product-manufacturing/new',
+    icon: Factory,
+    permission: PERMISSION_GROUPS.createPuProduction,
+  },
+  {
+    label: 'PU Product Inventory',
+    path: '/pu-product-stock',
+    icon: PackageSearch,
+    permission: PERMISSIONS.canViewStock,
+  },
+
+  // Sales
+  {
+    label: 'Finished Goods',
+    path: '/finished-goods-stock',
+    icon: Warehouse,
+    permission: PERMISSIONS.canViewStock,
+  },
+  {
+    label: 'Sales Management',
     path: '/sales',
     icon: ShoppingCart,
     permission: PERMISSIONS.canViewSales,
@@ -44,69 +108,17 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewPayments,
   },
   {
-    label: 'Reports',
+    label: 'Reports & Analytics',
     path: '/reports',
     icon: BarChart3,
     permission: PERMISSIONS.canViewReports,
   },
+
+  // Admin
   {
-    label: 'Stock',
-    path: '/stock',
-    icon: Boxes,
-    permission: PERMISSIONS.canViewStock,
-  },
-  {
-    label: 'Finished Goods',
-    path: '/finished-goods-stock',
-    icon: Warehouse,
-    permission: PERMISSIONS.canViewStock,
-  },
-  {
-    label: 'Rod Production',
-    path: '/rod-productions',
-    icon: Factory,
-    permission: PERMISSION_GROUPS.viewRodProduction,
-  },
-  {
-    label: 'Rod Stock',
-    path: '/rod-stocks',
-    icon: PackageSearch,
-    permission: PERMISSIONS.canViewStock,
-  },
-  {
-    label: 'Sheet Production',
-    path: '/sheet-productions',
-    icon: Factory,
-    permission: PERMISSION_GROUPS.viewProduction,
-  },
-  {
-    label: 'Add Sheet Production',
-    path: '/sheet-productions/new',
-    icon: Factory,
-    permission: PERMISSION_GROUPS.createProduction,
-  },
-  {
-    label: 'Sheet Stock',
-    path: '/sheet-stock',
-    icon: PackageSearch,
-    permission: PERMISSIONS.canViewSheetStock,
-  },
-  {
-    label: 'PU Manufacturing',
-    path: '/pu-product-manufacturing',
-    icon: Factory,
-    permission: PERMISSION_GROUPS.viewPuProduction,
-  },
-  {
-    label: 'Add PU Manufacturing',
-    path: '/pu-product-manufacturing/new',
-    icon: Factory,
-    permission: PERMISSION_GROUPS.createPuProduction,
-  },
-  {
-    label: 'PU Product Stock',
-    path: '/pu-product-stock',
-    icon: PackageSearch,
-    permission: PERMISSIONS.canViewStock,
+    label: 'User Management',
+    path: '/users',
+    icon: ShieldCheck,
+    permission: PERMISSIONS.canManageUsers,
   },
 ];
