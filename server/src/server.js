@@ -3,11 +3,19 @@ import { connectDatabase } from './config/db.js';
 import { env } from './config/env.js';
 
 async function startServer() {
-  await connectDatabase();
+  console.log('Starting CRM server...');
+  console.log(`Environment: ${env.nodeEnv}`);
 
-  app.listen(env.port, () => {
-    console.log(`Server listening on port ${env.port}`);
-  });
+  try {
+    await connectDatabase();
+
+    app.listen(env.port, '0.0.0.0', () => {
+      console.log(`Server listening on port ${env.port}`);
+    });
+  } catch (error) {
+    console.error('MongoDB connection failed:', error.message);
+    throw error;
+  }
 }
 
 startServer().catch((error) => {
