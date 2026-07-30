@@ -15,6 +15,7 @@ function AppLayout() {
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
       />
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
