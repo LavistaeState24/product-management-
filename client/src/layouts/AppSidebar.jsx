@@ -1,10 +1,11 @@
-import { X } from "lucide-react";
+import { Menu, PanelLeftClose, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { SIDEBAR_ITEMS } from "@/constants/navigation";
 import { cn } from "@/utils/cn";
+import logo from "../../assets/custo.png";
 import { useCan } from "@/hooks/useCan";
 
-function AppSidebar({ open, onClose, collapsed, }) {
+function AppSidebar({ open, onClose, collapsed, onToggleCollapse }) {
   const can = useCan();
 
   return (
@@ -30,28 +31,51 @@ function AppSidebar({ open, onClose, collapsed, }) {
             collapsed ? "md:justify-center md:px-3" : "justify-between"
           )}
         >
-          {collapsed ? (
-            <div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-primary text-lg font-extrabold text-card md:flex">
-              CRM
-            </div>
-          ) : (
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-card-muted">
-                Operations
-              </p>
-              <h1 className="mt-1 text-2xl font-extrabold text-card">
-                CRM Suite
-              </h1>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            <img
+              src={logo}
+              alt="Customized Polycast"
+              className={cn(
+                "object-contain transition-all duration-300",
+                collapsed ? "h-10 w-10" : "h-12 w-12"
+              )}
+            />
 
-          <button
-            className="rounded-full p-2 text-card transition hover:bg-sidebar-hover md:hidden"
-            onClick={onClose}
-            type="button"
-          >
-            <X className="h-5 w-5" />
-          </button>
+            {!collapsed && (
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-card-muted">
+                  Customized Polycast
+                </p>
+                <h1 className="mt-1 text-xl font-bold text-card">
+                  Operations CRM
+                </h1>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Desktop Collapse Button */}
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className="hidden rounded-lg p-2 text-card transition hover:bg-sidebar-hover md:flex"
+            >
+              {collapsed ? (
+                <Menu className="h-5 w-5" />
+              ) : (
+                <PanelLeftClose className="h-5 w-5" />
+              )}
+            </button>
+
+            {/* Mobile Close */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg p-2 text-card transition hover:bg-sidebar-hover md:hidden"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <nav className="flex-1 space-y-2 px-4 py-6">
