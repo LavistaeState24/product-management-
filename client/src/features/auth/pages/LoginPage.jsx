@@ -42,7 +42,7 @@ function LoginPage() {
             <h1 className="mt-6 max-w-lg text-5xl font-extrabold leading-tight text-card">
               Premium operations workspace for your next CRM rollout.
             </h1>
-            <p className="mt-6 mb-4  max-w-xl text-base text-card-muted">
+            <p className="mt-6 mb-4 max-w-xl text-base text-card-muted">
               Authentication, RBAC, reusable UI primitives, and a responsive command surface are ready. Business modules remain gated for later phases.
             </p>
           </div>
