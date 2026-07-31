@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Ban, FileText, PackageSearch, Pencil, Plus, ReceiptText } from 'lucide-react';
+import { Ban, Edit, Eye, FileText, PackageSearch, Pencil, Plus, ReceiptText, View } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -163,21 +163,19 @@ function SalesListPage() {
         render: (_, row) => (
           <div className="flex flex-wrap gap-2">
             <Link to={`/sales/${row.id}`}>
-              <Button type="button" size="sm" variant="outline">
-                View
+              <Button type="button" size="sm" variant="primary"  title="Edit">
+                <Eye className="h-4 w-4"/>
               </Button>
             </Link>
             <Link to={`/sales/${row.id}/invoice`}>
-              <Button type="button" size="sm" variant="ghost">
+              <Button type="button" size="sm" variant="secondary" title="Print">
                 <ReceiptText className="h-4 w-4" />
-                Print
               </Button>
             </Link>
             {hasPermission(PERMISSIONS.canEditSales) ? (
               <Link to={`/sales/${row.id}/edit`}>
-                <Button type="button" size="sm" variant="ghost">
+                <Button type="button" size="sm" variant="success" title="Edit">
                   <Pencil className="h-4 w-4" />
-                  Edit
                 </Button>
               </Link>
             ) : null}
@@ -186,13 +184,13 @@ function SalesListPage() {
                 type="button"
                 size="sm"
                 variant="danger"
+                title="Cancel"
                 onClick={() => {
                   setCancelTarget(row);
                   setCancelReason('');
                 }}
               >
                 <Ban className="h-4 w-4" />
-                Cancel
               </Button>
             ) : null}
           </div>
@@ -291,7 +289,6 @@ function SalesListPage() {
             <Link to="/sales/new">
               <Button>
                 <Plus className="h-4 w-4" />
-                Add Sale
               </Button>
             </Link>
           ) : null}
@@ -327,7 +324,7 @@ function SalesListPage() {
             aria-label="Invoice status"
           />
           <Button type="submit">Apply</Button>
-          <Button type="button" variant="outline" onClick={resetFilters}>
+          <Button type="button" variant="success" onClick={resetFilters}>
             Reset
           </Button>
         </form>

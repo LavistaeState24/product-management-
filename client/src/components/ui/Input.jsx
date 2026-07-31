@@ -10,9 +10,9 @@ const Input = forwardRef(function Input(
       {label ? <span className="text-sm font-semibold text-heading">{label}</span> : null}
       <div
         className={cn(
-          'flex h-12 items-center gap-3 rounded-2xl border border-border bg-card px-4 transition focus-within:ring-0',
-          error && 'border-danger',
-          className,
+          "flex h-12 items-center gap-3 rounded-2xl border border-border bg-card px-4 transition",
+          error && "border-danger",
+          className
         )}
       >
         {LeftIcon ? <LeftIcon className="h-4 w-4 text-body" /> : null}

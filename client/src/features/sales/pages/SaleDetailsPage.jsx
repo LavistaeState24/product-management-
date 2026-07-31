@@ -84,7 +84,7 @@ function getTerms(sale) {
 
 function DetailCard({ label, value }) {
   return (
-    <div className="rounded-2xl border border-border bg-background p-4">
+    <div className="rounded-2xl border border-border bg-white shadow-sm p-4">
       <p className="text-sm text-body">{label}</p>
       <p className="mt-2 break-words text-base font-semibold text-heading">
         {valueOrFallback(value)}
@@ -221,30 +221,27 @@ function SaleDetailsPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 ">
             <Link to="/sales">
               <Button type="button" variant="outline">
                 Back to sales
               </Button>
             </Link>
             <Link to={`/sales/${saleRecordId}/invoice`}>
-              <Button type="button" variant="ghost">
+              <Button type="button" variant="primary" title="Print"  >
                 <ReceiptText className="h-4 w-4" />
-                Print
               </Button>
             </Link>
             {hasPermission(PERMISSIONS.canEditSales) && !isCancelled ? (
               <Link to={`/sales/${saleRecordId}/edit`}>
-                <Button type="button" variant="ghost">
+                <Button type="button" variant="warning" title="Edit">
                   <Pencil className="h-4 w-4" />
-                  Edit
                 </Button>
               </Link>
             ) : null}
             {hasPermission(PERMISSIONS.canDeleteSales) && !isCancelled ? (
-              <Button type="button" variant="danger" onClick={() => setCancelOpen(true)}>
+              <Button type="button" variant="danger" title="Cancel" onClick={() => setCancelOpen(true)}>
                 <Ban className="h-4 w-4" />
-                Cancel
               </Button>
             ) : null}
           </div>
@@ -451,9 +448,8 @@ function SaleDetailsPage() {
               </div>
             </div>
             <Link to={`/sales/${saleRecordId}/invoice`} className="mt-4 inline-flex">
-              <Button type="button" variant="outline">
+              <Button type="button" variant="primary" title="Print">
                 <ReceiptText className="h-4 w-4" />
-                Open Print View
               </Button>
             </Link>
           </section>

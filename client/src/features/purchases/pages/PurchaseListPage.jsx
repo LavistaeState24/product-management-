@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { FileText, PackageSearch, Pencil, Plus, Trash2 } from 'lucide-react';
+import { FileText, PackageSearch, Pencil, Plus, Trash2, Eye } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -187,20 +187,21 @@ function PurchaseListPage() {
         key: 'actions',
         title: 'Actions',
         render: (_, row) => (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex items-center gap-2">
             <Link to={`/purchases/${row.id}`}>
-              <Button type="button" size="sm" variant="outline">
-                View
+              <Button type="button" size="sm" variant="primary">
+                <Eye className="h-4 w-4" />
               </Button>
             </Link>
+
             {hasPermission(PERMISSIONS.canEditPurchase) ? (
               <Link to={`/purchases/${row.id}/edit`}>
-                <Button type="button" size="sm" variant="ghost">
+                <Button type="button" size="sm" variant="warning">
                   <Pencil className="h-4 w-4" />
-                  Edit
                 </Button>
               </Link>
             ) : null}
+
             {hasPermission(PERMISSIONS.canDeletePurchase) ? (
               <Button
                 type="button"
@@ -209,7 +210,6 @@ function PurchaseListPage() {
                 onClick={() => setDeleteTarget(row)}
               >
                 <Trash2 className="h-4 w-4" />
-                Delete
               </Button>
             ) : null}
           </div>
@@ -295,8 +295,7 @@ function PurchaseListPage() {
           {hasPermission(PERMISSIONS.canCreatePurchase) ? (
             <Link to="/purchases/new">
               <Button>
-                <Plus className="h-4 w-4" />
-                Add Purchase
+                <Plus className="h-4 w-4" /> 
               </Button>
             </Link>
           ) : null}

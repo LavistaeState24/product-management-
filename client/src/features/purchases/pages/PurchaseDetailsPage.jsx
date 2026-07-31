@@ -223,10 +223,9 @@ function PurchaseDetailsPage() {
               >
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="warning"
                 >
                   <Pencil className="h-4 w-4" />
-                  Edit
                 </Button>
               </Link>
             ) : null}
@@ -242,7 +241,6 @@ function PurchaseDetailsPage() {
                 }
               >
                 <Trash2 className="h-4 w-4" />
-                Delete
               </Button>
             ) : null}
           </div>
@@ -494,14 +492,14 @@ function PurchaseDetailsPage() {
 
                   <Button
                     type="button"
-                    variant="outline"
-                    className="mt-4"
+                    variant="primary"
+                    className="mt-4 gap-2"
                     loading={billLoading}
                     disabled={billLoading}
                     onClick={handleViewBill}
                   >
                     <ExternalLink className="h-4 w-4" />
-                    View Bill
+                     View 
                   </Button>
                 </>
               ) : (
