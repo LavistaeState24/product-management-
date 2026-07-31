@@ -2,10 +2,10 @@ import { Menu, PanelLeftClose, X } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { SIDEBAR_ITEMS } from "@/constants/navigation";
 import { cn } from "@/utils/cn";
-import logo from "../../assets/custo.png";
+import logo from "../../assets/logo.png";
 import { useCan } from "@/hooks/useCan";
 
-function AppSidebar({ open, onClose, collapsed, onToggleCollapse }) {
+function AppSidebar({ open, onClose, collapsed }) {
   const can = useCan();
 
   return (
@@ -20,8 +20,8 @@ function AppSidebar({ open, onClose, collapsed, onToggleCollapse }) {
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-80 flex-col bg-sidebar text-card transition-all duration-300 md:sticky md:top-0 md:h-screen md:translate-x-0",
-          collapsed ? "md:w-20" : "md:w-64",
+          "fixed inset-y-0 left-0 z-40 flex w-80 flex-col overflow-hidden bg-sidebar text-card transition-all duration-300 md:sticky md:top-0 md:h-screen shadow-lg backdrop-blur overflow-y-visible md:translate-x-0",
+          collapsed ? "md:w-24" : "md:w-64",
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
@@ -37,55 +37,35 @@ function AppSidebar({ open, onClose, collapsed, onToggleCollapse }) {
               alt="Customized Polycast"
               className={cn(
                 "object-contain transition-all duration-300",
-                collapsed ? "h-10 w-10" : "h-12 w-12"
+                collapsed ? "h-16 w-16" : "h-[80px] w-auto mx-auto"
               )}
             />
 
-            {!collapsed && (
-              <div>
-                <p className="text-xs uppercase tracking-[0.22em] text-card-muted">
-                  Customized Polycast
-                </p>
-                <h1 className="mt-1 text-xl font-bold text-card">
-                  Operations CRM
-                </h1>
-              </div>
-            )}
+            {/* {!collapsed && (
+            
+            )} */}
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Desktop Collapse Button */}
-            <button
-              type="button"
-              onClick={onToggleCollapse}
-              className="hidden rounded-lg p-2 text-card transition hover:bg-sidebar-hover md:flex"
-            >
-              {collapsed ? (
-                <Menu className="h-5 w-5" />
-              ) : (
-                <PanelLeftClose className="h-5 w-5" />
-              )}
-            </button>
-
             {/* Mobile Close */}
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg p-2 text-card transition hover:bg-sidebar-hover md:hidden"
+              className="rounded-lg p-2 text-white transition hover:bg-sidebar-hover md:hidden"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <nav className="flex-1 space-y-2 px-4 py-6">
+        <nav className="flex-1 space-y-2 px-4 py-2">
           {SIDEBAR_ITEMS.filter((item) => can(item.permission)).map(
-            (item) => {
+            (item,index) => {
               const Icon = item.icon;
 
               return (
                 <NavLink
-                  key={item.path}
+                  key={`${item.path}-${item.label}-${index}`}
                   to={item.path}
                   onClick={onClose}
                   title={collapsed ? item.label : undefined}
@@ -94,8 +74,8 @@ function AppSidebar({ open, onClose, collapsed, onToggleCollapse }) {
                       "flex items-center rounded-2xl px-4 py-3 text-sm font-semibold transition",
                       collapsed ? "md:justify-center md:gap-0" : "gap-3",
                       isActive
-                        ? "bg-primary text-card"
-                        : "text-card-dim hover:bg-sidebar-hover hover:text-card"
+                        ? "bg-success text-white"
+                        : "text-white hover:bg-success hover:text-white"
                     )
                   }
                 >
@@ -108,9 +88,9 @@ function AppSidebar({ open, onClose, collapsed, onToggleCollapse }) {
         </nav>
 
         {!collapsed && (
-          <div className="m-4 rounded-3xl border border-card-soft bg-card-soft p-4">
+          <div className="m-3 rounded-xl border border-card-soft bg-sidebar p-4">
             <p className="text-sm font-semibold text-card">Operations Roadmap</p>
-            <p className="mt-2 text-sm text-card-muted">
+            <p className="mt-2 text-sm text-white">
               Purchases and sales are live. Stock, payments, and reports remain
               scheduled for later phases.
             </p>

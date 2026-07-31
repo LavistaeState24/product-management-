@@ -344,9 +344,8 @@ function ProductionForm({
             <h2 className="section-title">{config.producedTitle}</h2>
             <p className="section-copy mt-2">{config.producedDescription}</p>
           </div>
-          <Button type="button" variant="outline" onClick={addRow}>
+          <Button type="button" variant="primary" onClick={addRow}>
             <Plus className="h-4 w-4" />
-            Add Row
           </Button>
         </div>
 
@@ -420,9 +419,8 @@ function ProductionForm({
 
       <section className="panel p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
-          <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>
+          <Button type="button" variant="success" onClick={resetForm} disabled={saving}>
             <RotateCcw className="h-4 w-4" />
-            Reset
           </Button>
           <Button type="submit" loading={saving}>
             {mode === 'edit' ? config.updateButtonLabel : config.submitButtonLabel}

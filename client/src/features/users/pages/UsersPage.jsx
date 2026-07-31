@@ -384,17 +384,25 @@ function UsersPage() {
       title: 'Actions',
       render: (_, row) => (
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => openEditModal(row)} type="button">
-            <Edit3 className="h-4 w-4" />
-            Edit
+          <Button size="sm" variant="primary" onClick={() => openEditModal(row)} type="button">
+            <Edit3 className="h-4 w-4" title="Edit" />
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => handleToggleActive(row)} type="button">
-            {row.isActive ? <UserX className="h-4 w-4" /> : <UserCheck className="h-4 w-4" />}
-            {row.isActive ? 'Deactivate' : 'Activate'}
+          <Button
+            size="sm"
+            variant="warning"
+            onClick={() => handleToggleActive(row)}
+            type="button"
+            title={row.isActive ? "Deactivate User" : "Activate User"}
+            aria-label={row.isActive ? "Deactivate User" : "Activate User"}
+          >
+            {row.isActive ? (
+              <UserX className="h-4 w-4" />
+            ) : (
+              <UserCheck className="h-4 w-4" />
+            )}
           </Button>
-          <Button size="sm" variant="danger" onClick={() => setDeleteTarget(row)} type="button">
+          <Button size="sm" variant="danger" title="Delete" onClick={() => setDeleteTarget(row)} type="button">
             <Trash2 className="h-4 w-4" />
-            Delete
           </Button>
         </div>
       ),
@@ -411,13 +419,11 @@ function UsersPage() {
           <h2 className="mt-2 text-3xl font-bold text-heading">Users & Permissions</h2>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline" onClick={refreshUsers} type="button">
+          <Button variant="warning" onClick={refreshUsers} type="button" title="Refresh">
             <RefreshCw className="h-4 w-4" />
-            Refresh
           </Button>
-          <Button onClick={openCreateModal} type="button">
+          <Button onClick={openCreateModal} variant="primary" type="button" title="Add User">
             <Plus className="h-4 w-4" />
-            Add User
           </Button>
         </div>
       </div>

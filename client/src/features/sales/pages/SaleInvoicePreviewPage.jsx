@@ -406,22 +406,19 @@ function SaleInvoicePreviewPage() {
           <Link to={`/sales/${currentSaleId}`}>
             <Button type="button" variant="outline">
               <ArrowLeft className="h-4 w-4" />
-              Back to details
             </Button>
           </Link>
 
           {hasPermission(PERMISSIONS.canEditSales) && !isCancelled ? (
             <Link to={`/sales/${currentSaleId}/edit`}>
-              <Button type="button" variant="ghost">
+              <Button type="button" variant="primary" title="Edit">
                 <Pencil className="h-4 w-4" />
-                Edit Sale
               </Button>
             </Link>
           ) : null}
 
-          <Button type="button" onClick={() => window.print()}>
-            <Printer className="h-4 w-4" />
-            Print
+          <Button type="button" onClick={() => window.print()} title="Print">
+            <Printer className="h-4 w-4" variant="warning"/>
           </Button>
         </div>
       </section>

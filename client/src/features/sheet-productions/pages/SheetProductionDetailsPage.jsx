@@ -108,9 +108,8 @@ function SheetProductionDetailsPage() {
               Sheet production batch created on {formatDateTime(batch.dateTime)}.
             </p>
           </div>
-          <Button as={Link} to={`/sheet-productions/${batch.id}/edit`} variant="outline">
+          <Button as={Link} to={`/sheet-productions/${batch.id}/edit`} variant="warning">
             <FilePenLine className="h-4 w-4" />
-            Edit
           </Button>
         </div>
       </section>

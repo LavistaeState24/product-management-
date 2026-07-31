@@ -13,6 +13,7 @@ import {
 import { PERMISSION_GROUPS, PERMISSIONS } from '@/constants/permissions';
 
 export const SIDEBAR_ITEMS = [
+  // Dashboard
   {
     label: 'Dashboard',
     path: '/dashboard',
@@ -20,15 +21,15 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewDashboard,
   },
 
-  // Inventory
+  // Purchase & Stock
   {
-    label: 'Purchase Management',
+    label: 'Purchases',
     path: '/purchases',
     icon: ReceiptText,
     permission: PERMISSIONS.canViewPurchase,
   },
   {
-    label: 'Raw Material Stock',
+    label: 'Raw Stock',
     path: '/stock',
     icon: Boxes,
     permission: PERMISSIONS.canViewStock,
@@ -42,7 +43,7 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSION_GROUPS.viewRodProduction,
   },
   {
-    label: 'Rod Inventory',
+    label: 'Rod Stock',
     path: '/rod-stocks',
     icon: PackageSearch,
     permission: PERMISSIONS.canViewStock,
@@ -56,13 +57,13 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSION_GROUPS.viewProduction,
   },
   {
-    label: 'New Sheet Production',
+    label: 'New Sheet',
     path: '/sheet-productions/new',
     icon: Factory,
     permission: PERMISSION_GROUPS.createProduction,
   },
   {
-    label: 'Sheet Inventory',
+    label: 'Sheet Stock',
     path: '/sheet-stock',
     icon: PackageSearch,
     permission: PERMISSIONS.canViewSheetStock,
@@ -70,19 +71,19 @@ export const SIDEBAR_ITEMS = [
 
   // PU
   {
-    label: 'PU Manufacturing',
+    label: 'PU Production',
     path: '/pu-product-manufacturing',
     icon: Factory,
     permission: PERMISSION_GROUPS.viewPuProduction,
   },
   {
-    label: 'New PU Manufacturing',
+    label: 'New PU',
     path: '/pu-product-manufacturing/new',
     icon: Factory,
     permission: PERMISSION_GROUPS.createPuProduction,
   },
   {
-    label: 'PU Product Inventory',
+    label: 'PU Stock',
     path: '/pu-product-stock',
     icon: PackageSearch,
     permission: PERMISSIONS.canViewStock,
@@ -96,19 +97,19 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewStock,
   },
   {
-    label: 'Sales Management',
+    label: 'Sales',
     path: '/sales',
     icon: ShoppingCart,
     permission: PERMISSIONS.canViewSales,
   },
   {
-    label: 'Payment Management',
+    label: 'Payments',
     path: '/payment-management',
     icon: WalletCards,
     permission: PERMISSIONS.canViewPayments,
   },
   {
-    label: 'Reports & Analytics',
+    label: 'Reports',
     path: '/reports',
     icon: BarChart3,
     permission: PERMISSIONS.canViewReports,
@@ -116,7 +117,7 @@ export const SIDEBAR_ITEMS = [
 
   // Admin
   {
-    label: 'User Management',
+    label: 'Users',
     path: '/users',
     icon: ShieldCheck,
     permission: PERMISSIONS.canManageUsers,
