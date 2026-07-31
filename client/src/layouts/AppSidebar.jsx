@@ -65,10 +65,9 @@ function AppSidebar({ open, onClose, collapsed }) {
 
               return (
                 <NavLink
-                  key={item.path}
+                  key={`${item.path}-${item.label}-${index}`}
                   to={item.path}
                   onClick={onClose}
-                  key={`${item.path}-${item.label}-${index}`}
                   title={collapsed ? item.label : undefined}
                   className={({ isActive }) =>
                     cn(
