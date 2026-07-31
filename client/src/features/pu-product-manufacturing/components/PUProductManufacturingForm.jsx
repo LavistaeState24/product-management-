@@ -202,12 +202,18 @@ function PUProductManufacturingForm({
         </div>
         <div className="mt-6 grid gap-5 md:grid-cols-2">
           <Select label="PU Chemical" disabled={loadingStocks} options={stockOptions} value={form.puChemicalStockId} error={errors.puChemicalStockId} onChange={(event) => updateField('puChemicalStockId', event.target.value)} />
+
           <Input label="Available PU Chemical Stock" readOnly value={selectedChemical ? `${formatQuantity(selectedChemical.availableQuantity)} ${selectedChemical.unit}` : 'Select PU chemical'} />
+
           <Input label="Chemical Quantity (Kg)" type="number" min="0.01" step="0.01" value={form.chemicalQuantityKg} error={errors.chemicalQuantityKg} onChange={(event) => updateField('chemicalQuantityKg', event.target.value)} />
+
           <div className="hidden md:block" />
           <Select label="MOCA" disabled={loadingStocks} options={stockOptions} value={form.mocaStockId} error={errors.mocaStockId} onChange={(event) => updateField('mocaStockId', event.target.value)} />
+
           <Input label="Available MOCA Stock" readOnly value={selectedMoca ? `${formatQuantity(selectedMoca.availableQuantity)} ${selectedMoca.unit}` : 'Select MOCA'} />
+
           <Input label="MOCA Quantity (Kg)" type="number" min="0.01" step="0.01" value={form.mocaQuantityKg} error={errors.mocaQuantityKg} onChange={(event) => updateField('mocaQuantityKg', event.target.value)} />
+          
           <Input label="Date & Time" type="datetime-local" value={form.dateTime} error={errors.dateTime} onChange={(event) => updateField('dateTime', event.target.value)} />
         </div>
       </section>
@@ -230,9 +236,8 @@ function PUProductManufacturingForm({
 
       <section className="panel p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
-          <Button type="button" variant="outline" onClick={resetForm} disabled={saving}>
+          <Button type="button" variant="success" onClick={resetForm} disabled={saving}>
             <RotateCcw className="h-4 w-4" />
-            Reset
           </Button>
           <Button type="submit" loading={saving}>
             {mode === 'edit' ? 'Update Manufacturing' : 'Finish Manufacturing'}

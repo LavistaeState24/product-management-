@@ -109,13 +109,11 @@ function PUProductManufacturingDetailsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Badge variant="neutral">{batch.itemNumber}</Badge>
-            <Button as={Link} to={`/pu-product-manufacturing/${manufacturingId}/edit`} variant="outline">
+            <Button as={Link} to={`/pu-product-manufacturing/${manufacturingId}/edit`} variant="warning">
               <FilePenLine className="h-4 w-4" />
-              Edit
             </Button>
             <Button type="button" variant="danger" loading={deleting} onClick={handleDelete}>
               <Trash2 className="h-4 w-4" />
-              Delete
             </Button>
           </div>
         </div>

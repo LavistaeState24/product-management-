@@ -307,17 +307,16 @@ function PaymentManagementPage() {
                   onClick={() => openPaymentModal('purchase', row)}
                 >
                   <CreditCard className="h-4 w-4" />
-                  Record Payment
                 </Button>
               ) : null}
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="warning"
+                title="View History"
                 onClick={() => setHistoryTarget({ type: 'purchase', row })}
               >
                 <History className="h-4 w-4" />
-                View History
               </Button>
             </div>
           );
@@ -385,21 +384,20 @@ function PaymentManagementPage() {
                   type="button"
                   size="sm"
                   disabled={outstandingAmount <= 0}
-                  title={outstandingAmount <= 0 ? 'Invoice is fully paid' : undefined}
+                  title={outstandingAmount <= 0 ? 'Invoice is fully paid Record Payment' : undefined}
                   onClick={() => openPaymentModal('sale', row)}
                 >
                   <CreditCard className="h-4 w-4" />
-                  Record Payment
                 </Button>
               ) : null}
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
+                title=" View History"
                 onClick={() => setHistoryTarget({ type: 'sale', row })}
               >
                 <History className="h-4 w-4" />
-                View History
               </Button>
             </div>
           );

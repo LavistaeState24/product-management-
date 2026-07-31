@@ -456,7 +456,7 @@ function DashboardPage() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-border bg-background/70 p-4 sm:p-5">
+      <section className="rounded-3xl border border-border bg-white p-4 sm:p-5">
         <SectionHeader
           eyebrow="Needs Attention"
           title="Operational Exceptions"
@@ -691,15 +691,16 @@ function DashboardPage() {
             )}
           </div>
 
-          <div className="mt-5 flex justify-end">
+          <div className="mt-5  flex justify-end">
             <Button
               as={Link}
               to="/payment-management"
-              variant="outline"
-              className="w-full sm:w-auto"
+              variant="primary"
+              className="w-full sm:w-auto gap-3"
             >
-              Review Payments
+             
               <ArrowRight className="h-4 w-4" />
+               Review Payments
             </Button>
           </div>
         </section>

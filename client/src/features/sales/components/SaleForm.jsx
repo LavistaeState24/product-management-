@@ -487,11 +487,11 @@ function SaleForm({
           </div>
           <Button
             type="button"
-            variant="outline"
+            variant="primary"
+            title="Add"
             onClick={() => append({ ...emptyItem })}
           >
             <Plus className="h-4 w-4" />
-            Add Item
           </Button>
         </div>
 
