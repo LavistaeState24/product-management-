@@ -37,7 +37,7 @@ function AppSidebar({ open, onClose, collapsed }) {
               alt="Customized Polycast"
               className={cn(
                 "object-contain transition-all duration-300",
-                collapsed ? "h-16 w-16" : "h-[80px] w-auto mx-auto"
+                collapsed ? "h-16 w-16" : "h-24 w-auto mx-auto"
               )}
             />
 
