@@ -2,7 +2,9 @@ node_modules/
 client/node_modules/
 server/node_modules/
 client/dist/
-.env
-client/.env
-server/.env
+
+# Environment files may contain secrets. Keep all local env variants out of Git.
+.env*
+**/.env*
+
 npm-debug.log*

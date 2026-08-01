@@ -2,17 +2,24 @@ import { LoaderCircle } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const variants = {
-  primary: 'bg-primary text-card hover:bg-primary-hover',
+  // View
+  primary: 'bg-blue-600 text-white hover:bg-blue-900',  // Edit
+  success: 'bg-[#91c328] text-white hover:bg-[#91c328]',
+   // Optional (if used elsewhere)
+  warning: 'bg-yellow-500 text-white hover:bg-yellow-600',
+
+  // Delete
+  danger: 'bg-red-500 text-white hover:bg-red-600',
+
   secondary: 'bg-heading text-card hover:bg-sidebar',
   ghost: 'bg-transparent text-heading hover:bg-primary-tint',
-  danger: 'bg-danger text-card hover:opacity-90',
   outline: 'border border-border bg-card text-heading hover:bg-background',
 };
 
 const sizes = {
-  sm: 'py-2 px-4 text-sm',
-  md: 'py-2.5 px-5 text-sm',
-  lg: 'py-3 px-6 text-base',
+  sm: 'h-10 w-10 p-0 text-sm',
+  md: 'py-3 px-4 p-0 text-sm',
+  lg: 'h-12 w-12 p-0 text-base',
 };
 
 function Button({
@@ -28,7 +35,7 @@ function Button({
   return (
     <Component
       className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-2xl font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60',
+        'inline-flex items-center justify-center rounded-xl font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-60',
         variants[variant],
         sizes[size],
         className,
@@ -36,8 +43,11 @@ function Button({
       disabled={disabled || loading}
       {...props}
     >
-      {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-      <span>{children}</span>
+      {loading ? (
+        <LoaderCircle className="h-4 w-4 animate-spin" />
+      ) : (
+        children
+      )}
     </Component>
   );
 }

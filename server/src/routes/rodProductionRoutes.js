@@ -4,7 +4,7 @@ import {
   listRodProductions,
 } from '../controllers/rodProductionController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
-import { requirePermission } from '../middleware/rbacMiddleware.js';
+import { requireAnyPermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import { PERMISSIONS } from '../utils/permissions.js';
 import {
@@ -18,7 +18,7 @@ router.use(requireAuth);
 
 router.get(
   '/',
-  requirePermission(PERMISSIONS.canViewStock),
+  requireAnyPermission([PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock]),
   listRodProductionValidator,
   validateRequest,
   listRodProductions,
@@ -26,7 +26,7 @@ router.get(
 
 router.post(
   '/',
-  requirePermission(PERMISSIONS.canManageStock),
+  requireAnyPermission([PERMISSIONS.canCreateProduction, PERMISSIONS.canManageStock]),
   createRodProductionValidator,
   validateRequest,
   createRodProduction,

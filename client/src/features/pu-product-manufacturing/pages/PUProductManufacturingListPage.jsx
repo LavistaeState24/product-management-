@@ -142,10 +142,10 @@ function PUProductManufacturingListPage() {
         title: 'Actions',
         render: (_, row) => (
           <div className="flex items-center gap-2">
-            <Button as={Link} to={`/pu-product-manufacturing/${row.id}`} size="sm" variant="outline">
+            <Button as={Link} to={`/pu-product-manufacturing/${row.id}`} size="sm" variant="primary">
               <Eye className="h-4 w-4" />
             </Button>
-            <Button as={Link} to={`/pu-product-manufacturing/${row.id}/edit`} size="sm" variant="outline">
+            <Button as={Link} to={`/pu-product-manufacturing/${row.id}/edit`} size="sm" variant="warning">
               <FilePenLine className="h-4 w-4" />
             </Button>
             <Button
@@ -186,7 +186,6 @@ function PUProductManufacturingListPage() {
           </div>
           <Button as={Link} to="/pu-product-manufacturing/new">
             <Plus className="h-4 w-4" />
-            Add Manufacturing
           </Button>
         </div>
 

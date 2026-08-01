@@ -1,38 +1,31 @@
-import fs from 'fs';
-import path from 'path';
 import multer from 'multer';
 import { createHttpError } from '../utils/httpError.js';
 
-const uploadRoot = path.resolve(process.cwd(), 'uploads', 'bills');
+const allowedMimeTypes = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
 
-fs.mkdirSync(uploadRoot, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadRoot);
-  },
-  filename: (req, file, cb) => {
-    const extension = path.extname(file.originalname || '').toLowerCase();
-    const safeName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extension}`;
-    cb(null, safeName);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024,
-  },
-  fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = new Set([
-      'application/pdf',
-      'image/jpeg',
-      'image/png',
-      'image/webp',
-    ]);
 
+  limits: {
+    fileSize: 10 * 1024 * 1024,
+    files: 1,
+  },
+
+  fileFilter: (req, file, cb) => {
     if (!allowedMimeTypes.has(file.mimetype)) {
-      cb(createHttpError(400, 'Only PDF, JPG, PNG, and WEBP bill files are allowed.'));
+      cb(
+        createHttpError(
+          400,
+          'Only PDF, JPG, PNG, and WEBP bill files are allowed.',
+        ),
+      );
       return;
     }
 

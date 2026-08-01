@@ -5,12 +5,19 @@ export const PERMISSIONS = {
   canCreatePurchase: 'canCreatePurchase',
   canEditPurchase: 'canEditPurchase',
   canDeletePurchase: 'canDeletePurchase',
+  canViewProduction: 'canViewProduction',
+  canCreateProduction: 'canCreateProduction',
+  canEditProduction: 'canEditProduction',
+  canDeleteProduction: 'canDeleteProduction',
   canViewSales: 'canViewSales',
   canCreateSales: 'canCreateSales',
   canEditSales: 'canEditSales',
   canDeleteSales: 'canDeleteSales',
   canViewStock: 'canViewStock',
   canManageStock: 'canManageStock',
+  canCreateStock: 'canCreateStock',
+  canEditStock: 'canEditStock',
+  canDeleteStock: 'canDeleteStock',
   canViewSheetProduction: 'canViewSheetProduction',
   canCreateSheetProduction: 'canCreateSheetProduction',
   canUpdateSheetProduction: 'canUpdateSheetProduction',
@@ -18,7 +25,13 @@ export const PERMISSIONS = {
   canViewSheetStock: 'canViewSheetStock',
   canViewPayments: 'canViewPayments',
   canManagePayments: 'canManagePayments',
+  canCreatePayments: 'canCreatePayments',
+  canEditPayments: 'canEditPayments',
+  canDeletePayments: 'canDeletePayments',
   canViewReports: 'canViewReports',
+  canCreateReports: 'canCreateReports',
+  canEditReports: 'canEditReports',
+  canDeleteReports: 'canDeleteReports',
 };
 
 export const ROLES = {
@@ -26,4 +39,19 @@ export const ROLES = {
   staff: 'Staff',
   accountant: 'Accountant',
   salesPerson: 'Sales Person',
+  user: 'User',
+};
+
+export const ASSIGNABLE_ROLES = [ROLES.boss, ROLES.accountant, ROLES.user];
+
+export const PERMISSION_GROUPS = {
+  viewProduction: [PERMISSIONS.canViewProduction, PERMISSIONS.canViewSheetProduction],
+  createProduction: [PERMISSIONS.canCreateProduction, PERMISSIONS.canCreateSheetProduction],
+  editProduction: [PERMISSIONS.canEditProduction, PERMISSIONS.canUpdateSheetProduction],
+  viewPuProduction: [PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock],
+  createPuProduction: [PERMISSIONS.canCreateProduction, PERMISSIONS.canManageStock],
+  editPuProduction: [PERMISSIONS.canEditProduction, PERMISSIONS.canManageStock],
+  viewRodProduction: [PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock],
+  createRodProduction: [PERMISSIONS.canCreateProduction, PERMISSIONS.canManageStock],
+  createPayments: [PERMISSIONS.canCreatePayments, PERMISSIONS.canManagePayments],
 };

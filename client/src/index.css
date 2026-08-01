@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --color-sidebar: #0b1f3a;
-  --color-sidebar-hover: #143a66;
+  --color-sidebar: #123A63;
+  --color-sidebar-hover: #1B4D7D;
   --color-primary: #2563eb;
   --color-primary-hover: #1d4ed8;
   --color-background: #f8fafc;
@@ -13,7 +13,7 @@
   --color-heading: #0f172a;
   --color-body: #64748b;
   --color-border: #e5e7eb;
-  --color-success: #22c55e;
+  --color-success: #90c227;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-info: #3b82f6;

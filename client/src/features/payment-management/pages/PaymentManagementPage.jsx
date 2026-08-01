@@ -10,8 +10,8 @@ import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
 import Table from '@/components/ui/Table';
 import Textarea from '@/components/ui/Textarea';
-import { PERMISSIONS } from '@/constants/permissions';
-import { useAuth } from '@/hooks/useAuth';
+import { PERMISSION_GROUPS } from '@/constants/permissions';
+import { useCan } from '@/hooks/useCan';
 import { useToast } from '@/hooks/useToast';
 import { formatCurrency, formatDate } from '@/features/sales/utils/saleHelpers';
 import {
@@ -151,10 +151,10 @@ function PaymentManagementPage() {
   const [historyTarget, setHistoryTarget] = useState(null);
   const [historyItems, setHistoryItems] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const { hasPermission } = useAuth();
+  const can = useCan();
   const toast = useToast();
 
-  const canManagePayments = hasPermission(PERMISSIONS.canManagePayments);
+  const canManagePayments = can(PERMISSION_GROUPS.createPayments);
   const currentState = activeTab === 'purchases' ? purchaseState : customerState;
 
   useEffect(() => {
@@ -307,17 +307,16 @@ function PaymentManagementPage() {
                   onClick={() => openPaymentModal('purchase', row)}
                 >
                   <CreditCard className="h-4 w-4" />
-                  Record Payment
                 </Button>
               ) : null}
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="warning"
+                title="View History"
                 onClick={() => setHistoryTarget({ type: 'purchase', row })}
               >
                 <History className="h-4 w-4" />
-                View History
               </Button>
             </div>
           );
@@ -385,21 +384,20 @@ function PaymentManagementPage() {
                   type="button"
                   size="sm"
                   disabled={outstandingAmount <= 0}
-                  title={outstandingAmount <= 0 ? 'Invoice is fully paid' : undefined}
+                  title={outstandingAmount <= 0 ? 'Invoice is fully paid Record Payment' : undefined}
                   onClick={() => openPaymentModal('sale', row)}
                 >
                   <CreditCard className="h-4 w-4" />
-                  Record Payment
                 </Button>
               ) : null}
               <Button
                 type="button"
                 size="sm"
                 variant="outline"
+                title=" View History"
                 onClick={() => setHistoryTarget({ type: 'sale', row })}
               >
                 <History className="h-4 w-4" />
-                View History
               </Button>
             </div>
           );
