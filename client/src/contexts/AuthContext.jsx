@@ -1,6 +1,7 @@
 import { createContext, useEffect, useMemo, useState } from 'react';
 import { fetchCurrentUser, loginUser, logoutUser } from '@/services/authService';
 import { storage } from '@/services/storage';
+import { ROLES } from '@/constants/permissions';
 
 export const AuthContext = createContext(null);
 
@@ -21,7 +22,7 @@ export function AuthProvider({ children }) {
       try {
         const response = await fetchCurrentUser();
         setUser(response.user);
-      } catch (error) {
+      } catch {
         logoutUser();
         setUser(null);
       } finally {
@@ -50,7 +51,16 @@ export function AuthProvider({ children }) {
   }
 
   function hasPermission(permission) {
-    return Boolean(user?.permissions?.includes(permission));
+    if (!user) {
+      return false;
+    }
+
+    // Boss always has access
+    if (user.role === ROLES.Boss) {
+      return true;
+    }
+
+    return user.permissions?.includes(permission) ?? false;
   }
 
   const value = useMemo(
@@ -66,5 +76,9 @@ export function AuthProvider({ children }) {
     [user, isBootstrapping, isSubmitting],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }

@@ -21,7 +21,11 @@ export async function updateUser(userId, payload) {
 }
 
 export async function updateUserActiveStatus(userId, isActive) {
-  const response = await api.patch(`/users/${userId}/active-status`, { isActive });
+  const response = await api.patch(
+    `/users/${userId}/active-status`,
+    { isActive },
+  );
+
   return response.data;
 }
 

@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { PERMISSIONS } from '@/constants/permissions';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
+import invoice from "../../../../assets/invoice.png";
 import '@/features/sales/styles/invoice-print.css';
 
 const fallback = '-';
@@ -418,20 +419,23 @@ function SaleInvoicePreviewPage() {
           ) : null}
 
           <Button type="button" onClick={() => window.print()} title="Print">
-            <Printer className="h-4 w-4" variant="warning"/>
+            <Printer className="h-4 w-4" variant="warning" />
           </Button>
         </div>
       </section>
 
-      <section className="invoice-print-root relative mx-auto max-w-5xl rounded-2xl border border-border bg-card p-6 shadow-sm print:m-0 print:w-full print:max-w-none print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none">
+      <section
+        className="invoice-print-root invoice-page relative mx-auto max-w-5xl rounded-2xl border border-border bg-card p-6 shadow-sm print:m-0 print:w-full print:max-w-none print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none"
+      >
         {isCancelled ? (
           <>
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
-              <div className="-rotate-12 border-4 border-danger px-10 py-4 text-6xl font-black uppercase tracking-[0.2em] text-danger opacity-10">
+              <div className="-rotate-12 border-4 border-danger px-8 py-3 text-5xl font-black uppercase tracking-[0.2em] text-danger opacity-10 print:text-4xl">
                 Cancelled
               </div>
             </div>
-            <div className="mb-4 break-inside-avoid rounded-2xl border border-danger bg-danger-tint p-4 text-sm text-danger print:rounded-none">
+
+            <div className="mb-3 break-inside-avoid rounded-xl border border-danger bg-danger-tint p-3 text-xs text-danger print:mb-1 print:rounded-none print:p-1.5 print:text-[8px]">
               Cancelled on {formatDate(sale.cancelledAt)}. Reason:{' '}
               {valueOrFallback(sale.cancellationReason)}
             </div>
@@ -439,159 +443,268 @@ function SaleInvoicePreviewPage() {
         ) : null}
 
         <div className="border border-heading">
-          <div className="border-b border-heading px-4 py-3 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-body">
-              Original for Recipient
-            </p>
-            <h2 className="mt-1 text-2xl font-black uppercase tracking-[0.12em] text-heading">
-              Tax Invoice
-            </h2>
+          {/* Header */}
+          <div className="border-b border-heading px-5 py-3 print:px-3 print:py-2">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center">
+                <img
+                  src={invoice}
+                  alt="Customized Polycast"
+                  className="h-14 w-auto max-w-[220px] object-contain print:h-10 print:max-w-[160px]"
+                />
+              </div>
+
+              <div className="shrink-0 text-right">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-body print:text-[7px] print:tracking-[0.16em]">
+                  Original for Recipient
+                </p>
+
+                <h1 className="mt-1 text-xl font-black uppercase text-heading print:text-base print:leading-none">
+                  Tax Invoice
+                </h1>
+              </div>
+            </div>
           </div>
 
-          <div className="grid break-inside-avoid border-b border-heading lg:grid-cols-[1.25fr_0.75fr]">
-            <div className="border-b border-heading p-4 lg:border-b-0 lg:border-r">
-              <h3 className="break-words text-xl font-black uppercase text-heading">
+          {/* Company and invoice details */}
+          <div className="grid break-inside-avoid grid-cols-[1.25fr_0.75fr] border-b border-heading">
+            <div className="border-r border-heading p-3 print:p-2">
+              <h3 className="break-words text-lg font-black uppercase leading-tight text-heading print:text-[12px]">
                 {companyName}
               </h3>
-              <div className="mt-2 space-y-1 text-sm text-body">
+
+              <div className="mt-1 space-y-0.5 text-xs leading-snug text-body print:mt-0.5 print:text-[8px] print:leading-[1.2]">
                 {companyAddressLines.map((line) => (
                   <p key={line} className="break-words">
                     {line}
                   </p>
                 ))}
+
                 {isPresent(company.gstin || company.gst) ? (
                   <p>GSTIN: {company.gstin || company.gst}</p>
                 ) : null}
+
                 {isPresent(company.udyamNumber) ? (
                   <p>Udyam No: {company.udyamNumber}</p>
                 ) : null}
+
                 {isPresent(company.state) || isPresent(company.stateCode) ? (
                   <p>
                     State: {valueOrFallback(company.state)}
-                    {isPresent(company.stateCode) ? ` | State Code: ${company.stateCode}` : ''}
+                    {isPresent(company.stateCode)
+                      ? ` | State Code: ${company.stateCode}`
+                      : ''}
                   </p>
                 ) : null}
-                {isPresent(company.mobile || company.phone) || isPresent(company.email) ? (
+
+                {isPresent(company.mobile || company.phone) ||
+                  isPresent(company.email) ? (
                   <p className="break-words">
                     {isPresent(company.mobile || company.phone)
                       ? `Phone: ${company.mobile || company.phone}`
                       : ''}
-                    {isPresent(company.mobile || company.phone) && isPresent(company.email)
+
+                    {isPresent(company.mobile || company.phone) &&
+                      isPresent(company.email)
                       ? ' | '
                       : ''}
+
                     {isPresent(company.email) ? `Email: ${company.email}` : ''}
                   </p>
                 ) : null}
               </div>
             </div>
 
-            <div className="p-4">
+            <div className="p-3 text-xs print:p-2 print:text-[8px]">
               <DetailLine label="Invoice No." value={sale.invoiceNumber} />
-              <DetailLine label="Invoice Date" value={formatDate(sale.invoiceDate)} />
+              <DetailLine
+                label="Invoice Date"
+                value={formatDate(sale.invoiceDate)}
+              />
               <DetailLine label="Payment Type" value={sale.paymentType} />
-              <DetailLine label="Payment Status" value={sale.paymentStatus || sale.invoiceStatus} />
-              <DetailLine label="Due Date" value={sale.dueDate ? formatDate(sale.dueDate) : ''} />
+              <DetailLine
+                label="Payment Status"
+                value={sale.paymentStatus || sale.invoiceStatus}
+              />
+              <DetailLine
+                label="Due Date"
+                value={sale.dueDate ? formatDate(sale.dueDate) : ''}
+              />
             </div>
           </div>
 
-          <div className="grid break-inside-avoid border-b border-heading lg:grid-cols-2">
-            <div className="border-b border-heading p-4 lg:border-b-0 lg:border-r">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-heading">
+          {/* Buyer and status */}
+          <div className="grid break-inside-avoid grid-cols-2 border-b border-heading">
+            <div className="border-r border-heading p-3 print:p-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                 Buyer Details
               </p>
-              <h3 className="mt-2 break-words text-base font-bold text-heading">{customerName}</h3>
-              <div className="mt-2 space-y-1 text-sm text-body">
+
+              <h3 className="mt-1 break-words text-sm font-bold leading-tight text-heading print:text-[9px]">
+                {customerName}
+              </h3>
+
+              <div className="mt-1 space-y-0.5 text-xs leading-snug text-body print:text-[8px] print:leading-[1.2]">
                 <p>Mobile: {valueOrFallback(sale.customerMobile)}</p>
-                <p className="break-words">Address: {valueOrFallback(sale.customerAddress)}</p>
+
+                <p className="break-words">
+                  Address: {valueOrFallback(sale.customerAddress)}
+                </p>
+
                 <p>Location: {valueOrFallback(sale.customerLocation)}</p>
                 <p>GSTIN: {valueOrFallback(sale.customerGST)}</p>
               </div>
             </div>
 
-            <div className="p-4">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-heading">
+            <div className="p-3 print:p-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                 Invoice Status
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
+
+              <div className="mt-1.5 flex flex-wrap gap-1.5 print:mt-1 print:gap-1">
                 <Badge variant={getPaymentBadgeVariant(sale.paymentType)}>
                   {sale.paymentType || fallback}
                 </Badge>
+
                 <Badge variant={getInvoiceStatusBadgeVariant(sale.invoiceStatus)}>
                   {sale.invoiceStatus || fallback}
                 </Badge>
               </div>
+
               {showTransport ? (
-                <div className="mt-4 space-y-1 text-sm text-body">
+                <div className="mt-2 space-y-0.5 text-xs leading-snug text-body print:mt-1 print:text-[8px]">
                   <p className="font-semibold text-heading">Transport Details</p>
-                  {isPresent(sale.parcelCount) ? <p>Parcel Count: {sale.parcelCount}</p> : null}
-                  {isPresent(sale.transportName) ? <p>Transport: {sale.transportName}</p> : null}
-                  {isPresent(sale.vehicleNumber) ? <p>Vehicle No: {sale.vehicleNumber}</p> : null}
+
+                  {isPresent(sale.parcelCount) ? (
+                    <p>Parcel Count: {sale.parcelCount}</p>
+                  ) : null}
+
+                  {isPresent(sale.transportName) ? (
+                    <p>Transport: {sale.transportName}</p>
+                  ) : null}
+
+                  {isPresent(sale.vehicleNumber) ? (
+                    <p>Vehicle No: {sale.vehicleNumber}</p>
+                  ) : null}
                 </div>
               ) : null}
             </div>
           </div>
 
+          {/* Items table */}
           <div className="overflow-x-auto print:overflow-visible">
-            <table className="invoice-table w-full min-w-[960px] table-auto border-collapse text-xs print:min-w-0 print:table-fixed">
+            <table className="invoice-table w-full min-w-[100px] table-auto border-collapse text-[10px] print:min-w-0 print:table-fixed print:text-[7px] print:leading-[1.1]">
               <thead>
                 <tr className="bg-background text-left text-heading">
-                  <th className="w-10 border-b border-r border-heading px-2 py-2 text-center">Sr</th>
-                  <th className="border-b border-r border-heading px-2 py-2">Description</th>
-                  <th className="w-20 border-b border-r border-heading px-2 py-2">Item No.</th>
-                  <th className="w-16 border-b border-r border-heading px-2 py-2">Size</th>
-                  <th className="w-16 border-b border-r border-heading px-2 py-2">Colour</th>
-                  <th className="w-16 border-b border-r border-heading px-2 py-2 text-right">Qty</th>
-                  <th className="w-16 border-b border-r border-heading px-2 py-2">Unit</th>
-                  <th className="w-20 border-b border-r border-heading px-2 py-2 text-right">Rate</th>
-                  <th className="w-16 border-b border-r border-heading px-2 py-2 text-right">GST</th>
-                  <th className="w-24 border-b border-heading px-2 py-2 text-right">Amount</th>
+                  <th className="w-8 border-b border-r border-heading px-1.5 py-1.5 text-center print:px-1 print:py-1">
+                    Sr
+                  </th>
+
+                  <th className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
+                    Description
+                  </th>
+
+                  <th className="w-20 border-b border-r border-heading px-1.5 py-1.5 print:w-[15%] print:px-1 print:py-1">
+                    Item No.
+                  </th>
+
+                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 print:w-[8%] print:px-1 print:py-1">
+                    Size
+                  </th>
+
+                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 print:w-[8%] print:px-1 print:py-1">
+                    Colour
+                  </th>
+
+                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 text-right print:w-[7%] print:px-1 print:py-1">
+                    Qty
+                  </th>
+
+                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 print:w-[7%] print:px-1 print:py-1">
+                    Unit
+                  </th>
+
+                  <th className="w-20 border-b border-r border-heading px-1.5 py-1.5 text-right print:w-[11%] print:px-1 print:py-1">
+                    Rate
+                  </th>
+
+                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 text-right print:w-[7%] print:px-1 print:py-1">
+                    GST
+                  </th>
+
+                  <th className="w-24 border-b border-heading px-1.5 py-1.5 text-right print:w-[13%] print:px-1 print:py-1">
+                    Amount
+                  </th>
                 </tr>
               </thead>
+
               <tbody>
                 {items.length ? (
                   items.map((item, index) => (
-                    <tr className="break-inside-avoid" key={item.id || item._id || `${item.stockType}-${item.stockRef}-${index}`}>
-                      <td className="border-b border-r border-heading px-2 py-2 text-center">
+                    <tr
+                      className="break-inside-avoid"
+                      key={
+                        item.id ||
+                        item._id ||
+                        `${item.stockType}-${item.stockRef}-${index}`
+                      }
+                    >
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 text-center print:px-1 print:py-1">
                         {index + 1}
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2">
-                        <p className="font-semibold text-heading">
+
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
+                        <p className="font-semibold leading-tight text-heading">
                           {valueOrFallback(item.productName)}
                         </p>
-                        <p className="text-body">
+
+                        <p className="leading-tight text-body">
                           {formatStockType(item.stockType)}
-                          {isPresent(item.weight) ? ` | Weight: ${item.weight} KG` : ''}
+                          {isPresent(item.weight)
+                            ? ` | Weight: ${item.weight} KG`
+                            : ''}
                         </p>
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2">
+
+                      <td className="break-words border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
                         {valueOrFallback(item.itemNumber)}
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2">
+
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
                         {valueOrFallback(item.size)}
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2">
+
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
                         {valueOrFallback(item.colour || item.color)}
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2 text-right">
+
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 text-right print:px-1 print:py-1">
                         {item.quantity ?? 0}
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2">
+
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
                         {valueOrFallback(item.sellingUnit)}
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2 text-right">
+
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 text-right print:px-1 print:py-1">
                         {formatCurrency(item.sellingPrice)}
                       </td>
-                      <td className="border-b border-r border-heading px-2 py-2 text-right">
+
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 text-right print:px-1 print:py-1">
                         {Number(item.gstRate || 0)}%
                       </td>
-                      <td className="border-b border-heading px-2 py-2 text-right font-semibold">
+
+                      <td className="border-b border-heading px-1.5 py-1.5 text-right font-semibold print:px-1 print:py-1">
                         {formatCurrency(item.lineTotal)}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={10} className="border-b border-heading px-2 py-8 text-center text-body">
+                    <td
+                      colSpan={10}
+                      className="border-b border-heading px-2 py-5 text-center text-body print:py-2"
+                    >
                       No sale items are available.
                     </td>
                   </tr>
@@ -600,36 +713,52 @@ function SaleInvoicePreviewPage() {
             </table>
           </div>
 
-          <div className="grid break-inside-avoid border-b border-heading lg:grid-cols-[1fr_330px]">
-            <div className="border-b border-heading p-4 lg:border-b-0 lg:border-r">
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-heading">
+          {/* Amount and totals */}
+          <div className="grid break-inside-avoid grid-cols-[1fr_230px] border-b border-heading print:grid-cols-[1fr_210px]">
+            <div className="border-r border-heading p-3 print:p-2">
+              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                 Amount in Words
               </p>
-              <p className="mt-2 text-sm font-semibold text-heading">
+
+              <p className="mt-1 text-xs font-semibold leading-tight text-heading print:text-[8px]">
                 {numberToIndianWords(totals.grandTotal)}
               </p>
 
               {gstSummary.length ? (
-                <div className="mt-5 break-inside-avoid">
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-heading">
+                <div className="mt-2 break-inside-avoid print:mt-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                     GST Summary
                   </p>
-                  <table className="mt-2 w-full border-collapse text-xs">
+
+                  <table className="mt-1 w-full border-collapse text-[10px] print:text-[7px]">
                     <thead>
                       <tr className="bg-background text-heading">
-                        <th className="border border-heading px-2 py-1 text-left">GST Rate</th>
-                        <th className="border border-heading px-2 py-1 text-right">Taxable</th>
-                        <th className="border border-heading px-2 py-1 text-right">GST Amount</th>
+                        <th className="border border-heading px-1.5 py-1 text-left print:px-1 print:py-0.5">
+                          GST Rate
+                        </th>
+
+                        <th className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
+                          Taxable
+                        </th>
+
+                        <th className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
+                          GST Amount
+                        </th>
                       </tr>
                     </thead>
+
                     <tbody>
                       {gstSummary.map((group) => (
                         <tr key={group.rate}>
-                          <td className="border border-heading px-2 py-1">{group.rate}%</td>
-                          <td className="border border-heading px-2 py-1 text-right">
+                          <td className="border border-heading px-1.5 py-1 print:px-1 print:py-0.5">
+                            {group.rate}%
+                          </td>
+
+                          <td className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
                             {formatCurrency(group.taxable)}
                           </td>
-                          <td className="border border-heading px-2 py-1 text-right">
+
+                          <td className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
                             {formatCurrency(group.gst)}
                           </td>
                         </tr>
@@ -640,26 +769,45 @@ function SaleInvoicePreviewPage() {
               ) : null}
             </div>
 
-            <div className="p-4 text-sm">
-              <div className="space-y-2">
-                <div className="flex justify-between gap-4">
+            <div className="p-3 text-xs print:p-2 print:text-[8px]">
+              <div className="space-y-1 print:space-y-0.5">
+                <div className="flex justify-between gap-3">
                   <span className="text-body">Subtotal</span>
-                  <span className="font-semibold text-heading">{formatCurrency(totals.subtotal)}</span>
+
+                  <span className="font-semibold text-heading">
+                    {formatCurrency(totals.subtotal)}
+                  </span>
                 </div>
-                <div className="flex justify-between gap-4">
+
+                <div className="flex justify-between gap-3">
                   <span className="text-body">GST Amount</span>
-                  <span className="font-semibold text-heading">{formatCurrency(totals.gstAmount)}</span>
+
+                  <span className="font-semibold text-heading">
+                    {formatCurrency(totals.gstAmount)}
+                  </span>
                 </div>
-                <div className="flex justify-between gap-4 border-t border-heading pt-2">
-                  <span className="font-black uppercase text-heading">Grand Total</span>
-                  <span className="font-black text-heading">{formatCurrency(totals.grandTotal)}</span>
+
+                <div className="flex justify-between gap-3 border-t border-heading pt-1">
+                  <span className="font-black uppercase text-heading">
+                    Grand Total
+                  </span>
+
+                  <span className="font-black text-heading">
+                    {formatCurrency(totals.grandTotal)}
+                  </span>
                 </div>
-                <div className="flex justify-between gap-4">
+
+                <div className="flex justify-between gap-3">
                   <span className="text-body">Paid</span>
-                  <span className="font-semibold text-heading">{formatCurrency(totals.paidAmount)}</span>
+
+                  <span className="font-semibold text-heading">
+                    {formatCurrency(totals.paidAmount)}
+                  </span>
                 </div>
-                <div className="flex justify-between gap-4">
+
+                <div className="flex justify-between gap-3">
                   <span className="text-body">Outstanding</span>
+
                   <span className="font-semibold text-heading">
                     {formatCurrency(totals.outstandingAmount)}
                   </span>
@@ -668,45 +816,79 @@ function SaleInvoicePreviewPage() {
             </div>
           </div>
 
-          {(showBankDetails || showTerms || showNotes) ? (
-            <div className="grid break-inside-avoid border-b border-heading lg:grid-cols-2">
+          {/* Bank, terms and notes */}
+          {showBankDetails || showTerms || showNotes ? (
+            <div className="grid break-inside-avoid grid-cols-2 border-b border-heading">
               {showBankDetails ? (
-                <div className="border-b border-heading p-4 lg:border-b-0 lg:border-r">
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-heading">
+                <div
+                  className={`p-3 print:p-2 ${showTerms || showNotes ? 'border-r border-heading' : 'col-span-2'
+                    }`}
+                >
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                     Company&apos;s Bank Details
                   </p>
-                  <div className="mt-2 space-y-1 text-sm text-body">
+
+                  <div className="mt-1 space-y-0.5 text-xs leading-snug text-body print:text-[8px] print:leading-[1.2]">
                     {isPresent(bankDetails.accountHolderName) ? (
-                      <p>Account Holder: {bankDetails.accountHolderName}</p>
+                      <p>
+                        Account Holder: {bankDetails.accountHolderName}
+                      </p>
                     ) : null}
-                    <p>Bank: {valueOrFallback(bankDetails.bankName || bankDetails.name)}</p>
-                    <p>Account No: {valueOrFallback(bankDetails.accountNumber)}</p>
-                    <p>Branch: {valueOrFallback(bankDetails.branch)}</p>
-                    <p>IFSC: {valueOrFallback(bankDetails.ifsc || bankDetails.ifscCode)}</p>
+
+                    <p>
+                      Bank:{' '}
+                      {valueOrFallback(
+                        bankDetails.bankName || bankDetails.name,
+                      )}
+                    </p>
+
+                    <p>
+                      Account No:{' '}
+                      {valueOrFallback(bankDetails.accountNumber)}
+                    </p>
+
+                    <p>
+                      Branch: {valueOrFallback(bankDetails.branch)}
+                    </p>
+
+                    <p>
+                      IFSC:{' '}
+                      {valueOrFallback(
+                        bankDetails.ifsc || bankDetails.ifscCode,
+                      )}
+                    </p>
                   </div>
                 </div>
               ) : null}
 
-              {(showTerms || showNotes) ? (
-                <div className="p-4">
+              {showTerms || showNotes ? (
+                <div
+                  className={`p-3 print:p-2 ${!showBankDetails ? 'col-span-2' : ''
+                    }`}
+                >
                   {showTerms ? (
                     <>
-                      <p className="text-xs font-black uppercase tracking-[0.16em] text-heading">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                         Terms & Conditions
                       </p>
-                      <ul className="mt-2 space-y-1 text-sm text-body">
+
+                      <ul className="mt-1 space-y-0.5 text-xs leading-snug text-body print:text-[8px]">
                         {terms.map((term, index) => (
-                          <li key={`${term}-${index}`}>{term}</li>
+                          <li key={`${term}-${index}`}>
+                            {term}
+                          </li>
                         ))}
                       </ul>
                     </>
                   ) : null}
+
                   {showNotes ? (
-                    <div className={showTerms ? 'mt-4' : ''}>
-                      <p className="text-xs font-black uppercase tracking-[0.16em] text-heading">
+                    <div className={showTerms ? 'mt-2 print:mt-1' : ''}>
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                         Notes
                       </p>
-                      <p className="mt-2 whitespace-pre-wrap text-sm text-body">
+
+                      <p className="mt-1 whitespace-pre-wrap text-xs leading-snug text-body print:text-[8px]">
                         {sale.notes || sale.remarks}
                       </p>
                     </div>
@@ -716,19 +898,28 @@ function SaleInvoicePreviewPage() {
             </div>
           ) : null}
 
-          <div className="grid min-h-32 break-inside-avoid lg:grid-cols-2">
-            <div className="flex flex-col justify-between border-b border-heading p-4 text-xs text-body lg:border-b-0 lg:border-r">
+          {/* Footer and signature */}
+          <div className="grid min-h-24 break-inside-avoid grid-cols-2 print:min-h-[60px]">
+            <div className="flex flex-col justify-between border-r border-heading p-3 text-[10px] leading-snug text-body print:p-2 print:text-[7px]">
               <p>
-                Certified that the particulars given above are true and correct to the best of
-                available invoice records.
+                Certified that the particulars given above are true and correct
+                to the best of available invoice records.
               </p>
-              <p className="mt-8 text-center font-semibold uppercase text-heading">
-                {company.jurisdiction || STATIC_COMPANY_SETTINGS.jurisdiction}
+
+              <p className="mt-4 text-center font-semibold uppercase text-heading print:mt-2">
+                {company.jurisdiction ||
+                  STATIC_COMPANY_SETTINGS.jurisdiction}
               </p>
             </div>
-            <div className="flex flex-col justify-between p-4 text-right">
-              <p className="text-sm font-bold text-heading">For {companyName}</p>
-              <p className="mt-16 text-sm font-bold text-heading">Authorized Signature</p>
+
+            <div className="flex flex-col justify-between p-3 text-right print:p-2">
+              <p className="text-xs font-bold text-heading print:text-[8px]">
+                For {companyName}
+              </p>
+
+              <p className="mt-10 text-xs font-bold text-heading print:mt-6 print:text-[8px]">
+                Authorized Signature
+              </p>
             </div>
           </div>
         </div>

@@ -6,12 +6,19 @@ import {
   setUserActiveStatus,
   updateUser,
 } from '../services/userService.js';
+
 import { formatUser } from '../utils/formatUser.js';
-import { ALL_PERMISSIONS, CRM_MODULE_PERMISSIONS, ROLE_PERMISSIONS, ROLES } from '../utils/permissions.js';
+
+import {
+  ALL_PERMISSIONS,
+  ASSIGNABLE_ROLES,
+  CRM_MODULE_PERMISSIONS,
+  ROLE_PERMISSIONS,
+} from '../utils/permissions.js';
 
 export async function getUserManagementOptions(req, res) {
   return res.status(200).json({
-    roles: Object.values(ROLES),
+    roles: ASSIGNABLE_ROLES,
     permissions: ALL_PERMISSIONS,
     modulePermissions: CRM_MODULE_PERMISSIONS,
     rolePermissions: ROLE_PERMISSIONS,
@@ -51,7 +58,11 @@ export async function createUserController(req, res) {
 }
 
 export async function updateUserController(req, res) {
-  const user = await updateUser(req.params.userId, req.body, req.user._id);
+  const user = await updateUser(
+    req.params.userId,
+    req.body,
+    req.user._id,
+  );
 
   return res.status(200).json({
     message: 'User updated successfully.',
@@ -60,10 +71,16 @@ export async function updateUserController(req, res) {
 }
 
 export async function setUserActiveStatusController(req, res) {
-  const user = await setUserActiveStatus(req.params.userId, req.body.isActive, req.user._id);
+  const user = await setUserActiveStatus(
+    req.params.userId,
+    req.body.isActive,
+    req.user._id,
+  );
 
   return res.status(200).json({
-    message: user.isActive ? 'User activated successfully.' : 'User deactivated successfully.',
+    message: user.isActive
+      ? 'User activated successfully.'
+      : 'User deactivated successfully.',
     user: formatUser(user),
   });
 }
