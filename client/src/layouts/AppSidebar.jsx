@@ -67,7 +67,7 @@ function AppSidebar({ open, onClose, collapsed }) {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-2 overflow-y-auto px-4 py-2">
+        <nav className="flex-1 space-y-2 h-screen overflow-y-auto scrollbar-hide px-4 py-2">
           {visibleItems.map((item) => {
             const Icon = item.icon;
 
