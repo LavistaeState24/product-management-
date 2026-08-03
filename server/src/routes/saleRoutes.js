@@ -9,13 +9,19 @@ import {
   updateSale,
 } from '../controllers/saleController.js';
 import { recordSalePaymentController } from '../controllers/paymentHistoryController.js';
+
 import { requireAuth } from '../middleware/authMiddleware.js';
-import { requireAnyPermission, requirePermission } from '../middleware/rbacMiddleware.js';
-import { validateRequest } from '../middleware/validateRequest.js';
-import { PERMISSIONS } from '../utils/permissions.js';
 import {
-  createSaleValidator,
+  requireAnyPermission,
+  requirePermission,
+} from '../middleware/rbacMiddleware.js';
+import { validateRequest } from '../middleware/validateRequest.js';
+
+import { PERMISSIONS } from '../utils/permissions.js';
+
+import {
   cancelSaleValidator,
+  createSaleValidator,
   listSaleValidator,
   saleIdParamValidator,
   updateSaleValidator,
@@ -76,7 +82,10 @@ router.patch(
 
 router.post(
   '/:saleId/payments',
-  requireAnyPermission([PERMISSIONS.canCreatePayments, PERMISSIONS.canManagePayments]),
+  requireAnyPermission([
+    PERMISSIONS.canCreatePayments,
+    PERMISSIONS.canManagePayments,
+  ]),
   saleIdParamValidator,
   recordPaymentValidator,
   validateRequest,

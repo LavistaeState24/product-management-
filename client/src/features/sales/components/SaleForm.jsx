@@ -50,9 +50,9 @@ function getStockId(item) {
 function getAvailableQuantity(item) {
   return Number(
     item?.availableQuantity ??
-      item?.quantity ??
-      item?.currentStock ??
-      0,
+    item?.quantity ??
+    item?.currentStock ??
+    0,
   );
 }
 
@@ -151,7 +151,7 @@ function normalizeInitialValues(initialValues = {}) {
       : '');
   values.items =
     Array.isArray(initialValues.items) &&
-    initialValues.items.length
+      initialValues.items.length
       ? initialValues.items
       : [emptyItem];
 
@@ -334,42 +334,54 @@ function SaleForm({
       : 'Duplicate stock item selected.';
   }
 
+  const cleanText = (value) => String(value ?? '').trim();
+
   function buildPayload(values) {
     return {
       invoiceDate: values.invoiceDate,
-      customerName: values.customerName.trim(),
-      customerMobile: values.customerMobile?.trim() || '',
-      customerAddress: values.customerAddress?.trim() || '',
-      customerLocation: values.customerLocation?.trim() || '',
-      customerGST: values.customerGST?.trim().toUpperCase() || '',
+
+      customerName: cleanText(values.customerName),
+      customerMobile: cleanText(values.customerMobile),
+      customerAddress: cleanText(values.customerAddress),
+      customerLocation: cleanText(values.customerLocation),
+      customerGST: cleanText(values.customerGST).toUpperCase(),
+
       paymentType: values.paymentType,
+
       paidAmount:
         values.paymentType === 'Cash'
           ? invoiceSummary.grandTotal
           : Number(values.paidAmount) || 0,
+
       creditDays:
         values.paymentType === 'Credit'
-          ? Number(values.creditDays)
+          ? Number(values.creditDays) || 0
           : 0,
+
       parcelCount: Number(values.parcelCount) || 0,
-      transportName: values.transportName?.trim() || '',
-      vehicleNumber: values.vehicleNumber?.trim().toUpperCase() || '',
+
+      transportName: cleanText(values.transportName),
+      vehicleNumber: cleanText(values.vehicleNumber).toUpperCase(),
+
       bankDetails: {
-        bankName: values.bankName?.trim() || '',
-        accountNumber: values.bankAccountNumber?.trim() || '',
-        ifsc: values.bankIFSC?.trim().toUpperCase() || '',
-        branch: values.bankBranch?.trim() || '',
+        bankName: cleanText(values.bankName),
+        accountNumber: cleanText(values.bankAccountNumber),
+        ifsc: cleanText(values.bankIFSC).toUpperCase(),
+        branch: cleanText(values.bankBranch),
       },
-      termsAndConditions: String(values.termsText || '')
+
+      termsAndConditions: cleanText(values.termsText)
         .split('\n')
         .map((term) => term.trim())
         .filter(Boolean),
-      notes: values.notes?.trim() || '',
-      items: values.items.map((item) => ({
+
+      notes: cleanText(values.notes),
+
+      items: (values.items || []).map((item) => ({
         stockType: item.stockType,
         stockRef: item.stockRef,
-        quantity: Number(item.quantity),
-        sellingPrice: Number(item.sellingPrice),
+        quantity: Number(item.quantity) || 0,
+        sellingPrice: Number(item.sellingPrice) || 0,
         gstRate: Number(item.gstRate) || 0,
       })),
     };
@@ -577,8 +589,8 @@ function SaleForm({
                       ))}
                     </select>
                     {stockType &&
-                    !stockLoadingByType[stockType] &&
-                    stockOptions.length === 0 ? (
+                      !stockLoadingByType[stockType] &&
+                      stockOptions.length === 0 ? (
                       <span className="text-xs text-body">
                         No stock items found.
                       </span>
@@ -602,7 +614,9 @@ function SaleForm({
 
                   <Input
                     label="Quantity"
-                    type="number"
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
                     min="0.01"
                     step="0.01"
                     error={errors.items?.[index]?.quantity?.message}
