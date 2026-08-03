@@ -6,10 +6,13 @@ import {
   listPUProductManufacturing,
   updatePUProductManufacturing,
 } from '../controllers/puProductManufacturingController.js';
+
 import { requireAuth } from '../middleware/authMiddleware.js';
-import { requireAnyPermission } from '../middleware/rbacMiddleware.js';
+import { requirePermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
+
 import { PERMISSIONS } from '../utils/permissions.js';
+
 import {
   createPUProductManufacturingValidator,
   deletePUProductManufacturingValidator,
@@ -24,7 +27,7 @@ router.use(requireAuth);
 
 router.get(
   '/',
-  requireAnyPermission([PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock]),
+  requirePermission(PERMISSIONS.canViewPuProduction),
   listPUProductManufacturingValidator,
   validateRequest,
   listPUProductManufacturing,
@@ -32,7 +35,7 @@ router.get(
 
 router.get(
   '/:id',
-  requireAnyPermission([PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock]),
+  requirePermission(PERMISSIONS.canViewPuProduction),
   getPUProductManufacturingValidator,
   validateRequest,
   getPUProductManufacturing,
@@ -40,7 +43,7 @@ router.get(
 
 router.post(
   '/',
-  requireAnyPermission([PERMISSIONS.canCreateProduction, PERMISSIONS.canManageStock]),
+  requirePermission(PERMISSIONS.canCreatePuProduction),
   createPUProductManufacturingValidator,
   validateRequest,
   createPUProductManufacturing,
@@ -48,7 +51,7 @@ router.post(
 
 router.put(
   '/:id',
-  requireAnyPermission([PERMISSIONS.canEditProduction, PERMISSIONS.canManageStock]),
+  requirePermission(PERMISSIONS.canEditPuProduction),
   updatePUProductManufacturingValidator,
   validateRequest,
   updatePUProductManufacturing,
@@ -56,7 +59,7 @@ router.put(
 
 router.delete(
   '/:id',
-  requireAnyPermission([PERMISSIONS.canDeleteProduction, PERMISSIONS.canManageStock]),
+  requirePermission(PERMISSIONS.canDeletePuProduction),
   deletePUProductManufacturingValidator,
   validateRequest,
   deletePUProductManufacturing,

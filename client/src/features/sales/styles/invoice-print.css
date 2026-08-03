@@ -1,46 +1,439 @@
 @page {
   size: A4 portrait;
-  margin: 10mm;
+  margin: 6mm;
 }
 
 @media print {
   html,
-  body,
-  #root {
+  body {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 !important;
+    padding: 0 !important;
     background: #ffffff !important;
-  }
-
-  * {
+    overflow: visible !important;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
 
-  aside,
-  nav,
-  header,
-  footer {
-    display: none !important;
-  }
-
-  main {
-    padding: 0 !important;
-  }
-
+  /*
+   * Supports both class names:
+   * - invoice-page
+   * - invoice-print-root
+   */
+  .invoice-page,
   .invoice-print-root {
-    width: 190mm !important;
+    width: 198mm !important;
+    max-width: 198mm !important;
     min-height: auto !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+
+    break-before: avoid !important;
+    break-after: avoid !important;
   }
 
-  .invoice-table thead {
+  .invoice-page *,
+  .invoice-print-root * {
+    box-sizing: border-box;
+  }
+
+  /*
+   * Do not force the complete invoice to avoid page breaks.
+   * It can create an empty first page or push the whole invoice
+   * to another page in some browsers.
+   */
+  .invoice-page > div,
+  .invoice-print-root > div {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Keep individual important sections together */
+  .invoice-page section,
+  .invoice-page header,
+  .invoice-page footer,
+  .invoice-print-root section,
+  .invoice-print-root header,
+  .invoice-print-root footer,
+  .invoice-summary,
+  .invoice-bank-details,
+  .invoice-terms,
+  .invoice-signature,
+  .break-inside-avoid {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Fixed two-column layouts in print */
+  .invoice-page .grid-cols-2,
+  .invoice-print-root .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .invoice-page .grid-cols-\[1\.25fr_0\.75fr\],
+  .invoice-print-root .grid-cols-\[1\.25fr_0\.75fr\] {
+    grid-template-columns: 1.25fr 0.75fr !important;
+  }
+
+  .invoice-page .grid-cols-\[1fr_230px\],
+  .invoice-print-root .grid-cols-\[1fr_230px\] {
+    grid-template-columns: minmax(0, 1fr) 210px !important;
+  }
+
+  /*
+   * Safety for old JSX that still uses lg:grid-cols-*.
+   * Print should remain in columns regardless of viewport.
+   */
+  .invoice-page .lg\:grid-cols-2,
+  .invoice-print-root .lg\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .invoice-page .lg\:grid-cols-\[1\.25fr_0\.75fr\],
+  .invoice-print-root .lg\:grid-cols-\[1\.25fr_0\.75fr\] {
+    grid-template-columns: 1.25fr 0.75fr !important;
+  }
+
+  .invoice-page .lg\:grid-cols-\[1fr_330px\],
+  .invoice-print-root .lg\:grid-cols-\[1fr_330px\] {
+    grid-template-columns: minmax(0, 1fr) 210px !important;
+  }
+
+  /* Print border corrections for old responsive classes */
+  .invoice-page .lg\:border-b-0,
+  .invoice-print-root .lg\:border-b-0 {
+    border-bottom-width: 0 !important;
+  }
+
+  .invoice-page .lg\:border-r,
+  .invoice-print-root .lg\:border-r {
+    border-right-width: 1px !important;
+  }
+
+  /* General section spacing */
+  .invoice-page section,
+  .invoice-page header,
+  .invoice-page footer,
+  .invoice-print-root section,
+  .invoice-print-root header,
+  .invoice-print-root footer {
+    margin: 0 !important;
+  }
+
+  .invoice-page .invoice-section,
+  .invoice-print-root .invoice-section {
+    padding: 5px 8px !important;
+  }
+
+  /* Padding */
+  .invoice-page .p-6,
+  .invoice-print-root .p-6 {
+    padding: 8px !important;
+  }
+
+  .invoice-page .p-5,
+  .invoice-print-root .p-5 {
+    padding: 7px !important;
+  }
+
+  .invoice-page .p-4,
+  .invoice-print-root .p-4 {
+    padding: 6px !important;
+  }
+
+  .invoice-page .p-3,
+  .invoice-print-root .p-3 {
+    padding: 5px !important;
+  }
+
+  .invoice-page .p-2,
+  .invoice-print-root .p-2 {
+    padding: 4px !important;
+  }
+
+  .invoice-page .px-6,
+  .invoice-print-root .px-6 {
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+  }
+
+  .invoice-page .px-5,
+  .invoice-print-root .px-5 {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .invoice-page .px-4,
+  .invoice-print-root .px-4 {
+    padding-left: 7px !important;
+    padding-right: 7px !important;
+  }
+
+  .invoice-page .px-3,
+  .invoice-print-root .px-3 {
+    padding-left: 5px !important;
+    padding-right: 5px !important;
+  }
+
+  .invoice-page .px-2,
+  .invoice-print-root .px-2 {
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+
+  .invoice-page .py-4,
+  .invoice-print-root .py-4 {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .invoice-page .py-3,
+  .invoice-print-root .py-3 {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  .invoice-page .py-2,
+  .invoice-print-root .py-2 {
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+  }
+
+  .invoice-page .py-1,
+  .invoice-print-root .py-1 {
+    padding-top: 2px !important;
+    padding-bottom: 2px !important;
+  }
+
+  /* Margins */
+  .invoice-page .mt-8,
+  .invoice-print-root .mt-8 {
+    margin-top: 8px !important;
+  }
+
+  .invoice-page .mt-6,
+  .invoice-print-root .mt-6 {
+    margin-top: 7px !important;
+  }
+
+  .invoice-page .mt-5,
+  .invoice-print-root .mt-5 {
+    margin-top: 6px !important;
+  }
+
+  .invoice-page .mt-4,
+  .invoice-print-root .mt-4 {
+    margin-top: 5px !important;
+  }
+
+  .invoice-page .mt-3,
+  .invoice-print-root .mt-3 {
+    margin-top: 4px !important;
+  }
+
+  .invoice-page .mt-2,
+  .invoice-print-root .mt-2 {
+    margin-top: 3px !important;
+  }
+
+  .invoice-page .mt-1,
+  .invoice-print-root .mt-1 {
+    margin-top: 2px !important;
+  }
+
+  .invoice-page .mb-6,
+  .invoice-print-root .mb-6 {
+    margin-bottom: 7px !important;
+  }
+
+  .invoice-page .mb-4,
+  .invoice-print-root .mb-4 {
+    margin-bottom: 5px !important;
+  }
+
+  .invoice-page .mb-3,
+  .invoice-print-root .mb-3 {
+    margin-bottom: 4px !important;
+  }
+
+  /* Large signature spacing */
+  .invoice-page .mt-16,
+  .invoice-print-root .mt-16 {
+    margin-top: 22px !important;
+  }
+
+  .invoice-page .mt-10,
+  .invoice-print-root .mt-10 {
+    margin-top: 18px !important;
+  }
+
+  /* Gaps */
+  .invoice-page .gap-6,
+  .invoice-print-root .gap-6 {
+    gap: 7px !important;
+  }
+
+  .invoice-page .gap-4,
+  .invoice-print-root .gap-4 {
+    gap: 6px !important;
+  }
+
+  .invoice-page .gap-3,
+  .invoice-print-root .gap-3 {
+    gap: 5px !important;
+  }
+
+  .invoice-page .gap-2,
+  .invoice-print-root .gap-2 {
+    gap: 4px !important;
+  }
+
+  .invoice-page .gap-1,
+  .invoice-print-root .gap-1 {
+    gap: 2px !important;
+  }
+
+  /* Vertical spacing */
+  .invoice-page .space-y-2 > :not([hidden]) ~ :not([hidden]),
+  .invoice-print-root .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 3px !important;
+  }
+
+  .invoice-page .space-y-1 > :not([hidden]) ~ :not([hidden]),
+  .invoice-print-root .space-y-1 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1px !important;
+  }
+
+  .invoice-page .space-y-0\.5 > :not([hidden]) ~ :not([hidden]),
+  .invoice-print-root .space-y-0\.5 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0 !important;
+  }
+
+  /* Headings */
+  .invoice-page h1,
+  .invoice-print-root h1 {
+    font-size: 16px !important;
+    line-height: 1.05 !important;
+  }
+
+  .invoice-page h2,
+  .invoice-print-root h2 {
+    font-size: 14px !important;
+    line-height: 1.08 !important;
+  }
+
+  .invoice-page h3,
+  .invoice-print-root h3 {
+    font-size: 11px !important;
+    line-height: 1.1 !important;
+  }
+
+  .invoice-page p,
+  .invoice-print-root p {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Logo */
+  .invoice-page img,
+  .invoice-print-root img {
+    width: auto !important;
+    max-width: 160px !important;
+    max-height: 40px !important;
+    object-fit: contain !important;
+  }
+
+  /* Tables */
+  .invoice-page table,
+  .invoice-print-root table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    font-size: 7.5px !important;
+    line-height: 1.1 !important;
+  }
+
+  .invoice-page th,
+  .invoice-page td,
+  .invoice-print-root th,
+  .invoice-print-root td {
+    padding: 2px 3px !important;
+    vertical-align: top !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .invoice-page thead,
+  .invoice-print-root thead {
     display: table-header-group;
   }
 
-  .invoice-table tfoot {
-    display: table-footer-group;
+  .invoice-page tbody,
+  .invoice-print-root tbody {
+    display: table-row-group;
   }
 
-  .invoice-table tr {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  .invoice-page tr,
+  .invoice-page td,
+  .invoice-page th,
+  .invoice-print-root tr,
+  .invoice-print-root td,
+  .invoice-print-root th {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Remove horizontal table scrolling */
+  .invoice-page .overflow-x-auto,
+  .invoice-print-root .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  .invoice-page .min-w-\[960px\],
+  .invoice-page .min-w-\[900px\],
+  .invoice-print-root .min-w-\[960px\],
+  .invoice-print-root .min-w-\[900px\] {
+    min-width: 0 !important;
+  }
+
+  /* Compact footer/signature */
+  .invoice-page .min-h-32,
+  .invoice-print-root .min-h-32 {
+    min-height: 65px !important;
+  }
+
+  .invoice-page .min-h-24,
+  .invoice-print-root .min-h-24 {
+    min-height: 58px !important;
+  }
+
+  .invoice-signature {
+    min-height: 50px !important;
+  }
+
+  /* Prevent URLs being printed after links */
+  .invoice-page a[href]::after,
+  .invoice-print-root a[href]::after {
+    content: none !important;
+  }
+
+  /* Hide CRM controls */
+  .no-print,
+  button,
+  nav,
+  aside {
+    display: none !important;
   }
 }

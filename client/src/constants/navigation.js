@@ -1,19 +1,22 @@
 import {
+  BarChart3,
   Boxes,
   Factory,
   LayoutDashboard,
   PackageSearch,
-  BarChart3,
   ReceiptText,
   ShieldCheck,
   ShoppingCart,
   Warehouse,
   WalletCards,
 } from 'lucide-react';
-import { PERMISSION_GROUPS, PERMISSIONS } from '@/constants/permissions';
+
+import {
+  PERMISSION_GROUPS,
+  PERMISSIONS,
+} from '@/constants/permissions';
 
 export const SIDEBAR_ITEMS = [
-  // Dashboard
   {
     label: 'Dashboard',
     path: '/dashboard',
@@ -21,13 +24,13 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewDashboard,
   },
 
-  // Purchase & Stock
   {
     label: 'Purchases',
     path: '/purchases',
     icon: ReceiptText,
     permission: PERMISSIONS.canViewPurchase,
   },
+
   {
     label: 'Raw Stock',
     path: '/stock',
@@ -35,13 +38,13 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewStock,
   },
 
-  // Rod
   {
     label: 'Rod Production',
     path: '/rod-productions',
     icon: Factory,
-    permission: PERMISSION_GROUPS.viewRodProduction,
+    permission: PERMISSION_GROUPS.viewProduction,
   },
+
   {
     label: 'Rod Stock',
     path: '/rod-stocks',
@@ -49,19 +52,20 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewStock,
   },
 
-  // Sheet
   {
     label: 'Sheet Production',
     path: '/sheet-productions',
     icon: Factory,
     permission: PERMISSION_GROUPS.viewProduction,
   },
+
   {
     label: 'New Sheet',
     path: '/sheet-productions/new',
     icon: Factory,
     permission: PERMISSION_GROUPS.createProduction,
   },
+
   {
     label: 'Sheet Stock',
     path: '/sheet-stock',
@@ -69,19 +73,20 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewSheetStock,
   },
 
-  // PU
   {
     label: 'PU Production',
     path: '/pu-product-manufacturing',
     icon: Factory,
-    permission: PERMISSION_GROUPS.viewPuProduction,
+    permission: PERMISSION_GROUPS.viewProduction,
   },
+
   {
     label: 'New PU',
     path: '/pu-product-manufacturing/new',
     icon: Factory,
-    permission: PERMISSION_GROUPS.createPuProduction,
+    permission: PERMISSION_GROUPS.createProduction,
   },
+
   {
     label: 'PU Stock',
     path: '/pu-product-stock',
@@ -89,25 +94,27 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewStock,
   },
 
-  // Sales
   {
     label: 'Finished Goods',
     path: '/finished-goods-stock',
     icon: Warehouse,
     permission: PERMISSIONS.canViewStock,
   },
+
   {
     label: 'Sales',
     path: '/sales',
     icon: ShoppingCart,
     permission: PERMISSIONS.canViewSales,
   },
+
   {
     label: 'Payments',
     path: '/payment-management',
     icon: WalletCards,
     permission: PERMISSIONS.canViewPayments,
   },
+
   {
     label: 'Reports',
     path: '/reports',
@@ -115,7 +122,6 @@ export const SIDEBAR_ITEMS = [
     permission: PERMISSIONS.canViewReports,
   },
 
-  // Admin
   {
     label: 'Users',
     path: '/users',

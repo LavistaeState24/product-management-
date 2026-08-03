@@ -38,6 +38,11 @@ router.patch(
   validateRequest,
   setUserActiveStatusController,
 );
-router.delete('/:userId', deleteUserValidator, validateRequest, deleteUserController);
+router.delete(
+  '/:userId',
+  deleteUserValidator,
+  validateRequest,
+  deleteUserController,
+);
 
 export default router;

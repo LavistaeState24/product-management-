@@ -384,7 +384,7 @@ function PaymentManagementPage() {
                   type="button"
                   size="sm"
                   disabled={outstandingAmount <= 0}
-                  title={outstandingAmount <= 0 ? 'Invoice is fully paid Record Payment' : undefined}
+                  title={outstandingAmount <= 0 ? 'Invoice is fully paid' : 'Record Payment'}
                   onClick={() => openPaymentModal('sale', row)}
                 >
                   <CreditCard className="h-4 w-4" />

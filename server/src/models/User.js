@@ -1,6 +1,10 @@
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
-import { getDefaultPermissionsForRole, normalizePermissions, ROLES } from '../utils/permissions.js';
+import {
+  getDefaultPermissionsForRole,
+  normalizePermissions,
+  ROLES,
+} from '../utils/permissions.js';
 
 const userSchema = new mongoose.Schema(
   {
@@ -9,6 +13,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -16,24 +21,28 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     password: {
       type: String,
       required: true,
       minlength: 8,
       select: false,
     },
+
     role: {
       type: String,
       enum: Object.values(ROLES),
       required: true,
       default: ROLES.User,
     },
+
     permissions: {
       type: [String],
       default: function getPermissions() {
         return getDefaultPermissionsForRole(this.role);
       },
     },
+
     isActive: {
       type: Boolean,
       default: true,
@@ -45,23 +54,31 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre('save', async function syncRolePermissions(next) {
-  if ((this.isModified('role') || this.isNew) && !this.isModified('permissions')) {
-    this.permissions = getDefaultPermissionsForRole(this.role);
-  }
+  try {
+    if (
+      (this.isModified('role') || this.isNew) &&
+      !this.isModified('permissions')
+    ) {
+      this.permissions = getDefaultPermissionsForRole(this.role);
+    }
 
-  if (this.isModified('permissions')) {
-    this.permissions = normalizePermissions(this.permissions);
-  }
+    if (this.isModified('permissions')) {
+      this.permissions = normalizePermissions(this.permissions);
+    }
 
-  if (!this.isModified('password')) {
-    return next();
-  }
+    if (this.isModified('password')) {
+      this.password = await bcrypt.hash(this.password, 10);
+    }
 
-  this.password = await bcrypt.hash(this.password, 10);
-  return next();
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
-userSchema.methods.comparePassword = function comparePassword(candidatePassword) {
+userSchema.methods.comparePassword = function comparePassword(
+  candidatePassword,
+) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 

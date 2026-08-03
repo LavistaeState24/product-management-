@@ -7,7 +7,7 @@ import {
   updateSheetProduction,
 } from '../controllers/sheetProductionController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
-import { requireAnyPermission } from '../middleware/rbacMiddleware.js';
+import { requirePermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
 import { PERMISSIONS } from '../utils/permissions.js';
 import {
@@ -24,7 +24,7 @@ router.use(requireAuth);
 
 router.get(
   '/',
-  requireAnyPermission([PERMISSIONS.canViewSheetProduction, PERMISSIONS.canViewProduction]),
+  requirePermission(PERMISSIONS.canViewSheetProduction),
   listSheetProductionValidator,
   validateRequest,
   listSheetProductions,
@@ -32,7 +32,7 @@ router.get(
 
 router.get(
   '/:id',
-  requireAnyPermission([PERMISSIONS.canViewSheetProduction, PERMISSIONS.canViewProduction]),
+  requirePermission(PERMISSIONS.canViewSheetProduction),
   getSheetProductionValidator,
   validateRequest,
   getSheetProduction,
@@ -40,7 +40,7 @@ router.get(
 
 router.post(
   '/',
-  requireAnyPermission([PERMISSIONS.canCreateSheetProduction, PERMISSIONS.canCreateProduction]),
+  requirePermission(PERMISSIONS.canCreateSheetProduction),
   createSheetProductionValidator,
   validateRequest,
   createSheetProduction,
@@ -48,7 +48,7 @@ router.post(
 
 router.put(
   '/:id',
-  requireAnyPermission([PERMISSIONS.canUpdateSheetProduction, PERMISSIONS.canEditProduction]),
+  requirePermission(PERMISSIONS.canUpdateSheetProduction),
   updateSheetProductionValidator,
   validateRequest,
   updateSheetProduction,
@@ -56,7 +56,7 @@ router.put(
 
 router.delete(
   '/:id',
-  requireAnyPermission([PERMISSIONS.canDeleteSheetProduction, PERMISSIONS.canDeleteProduction]),
+  requirePermission(PERMISSIONS.canDeleteSheetProduction),
   deleteSheetProductionValidator,
   validateRequest,
   deleteSheetProduction,

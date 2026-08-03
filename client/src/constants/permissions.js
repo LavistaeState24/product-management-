@@ -1,33 +1,40 @@
 export const PERMISSIONS = {
   canViewDashboard: 'canViewDashboard',
   canManageUsers: 'canManageUsers',
+
   canViewPurchase: 'canViewPurchase',
   canCreatePurchase: 'canCreatePurchase',
   canEditPurchase: 'canEditPurchase',
   canDeletePurchase: 'canDeletePurchase',
+
   canViewProduction: 'canViewProduction',
   canCreateProduction: 'canCreateProduction',
   canEditProduction: 'canEditProduction',
   canDeleteProduction: 'canDeleteProduction',
+
   canViewSales: 'canViewSales',
   canCreateSales: 'canCreateSales',
   canEditSales: 'canEditSales',
   canDeleteSales: 'canDeleteSales',
+
   canViewStock: 'canViewStock',
   canManageStock: 'canManageStock',
   canCreateStock: 'canCreateStock',
   canEditStock: 'canEditStock',
   canDeleteStock: 'canDeleteStock',
+
   canViewSheetProduction: 'canViewSheetProduction',
   canCreateSheetProduction: 'canCreateSheetProduction',
   canUpdateSheetProduction: 'canUpdateSheetProduction',
   canDeleteSheetProduction: 'canDeleteSheetProduction',
   canViewSheetStock: 'canViewSheetStock',
+
   canViewPayments: 'canViewPayments',
   canManagePayments: 'canManagePayments',
   canCreatePayments: 'canCreatePayments',
   canEditPayments: 'canEditPayments',
   canDeletePayments: 'canDeletePayments',
+
   canViewReports: 'canViewReports',
   canCreateReports: 'canCreateReports',
   canEditReports: 'canEditReports',
@@ -35,23 +42,129 @@ export const PERMISSIONS = {
 };
 
 export const ROLES = {
-  boss: 'Boss',
-  staff: 'Staff',
-  accountant: 'Accountant',
-  salesPerson: 'Sales Person',
-  user: 'User',
+  Boss: 'Boss',
+  Accountant: 'Accountant',
+  Staff: 'Staff',
+  User: 'User',
+  SalesPerson: 'Sales Person',
+  StockIncharge: 'Stock Incharge',
+  Production: 'Production',
 };
 
-export const ASSIGNABLE_ROLES = [ROLES.boss, ROLES.accountant, ROLES.user];
+export const ASSIGNABLE_ROLES = [
+  ROLES.Boss,
+  ROLES.Accountant,
+  ROLES.Staff,
+  ROLES.SalesPerson,
+  ROLES.StockIncharge,
+  ROLES.Production,
+  ROLES.User,
+];
 
 export const PERMISSION_GROUPS = {
-  viewProduction: [PERMISSIONS.canViewProduction, PERMISSIONS.canViewSheetProduction],
-  createProduction: [PERMISSIONS.canCreateProduction, PERMISSIONS.canCreateSheetProduction],
-  editProduction: [PERMISSIONS.canEditProduction, PERMISSIONS.canUpdateSheetProduction],
-  viewPuProduction: [PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock],
-  createPuProduction: [PERMISSIONS.canCreateProduction, PERMISSIONS.canManageStock],
-  editPuProduction: [PERMISSIONS.canEditProduction, PERMISSIONS.canManageStock],
-  viewRodProduction: [PERMISSIONS.canViewProduction, PERMISSIONS.canViewStock],
-  createRodProduction: [PERMISSIONS.canCreateProduction, PERMISSIONS.canManageStock],
-  createPayments: [PERMISSIONS.canCreatePayments, PERMISSIONS.canManagePayments],
+  viewProduction: [
+    PERMISSIONS.canViewProduction,
+    PERMISSIONS.canViewSheetProduction,
+  ],
+
+  createProduction: [
+    PERMISSIONS.canCreateProduction,
+    PERMISSIONS.canCreateSheetProduction,
+  ],
+
+  editProduction: [
+    PERMISSIONS.canEditProduction,
+    PERMISSIONS.canUpdateSheetProduction,
+  ],
+
+  deleteProduction: [
+    PERMISSIONS.canDeleteProduction,
+    PERMISSIONS.canDeleteSheetProduction,
+  ],
+
+  viewPurchase: [
+    PERMISSIONS.canViewPurchase,
+  ],
+
+  createPurchase: [
+    PERMISSIONS.canCreatePurchase,
+  ],
+
+  editPurchase: [
+    PERMISSIONS.canEditPurchase,
+  ],
+
+  deletePurchase: [
+    PERMISSIONS.canDeletePurchase,
+  ],
+
+  viewSales: [
+    PERMISSIONS.canViewSales,
+  ],
+
+  createSales: [
+    PERMISSIONS.canCreateSales,
+  ],
+
+  editSales: [
+    PERMISSIONS.canEditSales,
+  ],
+
+  deleteSales: [
+    PERMISSIONS.canDeleteSales,
+  ],
+
+  viewStock: [
+    PERMISSIONS.canViewStock,
+    PERMISSIONS.canViewSheetStock,
+  ],
+
+  createStock: [
+    PERMISSIONS.canCreateStock,
+    PERMISSIONS.canManageStock,
+  ],
+
+  editStock: [
+    PERMISSIONS.canEditStock,
+    PERMISSIONS.canManageStock,
+  ],
+
+  deleteStock: [
+    PERMISSIONS.canDeleteStock,
+  ],
+
+  viewPayments: [
+    PERMISSIONS.canViewPayments,
+    PERMISSIONS.canManagePayments,
+  ],
+
+  createPayments: [
+    PERMISSIONS.canCreatePayments,
+    PERMISSIONS.canManagePayments,
+  ],
+
+  editPayments: [
+    PERMISSIONS.canEditPayments,
+    PERMISSIONS.canManagePayments,
+  ],
+
+  deletePayments: [
+    PERMISSIONS.canDeletePayments,
+  ],
+
+  viewReports: [
+    PERMISSIONS.canViewReports,
+  ],
+
+  createReports: [
+    PERMISSIONS.canCreateReports,
+  ],
+
+  editReports: [
+    PERMISSIONS.canEditReports,
+  ],
+
+  deleteReports: [
+    PERMISSIONS.canDeleteReports,
+  ],
 };

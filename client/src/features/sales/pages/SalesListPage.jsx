@@ -163,13 +163,13 @@ function SalesListPage() {
         render: (_, row) => (
           <div className="flex flex-wrap gap-2">
             <Link to={`/sales/${row.id}`}>
-              <Button type="button" size="sm" variant="primary"  title="Edit">
+              <Button type="button" size="sm" variant="primary"  title="View">
                 <Eye className="h-4 w-4"/>
               </Button>
             </Link>
             <Link to={`/sales/${row.id}/invoice`}>
               <Button type="button" size="sm" variant="secondary" title="Print">
-                <ReceiptText className="h-4 w-4" />
+                <ReceiptText className="h-4 w-4"/>
               </Button>
             </Link>
             {hasPermission(PERMISSIONS.canEditSales) ? (
@@ -288,7 +288,7 @@ function SalesListPage() {
           {hasPermission(PERMISSIONS.canCreateSales) ? (
             <Link to="/sales/new">
               <Button>
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" title="Add Sale" />
               </Button>
             </Link>
           ) : null}
@@ -324,7 +324,7 @@ function SalesListPage() {
             aria-label="Invoice status"
           />
           <Button type="submit">Apply</Button>
-          <Button type="button" variant="success" onClick={resetFilters}>
+          <Button type="button" variant="outline" onClick={resetFilters}>
             Reset
           </Button>
         </form>

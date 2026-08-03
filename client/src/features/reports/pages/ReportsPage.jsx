@@ -712,23 +712,21 @@ function ReportsPage() {
             <p className="section-copy mt-2">{config.description}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={exportCsv} disabled={!exportRows.length}>
+            <Button type="button" size="sm" variant="outline" title="Export to CSV" onClick={exportCsv} disabled={!exportRows.length}>
               <Download className="h-4 w-4" />
-              CSV
             </Button>
-            <Button type="button" size="sm" variant="outline" onClick={exportExcel} disabled={!exportRows.length}>
+            <Button type="button" size="sm" variant="success" title="Export to Excel" onClick={exportExcel} disabled={!exportRows.length}>
               <FileSpreadsheet className="h-4 w-4" />
-              Excel
             </Button>
             <Button
               type="button"
               size="sm"
-              variant="outline"
+              variant="primary"
+              title="Print Report"
               onClick={() => openPrintWindow(columns, exportRows, config.title, state.summary)}
               disabled={!exportRows.length}
             >
               <Printer className="h-4 w-4" />
-              Print
             </Button>
           </div>
         </div>

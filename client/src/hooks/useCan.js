@@ -11,7 +11,11 @@ export function useCan() {
       }
 
       if (Array.isArray(permission)) {
-        return permission.some((item) => hasPermission(item));
+        if (permission.length === 0) {
+          return true;
+        }
+
+        return permission.some(hasPermission);
       }
 
       return hasPermission(permission);
