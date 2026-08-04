@@ -6,6 +6,7 @@ import {
   ASSIGNABLE_ROLES,
   getDefaultPermissionsForRole,
   getEffectivePermissions,
+  PERMISSIONS,
   ROLE_PERMISSIONS,
   ROLES,
 } from './permissions.js';
@@ -49,5 +50,32 @@ test('Boss effective permissions always include all permissions', () => {
       permissions: [],
     }),
     [...ALL_PERMISSIONS],
+  );
+});
+
+test('Production receives only production-safe order permissions', () => {
+  const productionPermissions = new Set(ROLE_PERMISSIONS[ROLES.Production]);
+
+  assert.equal(productionPermissions.has(PERMISSIONS.canViewOrders), true);
+  assert.equal(productionPermissions.has(PERMISSIONS.canAcceptOrder), true);
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canUpdateOrderProduction),
+    true,
+  );
+  assert.equal(productionPermissions.has(PERMISSIONS.canMarkOrderReady), true);
+
+  assert.equal(productionPermissions.has(PERMISSIONS.canCreateOrder), false);
+  assert.equal(productionPermissions.has(PERMISSIONS.canDispatchOrder), false);
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canViewOrderClientDetails),
+    false,
+  );
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canViewClientMessageLog),
+    false,
+  );
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canShareOrderMessageOnWhatsApp),
+    false,
   );
 });
