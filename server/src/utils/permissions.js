@@ -39,6 +39,16 @@ export const PERMISSIONS = {
   canCreateReports: 'canCreateReports',
   canEditReports: 'canEditReports',
   canDeleteReports: 'canDeleteReports',
+
+  canViewOrders: 'canViewOrders',
+  canCreateOrder: 'canCreateOrder',
+  canAcceptOrder: 'canAcceptOrder',
+  canUpdateOrderProduction: 'canUpdateOrderProduction',
+  canMarkOrderReady: 'canMarkOrderReady',
+  canDispatchOrder: 'canDispatchOrder',
+  canViewOrderClientDetails: 'canViewOrderClientDetails',
+  canViewClientMessageLog: 'canViewClientMessageLog',
+  canShareOrderMessageOnWhatsApp: 'canShareOrderMessageOnWhatsApp',
 };
 
 export const ROLES = {
@@ -114,6 +124,18 @@ export const CRM_MODULE_PERMISSIONS = {
     edit: PERMISSIONS.canEditReports,
     delete: PERMISSIONS.canDeleteReports,
   },
+
+  Orders: {
+    view: PERMISSIONS.canViewOrders,
+    create: PERMISSIONS.canCreateOrder,
+    accept: PERMISSIONS.canAcceptOrder,
+    updateProduction: PERMISSIONS.canUpdateOrderProduction,
+    markReady: PERMISSIONS.canMarkOrderReady,
+    dispatch: PERMISSIONS.canDispatchOrder,
+    viewClientDetails: PERMISSIONS.canViewOrderClientDetails,
+    viewMessageLog: PERMISSIONS.canViewClientMessageLog,
+    shareWhatsApp: PERMISSIONS.canShareOrderMessageOnWhatsApp,
+  },
 };
 
 export const ALL_PERMISSIONS = Object.freeze(
@@ -184,6 +206,11 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.canViewSheetProduction,
     PERMISSIONS.canCreateSheetProduction,
     PERMISSIONS.canUpdateSheetProduction,
+
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canAcceptOrder,
+    PERMISSIONS.canUpdateOrderProduction,
+    PERMISSIONS.canMarkOrderReady,
   ],
 };
 
