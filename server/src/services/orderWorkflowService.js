@@ -188,10 +188,27 @@ export async function addOrderProgressUpdate({
 export async function markOrderReady({
   orderId,
   createdBy,
+  items = null,
 }) {
   return runOrderTransaction(async (session) => {
     const order = await findOrderOrThrow(orderId, session);
     assertOrderStatusTransition(order.status, 'ready');
+
+    if (Array.isArray(items)) {
+      items.forEach((item, index) => {
+        if (!order.items[index]) {
+          return;
+        }
+
+        const itemNo = String(item.itemNo || '').trim();
+        const stockType = item.stockType || 'manual';
+
+        order.items[index].itemNo = itemNo;
+        order.items[index].stockType = stockType;
+        order.items[index].stockRef =
+          stockType === 'manual' ? null : item.stockRef || null;
+      });
+    }
 
     order.status = 'ready';
     await order.save({ session });
@@ -220,6 +237,39 @@ export async function markOrderReady({
       notification,
       messageLog,
     };
+  });
+}
+
+export async function assignOrderItemNumbers({
+  orderId,
+  items,
+}) {
+  return runOrderTransaction(async (session) => {
+    const order = await findOrderOrThrow(orderId, session);
+
+    if (!['accepted', 'in_production', 'ready'].includes(order.status)) {
+      throw createHttpError(
+        422,
+        'Item numbers can only be assigned after an order is accepted.',
+      );
+    }
+
+    items.forEach((item, index) => {
+      if (!order.items[index]) {
+        return;
+      }
+
+      const stockType = item.stockType || 'manual';
+
+      order.items[index].itemNo = String(item.itemNo || '').trim();
+      order.items[index].stockType = stockType;
+      order.items[index].stockRef =
+        stockType === 'manual' ? null : item.stockRef || null;
+    });
+
+    await order.save({ session });
+
+    return order;
   });
 }
 

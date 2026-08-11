@@ -19,7 +19,7 @@ function canAccess(user, permissions = []) {
 }
 
 export function requirePermission(permission) {
-  return (req, res, next) => {
+  const middleware = (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         message: 'Authentication required.',
@@ -34,10 +34,14 @@ export function requirePermission(permission) {
 
     next();
   };
+
+  middleware.requiredPermission = permission;
+
+  return middleware;
 }
 
 export function requireAnyPermission(permissions) {
-  return (req, res, next) => {
+  const middleware = (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
         message: 'Authentication required.',
@@ -52,4 +56,8 @@ export function requireAnyPermission(permissions) {
 
     next();
   };
+
+  middleware.requiredPermissions = permissions;
+
+  return middleware;
 }

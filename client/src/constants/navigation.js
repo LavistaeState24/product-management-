@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Boxes,
+  ClipboardList,
   Factory,
   LayoutDashboard,
   PackageSearch,
@@ -106,6 +107,13 @@ export const SIDEBAR_ITEMS = [
     path: '/sales',
     icon: ShoppingCart,
     permission: PERMISSIONS.canViewSales,
+  },
+
+  {
+    label: 'Orders',
+    path: '/orders',
+    icon: ClipboardList,
+    permission: PERMISSIONS.canViewOrders,
   },
 
   {

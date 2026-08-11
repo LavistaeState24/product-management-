@@ -8,6 +8,8 @@ import OrderNotification from '../models/OrderNotification.js';
 import { buildCreateOrderPayload } from './orderService.js';
 import {
   acceptOrder,
+  addOrderProgressUpdate,
+  markOrderReady,
   runOrderTransaction,
 } from './orderWorkflowService.js';
 
@@ -27,6 +29,9 @@ function createOrderDoc(overrides = {}) {
     items: [
       {
         itemDesc: 'PU wheel',
+        size: '100mm',
+        colour: 'Blue',
+        hardness: '80A',
         quantity: 2,
         rate: 100,
         itemNo: '',
@@ -209,6 +214,172 @@ test('acceptOrder blocks repeated acceptance', async () => {
         }),
         /cannot move from accepted to accepted/,
       );
+    },
+  );
+});
+
+test('addOrderProgressUpdate keeps production response data separate from client messaging', async () => {
+  const order = createOrderDoc({
+    status: 'accepted',
+    dailyUpdates: [],
+  });
+  let saved = false;
+  let notificationCreated = false;
+
+  order.save = async ({ session }) => {
+    assert.ok(session);
+    saved = true;
+  };
+
+  await withMocks(
+    [
+      [
+        mongoose,
+        {
+          startSession: async () => ({
+            withTransaction: async (fn) => fn(),
+            endSession: async () => {},
+          }),
+        },
+      ],
+      [
+        Order,
+        {
+          findById: () => ({
+            session: async () => order,
+          }),
+        },
+      ],
+      [
+        OrderNotification,
+        {
+          create: async ([document], { session }) => {
+            assert.ok(session);
+            assert.equal(document.kind, 'progress');
+            assert.equal(document.message, 'Cutting completed');
+            notificationCreated = true;
+            return [{ _id: new mongoose.Types.ObjectId(), ...document }];
+          },
+        },
+      ],
+    ],
+    async () => {
+      const result = await addOrderProgressUpdate({
+        orderId,
+        note: 'Cutting completed',
+        createdBy: userId,
+      });
+
+      assert.equal(result.order.status, 'in_production');
+      assert.equal(result.order.dailyUpdates[0].note, 'Cutting completed');
+      assert.equal(saved, true);
+      assert.equal(notificationCreated, true);
+    },
+  );
+});
+
+test('markOrderReady assigns every item number before Ready without deducting stock', async () => {
+  const stockRef = new mongoose.Types.ObjectId();
+  const order = createOrderDoc({
+    status: 'in_production',
+    dailyUpdates: [],
+    items: [
+      {
+        itemDesc: 'PU wheel',
+        quantity: 2,
+        rate: 100,
+        itemNo: '',
+        stockType: 'manual',
+        stockRef: null,
+      },
+      {
+        itemDesc: 'Rod',
+        quantity: 1,
+        rate: 50,
+        itemNo: '',
+        stockType: 'manual',
+        stockRef: null,
+      },
+    ],
+  });
+  let saved = false;
+  let messageLogCreated = false;
+
+  order.save = async ({ session }) => {
+    assert.ok(session);
+    saved = true;
+  };
+
+  await withMocks(
+    [
+      [
+        mongoose,
+        {
+          startSession: async () => ({
+            withTransaction: async (fn) => fn(),
+            endSession: async () => {},
+          }),
+        },
+      ],
+      [
+        Order,
+        {
+          findById: () => ({
+            session: async () => order,
+          }),
+        },
+      ],
+      [
+        OrderNotification,
+        {
+          create: async ([document], { session }) => {
+            assert.ok(session);
+            assert.equal(document.kind, 'ready');
+            return [{ _id: new mongoose.Types.ObjectId(), ...document }];
+          },
+        },
+      ],
+      [
+        ClientMessageLog,
+        {
+          findOne: () => ({
+            session: async () => null,
+          }),
+          create: async ([document], { session }) => {
+            assert.ok(session);
+            assert.equal(document.kind, 'ready_for_dispatch');
+            assert.equal(document.status, 'draft');
+            messageLogCreated = true;
+            return [{ _id: new mongoose.Types.ObjectId(), ...document }];
+          },
+        },
+      ],
+    ],
+    async () => {
+      const result = await markOrderReady({
+        orderId,
+        createdBy: userId,
+        items: [
+          {
+            itemNo: 'MANUAL-1',
+            stockType: 'manual',
+            stockRef: null,
+          },
+          {
+            itemNo: 'ROD-1',
+            stockType: 'rod',
+            stockRef,
+          },
+        ],
+      });
+
+      assert.equal(result.order.status, 'ready');
+      assert.equal(result.order.items[0].itemNo, 'MANUAL-1');
+      assert.equal(result.order.items[0].stockRef, null);
+      assert.equal(result.order.items[1].itemNo, 'ROD-1');
+      assert.equal(String(result.order.items[1].stockRef), String(stockRef));
+      assert.equal(saved, true);
+      assert.equal(messageLogCreated, true);
     },
   );
 });
