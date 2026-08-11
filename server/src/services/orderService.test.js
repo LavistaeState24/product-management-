@@ -101,6 +101,41 @@ test('buildCreateOrderPayload ignores frontend orderNo, status, and itemNo', () 
   assert.equal(payload.items[0].stockRef, null);
   assert.equal(payload.items[0].quantity, 2);
   assert.equal(payload.items[0].rate, 125);
+  assert.equal(payload.productReference, undefined);
+});
+
+test('buildCreateOrderPayload includes sanitized product reference metadata when supplied', () => {
+  const payload = buildCreateOrderPayload(
+    {
+      clientName: 'Acme Industries',
+      clientMobile: '9876543210',
+      items: [
+        {
+          itemDesc: 'PU wheel',
+          quantity: '2',
+          rate: '125',
+          stockType: 'manual',
+        },
+      ],
+    },
+    userId,
+    {
+      url: 'https://example.com/reference.pdf',
+      key: 'order-product-references/reference.pdf',
+      originalName: 'reference.pdf',
+      mimeType: 'application/pdf',
+      size: 2048,
+      ignored: 'value',
+    },
+  );
+
+  assert.deepEqual(payload.productReference, {
+    url: 'https://example.com/reference.pdf',
+    key: 'order-product-references/reference.pdf',
+    originalName: 'reference.pdf',
+    mimeType: 'application/pdf',
+    size: 2048,
+  });
 });
 
 test('acceptOrder sets accepted status, ready date, and creates boss notification', async () => {

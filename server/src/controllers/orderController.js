@@ -77,7 +77,7 @@ function serializeMessageLog(messageLog) {
 }
 
 export async function createOrderController(req, res) {
-  const order = await createOrder(req.body, req.user._id);
+  const order = await createOrder(req.body, req.user._id, req.file);
 
   return res.status(201).json({
     message: 'Order created successfully.',

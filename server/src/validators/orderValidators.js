@@ -70,6 +70,10 @@ export const createOrderValidator = [
     .isIn(ORDER_STOCK_TYPES)
     .withMessage(`Stock type must be one of ${ORDER_STOCK_TYPES.join(', ')}.`),
   body('items').custom((items) => {
+    if (!Array.isArray(items)) {
+      return true;
+    }
+
     items.forEach((item, index) => {
       const stockType = item.stockType || 'manual';
 
@@ -138,6 +142,10 @@ function orderItemsWithItemNumbersValidator() {
         `Stock type must be one of ${ORDER_STOCK_TYPES.join(', ')}.`,
       ),
     body('items').custom((items) => {
+      if (!Array.isArray(items)) {
+        return true;
+      }
+
       items.forEach((item, index) => {
         const stockType = item.stockType || 'manual';
 

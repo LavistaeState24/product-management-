@@ -10,6 +10,20 @@ function serializeDailyUpdates(order) {
   }));
 }
 
+function serializeProductReference(productReference) {
+  if (!productReference?.key) {
+    return null;
+  }
+
+  return {
+    url: productReference.url || null,
+    key: productReference.key,
+    originalName: productReference.originalName || '',
+    mimeType: productReference.mimeType || '',
+    size: productReference.size ?? 0,
+  };
+}
+
 function serializeProductionItem(item) {
   return {
     itemDesc: item.itemDesc,
@@ -29,6 +43,7 @@ export function serializeOrderForProduction(order) {
     orderNo: order.orderNo,
     items: (order.items || []).map(serializeProductionItem),
     remarks: order.remarks || '',
+    productReference: serializeProductReference(order.productReference),
     status: order.status,
     readyByDate: order.readyByDate || null,
     dailyUpdates: serializeDailyUpdates(order),

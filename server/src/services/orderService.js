@@ -15,13 +15,32 @@ import {
   markOrderDispatched,
   openClientMessageInWhatsApp,
 } from './orderWorkflowService.js';
+import {
+  deleteStoredFile,
+  getStoredFileSignedUrl,
+  uploadOrderProductReference,
+} from './purchaseBillStorageService.js';
 
 function parseText(value) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-export function buildCreateOrderPayload(body, userId) {
+function serializeProductReference(productReference) {
+  if (!productReference?.key) {
+    return null;
+  }
+
   return {
+    url: productReference.url || null,
+    key: productReference.key,
+    originalName: productReference.originalName || '',
+    mimeType: productReference.mimeType || '',
+    size: productReference.size ?? 0,
+  };
+}
+
+export function buildCreateOrderPayload(body, userId, productReference = null) {
+  const payload = {
     clientName: parseText(body.clientName),
     clientMobile: parseText(body.clientMobile),
     remarks: parseText(body.remarks),
@@ -43,20 +62,95 @@ export function buildCreateOrderPayload(body, userId) {
       };
     }),
   };
+
+  const sanitizedProductReference =
+    serializeProductReference(productReference);
+
+  if (sanitizedProductReference) {
+    payload.productReference = sanitizedProductReference;
+  }
+
+  return payload;
 }
 
-export async function createOrder(body, userId) {
-  const order = new Order(buildCreateOrderPayload(body, userId));
+async function hydrateProductReferenceUrl(order) {
+  const plainOrder =
+    order?.toObject
+      ? order.toObject()
+      : order;
 
-  await order.save();
+  if (!plainOrder?.productReference?.key) {
+    return plainOrder;
+  }
 
-  return order;
+  const productReference = {
+    ...plainOrder.productReference,
+  };
+
+  try {
+    productReference.url = await getStoredFileSignedUrl(
+      productReference.key,
+      {
+        originalName:
+          productReference.originalName ||
+          'product-reference',
+      },
+    );
+  } catch (error) {
+    console.error(
+      'Failed to generate order product reference URL:',
+      error,
+    );
+    productReference.url = plainOrder.productReference.url || null;
+  }
+
+  return {
+    ...plainOrder,
+    productReference,
+  };
+}
+
+async function hydrateOrdersProductReferenceUrls(orders) {
+  return Promise.all(
+    orders.map((order) =>
+      hydrateProductReferenceUrl(order),
+    ),
+  );
+}
+
+export async function createOrder(body, userId, file = null) {
+  const productReference =
+    file
+      ? await uploadOrderProductReference(file)
+      : null;
+
+  const order = new Order(
+    buildCreateOrderPayload(
+      body,
+      userId,
+      productReference,
+    ),
+  );
+
+  try {
+    await order.save();
+  } catch (error) {
+    if (productReference?.key) {
+      await deleteStoredFile(productReference.key).catch(console.error);
+    }
+
+    throw error;
+  }
+
+  return hydrateProductReferenceUrl(order.toObject());
 }
 
 export async function listOrders({ filter = {} } = {}) {
-  return Order.find(filter)
+  const orders = await Order.find(filter)
     .sort({ createdAt: -1 })
     .lean();
+
+  return hydrateOrdersProductReferenceUrls(orders);
 }
 
 export async function getOrderById(orderId) {
@@ -66,7 +160,7 @@ export async function getOrderById(orderId) {
     throw createHttpError(404, 'Order not found.');
   }
 
-  return order;
+  return hydrateProductReferenceUrl(order);
 }
 
 export async function listProductionPendingOrders() {
@@ -100,34 +194,51 @@ export async function listReadyForDispatchOrders() {
 }
 
 export async function acceptOrder({ orderId, readyDays, userId }) {
-  return acceptOrderWorkflow({
+  const result = await acceptOrderWorkflow({
     orderId,
     readyDays,
     createdBy: userId,
   });
+
+  return {
+    ...result,
+    order: await hydrateProductReferenceUrl(result.order),
+  };
 }
 
 export async function addProductionProgress({ orderId, note, userId }) {
-  return addOrderProgressUpdate({
+  const result = await addOrderProgressUpdate({
     orderId,
     note,
     createdBy: userId,
   });
+
+  return {
+    ...result,
+    order: await hydrateProductReferenceUrl(result.order),
+  };
 }
 
 export async function markProductionReady({ orderId, items, userId }) {
-  return markOrderReady({
+  const result = await markOrderReady({
     orderId,
     items,
     createdBy: userId,
   });
+
+  return {
+    ...result,
+    order: await hydrateProductReferenceUrl(result.order),
+  };
 }
 
 export async function assignOrderItemNumbers({ orderId, items }) {
-  return assignOrderItemNumbersWorkflow({
+  const order = await assignOrderItemNumbersWorkflow({
     orderId,
     items,
   });
+
+  return hydrateProductReferenceUrl(order);
 }
 
 export async function dispatchOrder({ orderId, userId }) {
@@ -166,7 +277,7 @@ export async function dispatchOrder({ orderId, userId }) {
   });
 
   return {
-    order: dispatchedOrder,
+    order: await hydrateProductReferenceUrl(dispatchedOrder),
     messageLog: existingLog,
   };
 }

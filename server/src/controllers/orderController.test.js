@@ -11,6 +11,13 @@ const order = {
   clientName: 'Acme Industries',
   clientMobile: '9876543210',
   remarks: 'Urgent',
+  productReference: {
+    url: 'https://example.com/reference.pdf',
+    key: 'order-product-references/reference.pdf',
+    originalName: 'reference.pdf',
+    mimeType: 'application/pdf',
+    size: 2048,
+  },
   status: 'accepted',
   readyDays: 3,
   readyByDate: new Date('2026-08-07T00:00:00.000Z'),
@@ -58,6 +65,9 @@ test('serializeOrderForUser omits client, rate, and amount data without permissi
   assert.equal('amount' in serialized.items[0], false);
   assert.equal('amounts' in serialized, false);
   assert.equal('totals' in serialized, false);
+  assert.deepEqual(serialized.productReference, order.productReference);
+  assert.equal('messageLogs' in serialized, false);
+  assert.equal('whatsappUrl' in serialized, false);
 });
 
 test('serializeOrderForUser treats Boss as all-access', () => {

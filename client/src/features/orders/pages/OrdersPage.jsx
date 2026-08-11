@@ -1,13 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Clipboard,
   ExternalLink,
   Eye,
+  FileText,
   MessageCircle,
   Plus,
   RefreshCw,
   Send,
   Trash2,
+  Upload,
+  X,
 } from 'lucide-react';
 
 import Badge from '@/components/ui/Badge';
@@ -20,6 +23,7 @@ import { PERMISSIONS } from '@/constants/permissions';
 import { useToast } from '@/hooks/useToast';
 import { useCan } from '@/hooks/useCan';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
+import ProductReferenceAttachment from '@/features/orders/components/ProductReferenceAttachment';
 import {
   confirmNotificationForClient,
   createOrder,
@@ -60,6 +64,21 @@ const messageKindLabels = {
   ready_for_dispatch: 'Ready for Dispatch',
 };
 
+const maxAttachmentSize = 10 * 1024 * 1024;
+const allowedAttachmentTypes = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+];
+const allowedAttachmentExtensions = [
+  '.pdf',
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+];
+
 function createEmptyItem() {
   return {
     itemDesc: '',
@@ -97,6 +116,28 @@ function formatMessageStatus(value) {
   return value === 'opened' ? 'Opened in WhatsApp' : 'Draft';
 }
 
+function isImageAttachment(fileOrReference) {
+  return String(fileOrReference?.mimeType || fileOrReference?.type || '')
+    .startsWith('image/');
+}
+
+function isAllowedAttachment(file) {
+  const fileName = file.name?.toLowerCase() || '';
+  const hasValidExtension = allowedAttachmentExtensions.some((extension) =>
+    fileName.endsWith(extension),
+  );
+
+  const hasValidMimeType =
+    !file.type ||
+    allowedAttachmentTypes.includes(file.type);
+
+  return hasValidExtension && hasValidMimeType;
+}
+
+function renderAttachment(productReference) {
+  return <ProductReferenceAttachment productReference={productReference} />;
+}
+
 function renderItems(items = [], { showRate = false } = {}) {
   if (!items.length) {
     return '-';
@@ -129,8 +170,12 @@ function renderItems(items = [], { showRate = false } = {}) {
 function OrdersPage() {
   const toast = useToast();
   const can = useCan();
+  const productReferenceInputRef = useRef(null);
   const [activeTab, setActiveTab] = useState('new');
   const [form, setForm] = useState(initialForm);
+  const [productReferenceFile, setProductReferenceFile] = useState(null);
+  const [productReferencePreviewUrl, setProductReferencePreviewUrl] =
+    useState('');
   const [createdOrderNo, setCreatedOrderNo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -224,6 +269,20 @@ function OrdersPage() {
   }, [loadOrdersData]);
 
   useEffect(() => {
+    if (!productReferenceFile || !isImageAttachment(productReferenceFile)) {
+      setProductReferencePreviewUrl('');
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(productReferenceFile);
+    setProductReferencePreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [productReferenceFile]);
+
+  useEffect(() => {
     if (
       availableTabs.length &&
       !availableTabs.some((tab) => tab.key === activeTab)
@@ -275,6 +334,40 @@ function OrdersPage() {
     }));
   }
 
+  function clearProductReference() {
+    setProductReferenceFile(null);
+
+    if (productReferenceInputRef.current) {
+      productReferenceInputRef.current.value = '';
+    }
+  }
+
+  function handleProductReferenceChange(event) {
+    const file = event.target.files?.[0] || null;
+
+    if (!file) {
+      clearProductReference();
+      return;
+    }
+
+    if (file.size > maxAttachmentSize) {
+      toast.error('Attachment too large', 'Maximum file size is 10 MB.');
+      clearProductReference();
+      return;
+    }
+
+    if (!isAllowedAttachment(file)) {
+      toast.error(
+        'Unsupported attachment',
+        'Only PDF, JPG, JPEG, PNG, and WEBP files are allowed.',
+      );
+      clearProductReference();
+      return;
+    }
+
+    setProductReferenceFile(file);
+  }
+
   async function handleCreateOrder(event) {
     event.preventDefault();
 
@@ -297,6 +390,7 @@ function OrdersPage() {
           quantity: item.quantity,
           rate: item.rate,
         })),
+        productReference: productReferenceFile,
       };
 
       const response = await createOrder(payload);
@@ -304,6 +398,7 @@ function OrdersPage() {
 
       setCreatedOrderNo(orderNo);
       setForm(initialForm);
+      clearProductReference();
       toast.success(
         'Order created',
         orderNo ? `Generated order number ${orderNo}.` : undefined,
@@ -487,6 +582,11 @@ function OrdersPage() {
       render: (items) => renderItems(items, { showRate: true }),
     },
     {
+      key: 'productReference',
+      title: 'Attachment',
+      render: renderAttachment,
+    },
+    {
       key: 'readyByDate',
       title: 'Ready Date',
       render: formatDate,
@@ -518,6 +618,11 @@ function OrdersPage() {
       key: 'items',
       title: 'Items',
       render: (items) => renderItems(items, { showRate: true }),
+    },
+    {
+      key: 'productReference',
+      title: 'Attachment',
+      render: renderAttachment,
     },
     {
       key: 'status',
@@ -759,6 +864,71 @@ function OrdersPage() {
           >
             <Plus className="h-4 w-4" />
           </Button>
+
+          <div className="rounded-2xl border border-border bg-background p-4">
+            <label className="flex w-full flex-col gap-2">
+              <span className="text-sm font-semibold text-heading">
+                Product Reference / Attachment (Optional)
+              </span>
+              <input
+                ref={productReferenceInputRef}
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                className="rounded-2xl border border-dashed border-border bg-card px-4 py-3 text-sm text-heading file:mr-4 file:rounded-2xl file:border-0 file:bg-primary file:px-4 file:py-2 file:font-semibold file:text-card"
+                onChange={handleProductReferenceChange}
+              />
+              <span className="text-xs text-body">
+                Supported formats: PDF, JPG, JPEG, PNG, WEBP. Maximum size: 10 MB.
+              </span>
+            </label>
+
+            {productReferenceFile ? (
+              <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                  {productReferencePreviewUrl ? (
+                    <img
+                      src={productReferencePreviewUrl}
+                      alt="Product reference preview"
+                      className="h-16 w-16 rounded-xl border border-border object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-border bg-background">
+                      <FileText className="h-6 w-6 text-body" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-heading">
+                      {productReferenceFile.name}
+                    </p>
+                    <p className="text-xs text-body">
+                      {(productReferenceFile.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    title="Reselect attachment"
+                    className="h-10 w-auto gap-2 rounded-lg px-3"
+                    onClick={() => productReferenceInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    title="Remove attachment"
+                    className="h-10 w-10 rounded-lg"
+                    onClick={clearProductReference}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
 
           <Textarea
             label="Remarks"
