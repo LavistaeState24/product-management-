@@ -8,6 +8,18 @@ export const orderIdParamValidator = [
     .withMessage('Order id must be a valid identifier.'),
 ];
 
+export const notificationIdParamValidator = [
+  param('notificationId')
+    .isMongoId()
+    .withMessage('Notification id must be a valid identifier.'),
+];
+
+export const messageLogIdParamValidator = [
+  param('messageLogId')
+    .isMongoId()
+    .withMessage('Message log id must be a valid identifier.'),
+];
+
 export const createOrderValidator = [
   body('clientName')
     .trim()
@@ -88,5 +100,59 @@ export const acceptOrderValidator = [
     .toInt(),
 ];
 
+export const progressOrderValidator = [
+  ...orderIdParamValidator,
+  body('note')
+    .trim()
+    .notEmpty()
+    .withMessage('Progress note is required.')
+    .isLength({ max: 1000 })
+    .withMessage('Progress note must be 1000 characters or fewer.'),
+];
 
+export const markOrderReadyValidator = [
+  ...orderIdParamValidator,
+  ...orderItemsWithItemNumbersValidator(),
+];
+
+export const assignOrderItemNumbersValidator = [
+  ...orderIdParamValidator,
+  ...orderItemsWithItemNumbersValidator(),
+];
+
+function orderItemsWithItemNumbersValidator() {
+  return [
+    body('items')
+      .isArray({ min: 1 })
+      .withMessage('Every order item must be submitted with an item number.'),
+    body('items.*.itemNo')
+      .trim()
+      .notEmpty()
+      .withMessage('Every item needs an item number before Ready.')
+      .isLength({ max: 120 })
+      .withMessage('Item number must be 120 characters or fewer.'),
+    body('items.*.stockType')
+      .optional({ values: 'falsy' })
+      .isIn(ORDER_STOCK_TYPES)
+      .withMessage(
+        `Stock type must be one of ${ORDER_STOCK_TYPES.join(', ')}.`,
+      ),
+    body('items').custom((items) => {
+      items.forEach((item, index) => {
+        const stockType = item.stockType || 'manual';
+
+        if (
+          stockType !== 'manual' &&
+          !mongoose.Types.ObjectId.isValid(item.stockRef)
+        ) {
+          throw new Error(
+            `Item ${index + 1}: Stock reference must be a valid identifier.`,
+          );
+        }
+      });
+
+      return true;
+    }),
+  ];
+}
 

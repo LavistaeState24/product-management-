@@ -44,6 +44,7 @@ export const PERMISSIONS = {
   canCreateOrder: 'canCreateOrder',
   canAcceptOrder: 'canAcceptOrder',
   canUpdateOrderProduction: 'canUpdateOrderProduction',
+  canAssignOrderItemNumber: 'canAssignOrderItemNumber',
   canMarkOrderReady: 'canMarkOrderReady',
   canDispatchOrder: 'canDispatchOrder',
   canViewOrderClientDetails: 'canViewOrderClientDetails',
@@ -130,6 +131,7 @@ export const CRM_MODULE_PERMISSIONS = {
     create: PERMISSIONS.canCreateOrder,
     accept: PERMISSIONS.canAcceptOrder,
     updateProduction: PERMISSIONS.canUpdateOrderProduction,
+    assignItemNumber: PERMISSIONS.canAssignOrderItemNumber,
     markReady: PERMISSIONS.canMarkOrderReady,
     dispatch: PERMISSIONS.canDispatchOrder,
     viewClientDetails: PERMISSIONS.canViewOrderClientDetails,
@@ -142,15 +144,68 @@ export const ALL_PERMISSIONS = Object.freeze(
   Object.values(PERMISSIONS),
 );
 
+export const ORDER_PERMISSIONS = Object.freeze([
+  PERMISSIONS.canViewOrders,
+  PERMISSIONS.canCreateOrder,
+  PERMISSIONS.canAcceptOrder,
+  PERMISSIONS.canUpdateOrderProduction,
+  PERMISSIONS.canAssignOrderItemNumber,
+  PERMISSIONS.canMarkOrderReady,
+  PERMISSIONS.canDispatchOrder,
+  PERMISSIONS.canViewOrderClientDetails,
+  PERMISSIONS.canViewClientMessageLog,
+  PERMISSIONS.canShareOrderMessageOnWhatsApp,
+]);
+
+export const ROLE_ORDER_PERMISSIONS = {
+  [ROLES.Boss]: ORDER_PERMISSIONS,
+  [ROLES['Sales Person']]: [
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canCreateOrder,
+    PERMISSIONS.canViewOrderClientDetails,
+  ],
+  [ROLES.Production]: [
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canAcceptOrder,
+    PERMISSIONS.canUpdateOrderProduction,
+    PERMISSIONS.canAssignOrderItemNumber,
+    PERMISSIONS.canMarkOrderReady,
+  ],
+  [ROLES['Stock Incharge']]: [
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canAssignOrderItemNumber,
+  ],
+  [ROLES.Accountant]: [
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canViewOrderClientDetails,
+  ],
+  [ROLES.Staff]: [
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canCreateOrder,
+    PERMISSIONS.canViewOrderClientDetails,
+  ],
+  [ROLES.User]: [
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canCreateOrder,
+    PERMISSIONS.canViewOrderClientDetails,
+  ],
+};
+
 export const ROLE_PERMISSIONS = {
   [ROLES.Boss]: ALL_PERMISSIONS,
 
   [ROLES.User]: [
     PERMISSIONS.canViewDashboard,
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canCreateOrder,
+    PERMISSIONS.canViewOrderClientDetails,
   ],
 
   [ROLES.Staff]: [
     PERMISSIONS.canViewDashboard,
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canCreateOrder,
+    PERMISSIONS.canViewOrderClientDetails,
   ],
 
   [ROLES.Accountant]: [
@@ -169,6 +224,9 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.canEditPayments,
 
     PERMISSIONS.canViewReports,
+
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canViewOrderClientDetails,
   ],
 
   [ROLES['Sales Person']]: [
@@ -178,6 +236,10 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.canViewSales,
     PERMISSIONS.canCreateSales,
     PERMISSIONS.canEditSales,
+
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canCreateOrder,
+    PERMISSIONS.canViewOrderClientDetails,
   ],
 
   [ROLES['Stock Incharge']]: [
@@ -191,6 +253,9 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.canEditStock,
 
     PERMISSIONS.canViewSheetStock,
+
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canAssignOrderItemNumber,
   ],
 
   [ROLES.Production]: [
@@ -210,6 +275,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.canViewOrders,
     PERMISSIONS.canAcceptOrder,
     PERMISSIONS.canUpdateOrderProduction,
+    PERMISSIONS.canAssignOrderItemNumber,
     PERMISSIONS.canMarkOrderReady,
   ],
 };

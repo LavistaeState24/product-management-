@@ -65,6 +65,10 @@ const ReportsPage = lazy(() =>
   import('@/features/reports/pages/ReportsPage'),
 );
 
+const OrdersPage = lazy(() =>
+  import('@/features/orders/pages/OrdersPage'),
+);
+
 const StockManagementPage = lazy(() =>
   import('@/features/stock/pages/StockManagementPage'),
 );
@@ -362,6 +366,22 @@ function AppRouter() {
               <Route
                 path="/reports"
                 element={<ReportsPage />}
+              />
+            </Route>
+
+            {/* Orders */}
+            <Route
+              element={
+                <ProtectedRoute
+                  permission={
+                    PERMISSIONS.canViewOrders
+                  }
+                />
+              }
+            >
+              <Route
+                path="/orders"
+                element={<OrdersPage />}
               />
             </Route>
 
