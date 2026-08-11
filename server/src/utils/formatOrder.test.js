@@ -13,6 +13,13 @@ const order = {
   clientName: 'Acme Industries',
   clientMobile: '9876543210',
   remarks: 'Urgent',
+  productReference: {
+    url: 'https://example.com/reference.png',
+    key: 'order-product-references/reference.png',
+    originalName: 'reference.png',
+    mimeType: 'image/png',
+    size: 1234,
+  },
   status: 'accepted',
   readyDays: 3,
   acceptedAt: new Date('2026-08-04T00:00:00.000Z'),
@@ -50,11 +57,13 @@ test('serializeOrderForBoss includes client and rate details', () => {
   assert.equal(serialized.clientMobile, order.clientMobile);
   assert.equal(serialized.items[0].rate, 125);
   assert.equal(serialized.readyDays, 3);
+  assert.deepEqual(serialized.productReference, order.productReference);
 });
 
-test('serializeOrderForProduction omits confidential client and rate details', () => {
+test('serializeOrderForProduction includes attachment and omits confidential details', () => {
   const serialized = serializeOrderForProduction(order);
 
+  assert.deepEqual(serialized.productReference, order.productReference);
   assert.equal('clientName' in serialized, false);
   assert.equal('clientMobile' in serialized, false);
   assert.equal('rate' in serialized.items[0], false);

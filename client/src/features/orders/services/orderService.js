@@ -1,7 +1,27 @@
 import api from '@/services/api';
 
+function buildOrderFormData(values) {
+  const formData = new FormData();
+
+  formData.append('clientName', values.clientName || '');
+  formData.append('clientMobile', values.clientMobile || '');
+  formData.append('remarks', values.remarks || '');
+  formData.append('items', JSON.stringify(values.items || []));
+
+  if (values.productReference instanceof File) {
+    formData.append('productReference', values.productReference);
+  }
+
+  return formData;
+}
+
 export async function createOrder(values) {
-  const { data } = await api.post('/orders', values);
+  const payload =
+    values.productReference instanceof File
+      ? buildOrderFormData(values)
+      : values;
+
+  const { data } = await api.post('/orders', payload);
 
   return data;
 }

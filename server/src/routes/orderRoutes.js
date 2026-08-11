@@ -21,8 +21,10 @@ import {
   prepareAcceptedClientMessageController,
 } from '../controllers/orderController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
+import { uploadOrderProductReference } from '../middleware/uploadMiddleware.js';
 import { requirePermission } from '../middleware/rbacMiddleware.js';
 import { validateRequest } from '../middleware/validateRequest.js';
+import { createHttpError } from '../utils/httpError.js';
 import { PERMISSIONS } from '../utils/permissions.js';
 import {
   acceptOrderValidator,
@@ -39,9 +41,25 @@ const router = Router();
 
 router.use(requireAuth);
 
+function parseCreateOrderBody(req, res, next) {
+  if (typeof req.body.items !== 'string') {
+    next();
+    return;
+  }
+
+  try {
+    req.body.items = JSON.parse(req.body.items);
+    next();
+  } catch {
+    next(createHttpError(400, 'Order items must be valid JSON.'));
+  }
+}
+
 router.post(
   '/',
   requirePermission(PERMISSIONS.canCreateOrder),
+  uploadOrderProductReference,
+  parseCreateOrderBody,
   createOrderValidator,
   validateRequest,
   createOrderController,

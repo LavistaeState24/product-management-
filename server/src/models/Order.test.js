@@ -135,6 +135,36 @@ test('Order orderNo is immutable and unique', () => {
   assert.equal(orderNoPath.options.unique, true);
 });
 
+test('Order productReference is optional and stores attachment metadata', async () => {
+  const restore = mockCounter();
+
+  try {
+    const orderWithoutReference = createValidOrder();
+    await orderWithoutReference.validate();
+    assert.equal(orderWithoutReference.productReference, null);
+
+    const orderWithReference = createValidOrder({
+      productReference: {
+        url: 'https://example.com/reference.webp',
+        key: 'order-product-references/reference.webp',
+        originalName: 'reference.webp',
+        mimeType: 'image/webp',
+        size: 4096,
+      },
+    });
+
+    await orderWithReference.validate();
+    assert.equal(
+      orderWithReference.productReference.key,
+      'order-product-references/reference.webp',
+    );
+    assert.equal(orderWithReference.productReference.mimeType, 'image/webp');
+    assert.equal(orderWithReference.productReference.size, 4096);
+  } finally {
+    restore();
+  }
+});
+
 test('Order accepts multi-item stock references and manual entries', async () => {
   const restore = mockCounter();
 

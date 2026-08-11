@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, ClipboardList, Plus, RefreshCw } from 'lucide-react';
+import {
+  CheckCircle2,
+  ClipboardList,
+  Plus,
+  RefreshCw,
+} from 'lucide-react';
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -13,6 +18,7 @@ import { PERMISSIONS } from '@/constants/permissions';
 import { useToast } from '@/hooks/useToast';
 import { useCan } from '@/hooks/useCan';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
+import ProductReferenceAttachment from '@/features/orders/components/ProductReferenceAttachment';
 import {
   acceptProductionOrder,
   addProductionProgress,
@@ -51,6 +57,10 @@ function formatDate(value) {
 
 function formatStatus(value) {
   return statusLabels[value] || value || '-';
+}
+
+function renderAttachment(productReference) {
+  return <ProductReferenceAttachment productReference={productReference} />;
 }
 
 function renderProductionItems(items = []) {
@@ -404,6 +414,11 @@ function ProductionOrdersPanel() {
       title: 'Items',
       render: renderProductionItems,
     },
+    {
+      key: 'productReference',
+      title: 'Attachment',
+      render: renderAttachment,
+    },
     { key: 'remarks', title: 'Remarks' },
     {
       key: 'actions',
@@ -444,6 +459,11 @@ function ProductionOrdersPanel() {
       key: 'items',
       title: 'Items',
       render: renderProductionItems,
+    },
+    {
+      key: 'productReference',
+      title: 'Attachment',
+      render: renderAttachment,
     },
     {
       key: 'readyByDate',
@@ -497,6 +517,11 @@ function ProductionOrdersPanel() {
       key: 'items',
       title: 'Items',
       render: renderProductionItems,
+    },
+    {
+      key: 'productReference',
+      title: 'Attachment',
+      render: renderAttachment,
     },
     {
       key: 'status',
@@ -599,6 +624,15 @@ function ProductionOrdersPanel() {
                   </div>
                   <Badge>{formatStatus(order.status)}</Badge>
                 </div>
+
+                {order.productReference?.key ? (
+                  <div className="mb-4 rounded-2xl border border-border bg-background p-4">
+                    <p className="mb-2 text-sm font-semibold text-heading">
+                      Product Reference / Attachment
+                    </p>
+                    {renderAttachment(order.productReference)}
+                  </div>
+                ) : null}
 
                 <div className="space-y-4">
                   {order.items.map((item, index) => {

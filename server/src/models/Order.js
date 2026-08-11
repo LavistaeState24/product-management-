@@ -100,6 +100,39 @@ const dailyUpdateSchema = new mongoose.Schema(
   },
 );
 
+const productReferenceSchema = new mongoose.Schema(
+  {
+    url: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    key: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    originalName: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    mimeType: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    size: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
 const orderSchema = new mongoose.Schema(
   {
     orderNo: {
@@ -136,6 +169,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: '',
+    },
+    productReference: {
+      type: productReferenceSchema,
+      default: null,
     },
     status: {
       type: String,
