@@ -77,6 +77,18 @@ function parseSalePayload(body) {
     parcelCount: parseNumber(body.parcelCount),
     transportName: parseText(body.transportName || body.transportDetails?.name),
     vehicleNumber: parseUpperText(body.vehicleNumber || body.transportDetails?.vehicleNumber),
+    deliveryNote: parseText(body.deliveryNote),
+    referenceNumber: parseText(body.referenceNumber),
+    referenceDate: parseOptionalDate(body.referenceDate),
+    buyerOrderNumber: parseText(body.buyerOrderNumber),
+    buyerOrderDate: parseOptionalDate(body.buyerOrderDate),
+    dispatchDocumentNumber: parseText(body.dispatchDocumentNumber),
+    dispatchThrough: parseText(body.dispatchThrough || body.transportDetails?.dispatchThrough),
+    dispatchDate: parseOptionalDate(body.dispatchDate || body.transportDetails?.dispatchDate),
+    destination: parseText(body.destination || body.transportDetails?.destination),
+    termsOfDelivery: parseText(body.termsOfDelivery || body.transportDetails?.termsOfDelivery),
+    freightCharges: parseNumber(body.freightCharges),
+    roundOff: parseNumber(body.roundOff),
     notes: parseText(body.notes),
     remarks: parseText(body.remarks),
     partyDetails: body.partyDetails || {},
@@ -93,6 +105,7 @@ function parseSalePayload(body) {
     quantity: body.quantity,
     sellingPrice: body.sellingPrice,
     gstRate: body.gstRate,
+    hsnSac: parseText(body.hsnSac),
   };
 }
 
@@ -148,6 +161,18 @@ function buildSaleMutation({ sale, payload, customer, items, amounts, userId }) 
   sale.transportDetails = payload.transportDetails;
   sale.transportName = payload.transportName;
   sale.vehicleNumber = payload.vehicleNumber;
+  sale.deliveryNote = payload.deliveryNote;
+  sale.referenceNumber = payload.referenceNumber;
+  sale.referenceDate = payload.referenceDate;
+  sale.buyerOrderNumber = payload.buyerOrderNumber;
+  sale.buyerOrderDate = payload.buyerOrderDate;
+  sale.dispatchDocumentNumber = payload.dispatchDocumentNumber;
+  sale.dispatchThrough = payload.dispatchThrough;
+  sale.dispatchDate = payload.dispatchDate;
+  sale.destination = payload.destination;
+  sale.termsOfDelivery = payload.termsOfDelivery;
+  sale.freightCharges = amounts.freightCharges;
+  sale.roundOff = amounts.roundOff;
   sale.bankDetails = payload.bankDetails;
   sale.termsAndConditions = payload.termsAndConditions;
   sale.remarks = payload.remarks;
@@ -185,6 +210,7 @@ function getSaleItemsForStock(sale) {
       quantity: sale.quantity,
       sellingPrice: sale.sellingPrice,
       gstRate: 0,
+      hsnSac: sale.hsnSac || '',
     },
   ];
 }
@@ -444,6 +470,8 @@ export async function createSale(req, res) {
       paymentType: payload.paymentType,
       invoiceDate: payload.invoiceDate,
       creditDays: payload.creditDays,
+      freightCharges: payload.freightCharges,
+      roundOff: payload.roundOff,
     });
 
     assertPaidAmount(amounts);
@@ -512,6 +540,8 @@ export async function updateSale(req, res) {
       paymentType: payload.paymentType,
       invoiceDate: payload.invoiceDate,
       creditDays: payload.creditDays,
+      freightCharges: payload.freightCharges,
+      roundOff: payload.roundOff,
     });
 
     assertPaidAmount(amounts);

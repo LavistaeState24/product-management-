@@ -38,6 +38,7 @@ function mapSaleItemToFormItem(item) {
         item.inventoryRef ||
         item.stock,
     ),
+    hsnSac: item.hsnSac || '',
     quantity: String(item.quantity ?? ''),
     sellingPrice: String(
       item.sellingPrice ??
@@ -63,6 +64,7 @@ function getSaleItems(sale) {
         sale.product ||
           sale.productId,
       ),
+      hsnSac: sale.hsnSac || '',
       quantity: String(sale.quantity ?? ''),
       sellingPrice: String(
         sale.sellingPrice ?? '',
@@ -90,6 +92,18 @@ function mapSaleToFormValues(sale) {
     parcelCount: String(sale.parcelCount || ''),
     transportName: sale.transportName || '',
     vehicleNumber: sale.vehicleNumber || '',
+    deliveryNote: sale.deliveryNote || '',
+    referenceNumber: sale.referenceNumber || '',
+    referenceDate: toDateInputValue(sale.referenceDate),
+    buyerOrderNumber: sale.buyerOrderNumber || '',
+    buyerOrderDate: toDateInputValue(sale.buyerOrderDate),
+    dispatchDocumentNumber: sale.dispatchDocumentNumber || '',
+    dispatchThrough: sale.dispatchThrough || '',
+    dispatchDate: toDateInputValue(sale.dispatchDate),
+    destination: sale.destination || '',
+    termsOfDelivery: sale.termsOfDelivery || '',
+    freightCharges: String(sale.freightCharges || ''),
+    roundOff: String(sale.roundOff || ''),
     bankDetails: sale.bankDetails || {},
     termsAndConditions: sale.termsAndConditions || [],
     notes: sale.notes || '',
