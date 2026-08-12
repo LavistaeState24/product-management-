@@ -77,6 +77,7 @@ function createStockSnapshot({ stock, stockType, config, item }) {
     colour: stock.colour || item.colour || '',
     weight: config.weightField ? stock[config.weightField] : item.weight ?? null,
     sellingUnit: stock[config.sellingUnitField] || item.sellingUnit || '',
+    hsnSac: item.hsnSac || '',
   };
 }
 
@@ -142,6 +143,7 @@ export async function normalizeSaleItems({ payload, session }) {
           quantity: payload.quantity,
           sellingPrice: payload.sellingPrice,
           gstRate: payload.gstRate || 0,
+          hsnSac: payload.hsnSac || '',
         },
       ];
 

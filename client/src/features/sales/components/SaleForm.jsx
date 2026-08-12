@@ -38,6 +38,7 @@ const stockTypeOptions = [
 const emptyItem = {
   stockType: '',
   stockRef: '',
+  hsnSac: '',
   quantity: '1',
   sellingPrice: '',
   gstRate: '0',
@@ -118,6 +119,18 @@ function normalizeInitialValues(initialValues = {}) {
     parcelCount: '',
     transportName: '',
     vehicleNumber: '',
+    deliveryNote: '',
+    referenceNumber: '',
+    referenceDate: '',
+    buyerOrderNumber: '',
+    buyerOrderDate: '',
+    dispatchDocumentNumber: '',
+    dispatchThrough: '',
+    dispatchDate: '',
+    destination: '',
+    termsOfDelivery: '',
+    freightCharges: '',
+    roundOff: '',
     bankName: '',
     bankAccountNumber: '',
     bankIFSC: '',
@@ -198,6 +211,8 @@ function SaleForm({
   const invoiceDate = watch('invoiceDate');
   const paidAmount = watch('paidAmount');
   const creditDays = watch('creditDays');
+  const freightCharges = watch('freightCharges');
+  const roundOff = watch('roundOff');
   const watchedItems = watch('items') || [];
 
   const loadStockOptions = useCallback(async (stockType, search = '') => {
@@ -265,19 +280,29 @@ function SaleForm({
       lines.reduce((total, line) => total + line.gstAmount, 0),
     );
     const grandTotal = roundCurrency(subtotal + gstAmount);
+    const normalizedFreightCharges = Math.max(
+      roundCurrency(Number(freightCharges) || 0),
+      0,
+    );
+    const normalizedRoundOff = roundCurrency(Number(roundOff) || 0);
+    const adjustedGrandTotal = roundCurrency(
+      grandTotal + normalizedFreightCharges + normalizedRoundOff,
+    );
     const normalizedPaidAmount =
       paymentType === 'Cash'
-        ? grandTotal
+        ? adjustedGrandTotal
         : roundCurrency(Math.max(Number(paidAmount) || 0, 0));
     const outstanding = roundCurrency(
-      Math.max(grandTotal - normalizedPaidAmount, 0),
+      Math.max(adjustedGrandTotal - normalizedPaidAmount, 0),
     );
 
     return {
       lines,
       subtotal,
       gstAmount,
-      grandTotal,
+      freightCharges: normalizedFreightCharges,
+      roundOff: normalizedRoundOff,
+      grandTotal: adjustedGrandTotal,
       paidAmount: normalizedPaidAmount,
       outstanding,
       paymentStatus:
@@ -290,9 +315,11 @@ function SaleForm({
     };
   }, [
     creditDays,
+    freightCharges,
     invoiceDate,
     paidAmount,
     paymentType,
+    roundOff,
     watchedItems,
   ]);
 
@@ -362,6 +389,18 @@ function SaleForm({
 
       transportName: cleanText(values.transportName),
       vehicleNumber: cleanText(values.vehicleNumber).toUpperCase(),
+      deliveryNote: cleanText(values.deliveryNote),
+      referenceNumber: cleanText(values.referenceNumber),
+      referenceDate: values.referenceDate || null,
+      buyerOrderNumber: cleanText(values.buyerOrderNumber),
+      buyerOrderDate: values.buyerOrderDate || null,
+      dispatchDocumentNumber: cleanText(values.dispatchDocumentNumber),
+      dispatchThrough: cleanText(values.dispatchThrough),
+      dispatchDate: values.dispatchDate || null,
+      destination: cleanText(values.destination),
+      termsOfDelivery: cleanText(values.termsOfDelivery),
+      freightCharges: Number(values.freightCharges) || 0,
+      roundOff: Number(values.roundOff) || 0,
 
       bankDetails: {
         bankName: cleanText(values.bankName),
@@ -380,6 +419,7 @@ function SaleForm({
       items: (values.items || []).map((item) => ({
         stockType: item.stockType,
         stockRef: item.stockRef,
+        hsnSac: cleanText(item.hsnSac),
         quantity: Number(item.quantity) || 0,
         sellingPrice: Number(item.sellingPrice) || 0,
         gstRate: Number(item.gstRate) || 0,
@@ -659,6 +699,11 @@ function SaleForm({
                         'GST cannot be negative.',
                     })}
                   />
+                  <Input
+                    label="HSN/SAC"
+                    maxLength={30}
+                    {...register(`items.${index}.hsnSac`)}
+                  />
                   <label className="flex flex-col gap-2">
                     <span className="text-sm font-semibold text-heading">
                       Line Total
@@ -787,6 +832,36 @@ function SaleForm({
                 setValueAs: (value) => String(value || '').toUpperCase(),
               })}
             />
+            <Input label="Delivery Note" {...register('deliveryNote')} />
+            <Input label="Reference No." {...register('referenceNumber')} />
+            <Input
+              label="Reference Date"
+              type="date"
+              {...register('referenceDate')}
+            />
+            <Input label="Buyer Order No." {...register('buyerOrderNumber')} />
+            <Input
+              label="Buyer Order Date"
+              type="date"
+              {...register('buyerOrderDate')}
+            />
+            <Input
+              label="Dispatch Doc No."
+              {...register('dispatchDocumentNumber')}
+            />
+            <Input label="Dispatch Through" {...register('dispatchThrough')} />
+            <Input
+              label="Dispatch Date"
+              type="date"
+              {...register('dispatchDate')}
+            />
+            <Input label="Destination" {...register('destination')} />
+            <Textarea
+              label="Terms of Delivery"
+              rows={3}
+              className="md:col-span-2"
+              {...register('termsOfDelivery')}
+            />
           </div>
         </div>
       </section>
@@ -849,6 +924,18 @@ function SaleForm({
                 {formatCurrency(invoiceSummary.gstAmount)}
               </strong>
             </div>
+            <div className="flex justify-between gap-4">
+              <span>Freight Charges</span>
+              <strong className="text-heading">
+                {formatCurrency(invoiceSummary.freightCharges)}
+              </strong>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span>Round Off</span>
+              <strong className="text-heading">
+                {formatCurrency(invoiceSummary.roundOff)}
+              </strong>
+            </div>
             <div className="flex justify-between gap-4 border-t border-border pt-3">
               <span>Grand Total</span>
               <strong className="text-heading">
@@ -866,6 +953,25 @@ function SaleForm({
               <strong className="text-heading">
                 {formatCurrency(invoiceSummary.outstanding)}
               </strong>
+            </div>
+            <div className="grid gap-3 border-t border-border pt-3">
+              <Input
+                label="Freight Charges"
+                type="number"
+                min="0"
+                step="0.01"
+                {...register('freightCharges', {
+                  validate: (value) =>
+                    Number(value || 0) >= 0 ||
+                    'Freight charges cannot be negative.',
+                })}
+              />
+              <Input
+                label="Round Off"
+                type="number"
+                step="0.01"
+                {...register('roundOff')}
+              />
             </div>
           </div>
           <div className="mt-6 flex flex-col gap-3">

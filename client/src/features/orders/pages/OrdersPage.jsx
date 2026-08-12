@@ -521,24 +521,25 @@ function OrdersPage() {
       key: 'actions',
       title: 'Actions',
       render: (_, notification) => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-row gap-2">
           {notification.kind === 'accepted' ? (
             <>
               <Button
                 type="button"
                 variant="outline"
+                title="Prepare Message"
                 className="h-10 w-auto gap-2 rounded-lg px-3"
                 loading={busyKey === `prepare-${notification.id}`}
                 disabled={!canShareWhatsApp}
                 onClick={() => handlePrepareMessage(notification.id)}
               >
                 <MessageCircle className="h-4 w-4" />
-                Prepare Message
               </Button>
               {preparedLogByNotification[notification.id] ? (
                 <Button
                   type="button"
                   variant="success"
+                  title="Open in WhatsApp"
                   className="h-10 w-auto gap-2 rounded-lg px-3"
                   loading={
                     busyKey ===
@@ -552,7 +553,6 @@ function OrdersPage() {
                   }
                 >
                   <ExternalLink className="h-4 w-4" />
-                  Open WhatsApp
                 </Button>
               ) : null}
             </>
@@ -560,12 +560,12 @@ function OrdersPage() {
           <Button
             type="button"
             variant="primary"
+            title="Mark notification as seen"
             className="h-10 w-auto gap-2 rounded-lg px-3"
             loading={busyKey === `seen-${notification.id}`}
             onClick={() => handleMarkSeen(notification.id)}
           >
             <Eye className="h-4 w-4" />
-            OK, Seen
           </Button>
         </div>
       ),
@@ -789,8 +789,8 @@ function OrdersPage() {
                   </h2>
                   <Button
                     type="button"
-                    variant="ghost"
-                    className="h-10 w-10 rounded-lg"
+                    variant="danger"
+                    // className="h-10 w-10 rounded-lg"
                     disabled={form.items.length === 1}
                     onClick={() => removeItem(index)}
                     aria-label="Remove item"
@@ -857,7 +857,7 @@ function OrdersPage() {
 
           <Button
             type="button"
-            variant="outline"
+            variant="primary"
             title="Add another item to the order"
             className="h-10 w-auto gap-2 rounded-lg px-3"
             onClick={addItem}

@@ -279,9 +279,49 @@ function hasTransportDetails(sale) {
     Number(sale?.parcelCount || 0) > 0 ? sale.parcelCount : '',
     sale?.transportName,
     sale?.vehicleNumber,
+    sale?.deliveryNote,
+    sale?.referenceNumber,
+    sale?.referenceDate,
+    sale?.buyerOrderNumber,
+    sale?.buyerOrderDate,
+    sale?.dispatchDocumentNumber,
+    sale?.dispatchThrough,
+    sale?.dispatchDate,
+    sale?.destination,
+    sale?.termsOfDelivery,
     sale?.transportDetails?.transportName,
     sale?.transportDetails?.vehicleNumber,
   ].some(isPresent);
+}
+
+function getDescriptionLines(item) {
+  return [
+    item.itemNumber ? `Item No: ${item.itemNumber}` : '',
+    item.size ? `Size: ${item.size}` : '',
+    item.colour || item.color ? `Colour: ${item.colour || item.color}` : '',
+    isPresent(item.weight) ? `Weight: ${item.weight} KG` : '',
+    item.stockType ? `Type: ${formatStockType(item.stockType)}` : '',
+  ].filter(Boolean);
+}
+
+function getInvoiceDetailRows(sale) {
+  return [
+    ['Invoice No.', sale.invoiceNumber],
+    ['Invoice Date', formatDate(sale.invoiceDate)],
+    ['Delivery Note', sale.deliveryNote],
+    ['Reference No.', sale.referenceNumber],
+    ['Reference Date', sale.referenceDate ? formatDate(sale.referenceDate) : ''],
+    ['Buyer Order No.', sale.buyerOrderNumber],
+    ['Buyer Order Date', sale.buyerOrderDate ? formatDate(sale.buyerOrderDate) : ''],
+    ['Dispatch Doc No.', sale.dispatchDocumentNumber],
+    ['Dispatch Through', sale.dispatchThrough || sale.transportName],
+    ['Dispatch Date', sale.dispatchDate ? formatDate(sale.dispatchDate) : ''],
+    ['Destination', sale.destination],
+    ['Vehicle No.', sale.vehicleNumber],
+    ['Terms of Delivery', sale.termsOfDelivery],
+    ['Payment Type', sale.paymentType],
+    ['Due Date', sale.dueDate ? formatDate(sale.dueDate) : ''],
+  ].filter(([, value]) => isPresent(value) && value !== 'Not available');
 }
 
 function DetailLine({ label, value }) {
@@ -290,7 +330,7 @@ function DetailLine({ label, value }) {
   }
 
   return (
-    <div className="flex justify-between gap-4 border-b border-border/70 py-1.5 text-xs">
+    <div className="flex justify-between gap-4 border-b border-border/70 py-1.5 text-xs print:py-1.5 print:text-[7px]">
       <span className="text-body">{label}</span>
       <span className="text-right font-semibold text-heading">{value}</span>
     </div>
@@ -353,6 +393,8 @@ function SaleInvoicePreviewPage() {
       grandTotal: sale?.grandTotal ?? sale?.totalAmount ?? calculatedSubtotal + calculatedGst,
       paidAmount: sale?.paidAmount ?? sale?.paid ?? 0,
       outstandingAmount: sale?.outstandingAmount ?? sale?.outstanding ?? 0,
+      freightCharges: sale?.freightCharges ?? 0,
+      roundOff: sale?.roundOff ?? 0,
     };
   }, [items, sale]);
 
@@ -360,8 +402,11 @@ function SaleInvoicePreviewPage() {
     const groups = new Map();
 
     items.forEach((item) => {
+      const hsnSac = item.hsnSac || '';
       const rate = Number(item.gstRate || 0);
-      const current = groups.get(rate) || {
+      const key = `${hsnSac || 'none'}-${rate}`;
+      const current = groups.get(key) || {
+        hsnSac,
         rate,
         taxable: 0,
         gst: 0,
@@ -369,7 +414,7 @@ function SaleInvoicePreviewPage() {
 
       current.taxable += Number(item.lineSubtotal || 0);
       current.gst += Number(item.gstAmount || 0);
-      groups.set(rate, current);
+      groups.set(key, current);
     });
 
     return Array.from(groups.values());
@@ -390,6 +435,7 @@ function SaleInvoicePreviewPage() {
   const showTerms = terms.length > 0;
   const showNotes = isPresent(sale.notes) || isPresent(sale.remarks);
   const companyName = company.companyName || company.name || STATIC_COMPANY_SETTINGS.companyName;
+  const invoiceDetailRows = getInvoiceDetailRows(sale);
 
   return (
     <div className="space-y-6 print:space-y-0">
@@ -455,7 +501,7 @@ function SaleInvoicePreviewPage() {
               </div>
 
               <div className="shrink-0 text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-body print:text-[7px] print:tracking-[0.16em]">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.2em] text-body print:text-[7px] print:tracking-[0.16em]">
                   Original for Recipient
                 </p>
 
@@ -467,13 +513,13 @@ function SaleInvoicePreviewPage() {
           </div>
 
           {/* Company and invoice details */}
-          <div className="grid break-inside-avoid grid-cols-[1.25fr_0.75fr] border-b border-heading">
+          <div className="grid break-inside-avoid grid-cols-2 border-b border-heading">
             <div className="border-r border-heading p-3 print:p-2">
               <h3 className="break-words text-lg font-black uppercase leading-tight text-heading print:text-[12px]">
                 {companyName}
               </h3>
 
-              <div className="mt-1 space-y-0.5 text-xs leading-snug text-body print:mt-0.5 print:text-[8px] print:leading-[1.2]">
+              <div className="mt-1 space-y-0.5 text-md leading-snug text-body print:mt-0.5 print:text-[8px] print:leading-[1.2]">
                 {companyAddressLines.map((line) => (
                   <p key={line} className="break-words">
                     {line}
@@ -515,28 +561,32 @@ function SaleInvoicePreviewPage() {
               </div>
             </div>
 
-            <div className="p-3 text-xs print:p-2 print:text-[8px]">
-              <DetailLine label="Invoice No." value={sale.invoiceNumber} />
-              <DetailLine
-                label="Invoice Date"
-                value={formatDate(sale.invoiceDate)}
-              />
-              <DetailLine label="Payment Type" value={sale.paymentType} />
-              <DetailLine
-                label="Payment Status"
-                value={sale.paymentStatus || sale.invoiceStatus}
-              />
-              <DetailLine
-                label="Due Date"
-                value={sale.dueDate ? formatDate(sale.dueDate) : ''}
-              />
+            <div className="grid grid-cols-2 text-sm print:text-[12px]">
+              {invoiceDetailRows.map(([label, value], index) => {
+                if (!isPresent(value)) return null;
+
+                return (
+                  <div
+                    key={`${label}-${index}`}
+                    className="min-h-[50px] border-b border-heading px-2 py-1.5 odd:border-r print:min-h-[34px] print:px-1 print:py-1"
+                  >
+                    <p className="text-[12px] font-medium leading-tight text-body print:text-[7px]">
+                      {label}
+                    </p>
+
+                    <p className="mt-2 break-words font-semibold text-[12px] leading-tight text-heading print:mt-0.5">
+                      {value}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* Buyer and status */}
           <div className="grid break-inside-avoid grid-cols-2 border-b border-heading">
             <div className="border-r border-heading p-3 print:p-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
+              <p className="text-[12px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                 Buyer Details
               </p>
 
@@ -544,7 +594,7 @@ function SaleInvoicePreviewPage() {
                 {customerName}
               </h3>
 
-              <div className="mt-1 space-y-0.5 text-xs leading-snug text-body print:text-[8px] print:leading-[1.2]">
+              <div className="mt-1 space-y-0.5 text-sm leading-snug text-body print:text-[8px] print:leading-[1.2]">
                 <p>Mobile: {valueOrFallback(sale.customerMobile)}</p>
 
                 <p className="break-words">
@@ -557,7 +607,7 @@ function SaleInvoicePreviewPage() {
             </div>
 
             <div className="p-3 print:p-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
+              <p className="text-[12px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                 Invoice Status
               </p>
 
@@ -572,7 +622,7 @@ function SaleInvoicePreviewPage() {
               </div>
 
               {showTransport ? (
-                <div className="mt-2 space-y-0.5 text-xs leading-snug text-body print:mt-1 print:text-[8px]">
+                <div className="mt-2 space-y-0.5 text-sm leading-snug text-body print:mt-1 print:text-[8px]">
                   <p className="font-semibold text-heading">Transport Details</p>
 
                   {isPresent(sale.parcelCount) ? (
@@ -586,6 +636,10 @@ function SaleInvoicePreviewPage() {
                   {isPresent(sale.vehicleNumber) ? (
                     <p>Vehicle No: {sale.vehicleNumber}</p>
                   ) : null}
+
+                  {isPresent(sale.destination) ? (
+                    <p>Destination: {sale.destination}</p>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -593,43 +647,31 @@ function SaleInvoicePreviewPage() {
 
           {/* Items table */}
           <div className="overflow-x-auto print:overflow-visible">
-            <table className="invoice-table w-full min-w-[100px] table-auto border-collapse text-[10px] print:min-w-0 print:table-fixed print:text-[7px] print:leading-[1.1]">
+            <table className="invoice-table w-full min-w-[100px] table-auto border-collapse text-[12px] print:min-w-0 print:table-fixed print:text-[12px] print:leading-[1.1]">
               <thead>
                 <tr className="bg-background text-left text-heading">
                   <th className="w-8 border-b border-r border-heading px-1.5 py-1.5 text-center print:px-1 print:py-1">
-                    Sr
+                    Sl No
                   </th>
 
                   <th className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
-                    Description
+                    Description Of Goods & Services
                   </th>
 
-                  <th className="w-20 border-b border-r border-heading px-1.5 py-1.5 print:w-[15%] print:px-1 print:py-1">
-                    Item No.
-                  </th>
-
-                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 print:w-[8%] print:px-1 print:py-1">
-                    Size
-                  </th>
-
-                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 print:w-[8%] print:px-1 print:py-1">
-                    Colour
+                  <th className="w-20 border-b border-r border-heading px-1.5 py-1.5 print:w-[12%] print:px-1 print:py-1">
+                    HSN/SAC
                   </th>
 
                   <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 text-right print:w-[7%] print:px-1 print:py-1">
-                    Qty
+                    Quality
                   </th>
 
                   <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 print:w-[7%] print:px-1 print:py-1">
-                    Unit
-                  </th>
-
-                  <th className="w-20 border-b border-r border-heading px-1.5 py-1.5 text-right print:w-[11%] print:px-1 print:py-1">
                     Rate
                   </th>
 
-                  <th className="w-14 border-b border-r border-heading px-1.5 py-1.5 text-right print:w-[7%] print:px-1 print:py-1">
-                    GST
+                  <th className="w-20 border-b border-r border-heading px-1.5 py-1.5 text-right print:w-[11%] print:px-1 print:py-1">
+                    Per
                   </th>
 
                   <th className="w-24 border-b border-heading px-1.5 py-1.5 text-right print:w-[13%] print:px-1 print:py-1">
@@ -658,24 +700,15 @@ function SaleInvoicePreviewPage() {
                           {valueOrFallback(item.productName)}
                         </p>
 
-                        <p className="leading-tight text-body">
-                          {formatStockType(item.stockType)}
-                          {isPresent(item.weight)
-                            ? ` | Weight: ${item.weight} KG`
-                            : ''}
-                        </p>
+                        {getDescriptionLines(item).map((line) => (
+                          <p key={line} className="leading-tight text-body">
+                            {line}
+                          </p>
+                        ))}
                       </td>
 
                       <td className="break-words border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
-                        {valueOrFallback(item.itemNumber)}
-                      </td>
-
-                      <td className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
-                        {valueOrFallback(item.size)}
-                      </td>
-
-                      <td className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
-                        {valueOrFallback(item.colour || item.color)}
+                        {valueOrFallback(item.hsnSac)}
                       </td>
 
                       <td className="border-b border-r border-heading px-1.5 py-1.5 text-right print:px-1 print:py-1">
@@ -683,26 +716,23 @@ function SaleInvoicePreviewPage() {
                       </td>
 
                       <td className="border-b border-r border-heading px-1.5 py-1.5 print:px-1 print:py-1">
-                        {valueOrFallback(item.sellingUnit)}
-                      </td>
-
-                      <td className="border-b border-r border-heading px-1.5 py-1.5 text-right print:px-1 print:py-1">
                         {formatCurrency(item.sellingPrice)}
                       </td>
 
                       <td className="border-b border-r border-heading px-1.5 py-1.5 text-right print:px-1 print:py-1">
+                        {valueOrFallback(item.sellingUnit)} <br />
                         {Number(item.gstRate || 0)}%
                       </td>
 
-                      <td className="border-b border-heading px-1.5 py-1.5 text-right font-semibold print:px-1 print:py-1">
-                        {formatCurrency(item.lineTotal)}
+                      <td className="border-b border-r border-heading px-1.5 py-1.5 text-right print:px-1 print:py-1">
+                        {formatCurrency(item.lineSubtotal)}
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={10}
+                      colSpan={7}
                       className="border-b border-heading px-2 py-5 text-center text-body print:py-2"
                     >
                       No sale items are available.
@@ -716,29 +746,41 @@ function SaleInvoicePreviewPage() {
           {/* Amount and totals */}
           <div className="grid break-inside-avoid grid-cols-[1fr_230px] border-b border-heading print:grid-cols-[1fr_210px]">
             <div className="border-r border-heading p-3 print:p-2">
-              <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
+              <p className="text-[12px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                 Amount in Words
               </p>
 
-              <p className="mt-1 text-xs font-semibold leading-tight text-heading print:text-[8px]">
+              <p className="mt-1 text-sm font-semibold leading-tight text-heading print:text-[8px]">
                 {numberToIndianWords(totals.grandTotal)}
+              </p>
+
+              <p className="mt-2 text-[12px] font-black uppercase tracking-[0.14em] text-heading print:mt-1 print:text-[7px]">
+                Tax Amount in Words
+              </p>
+
+              <p className="mt-1 text-sm font-semibold leading-tight text-heading print:text-[8px]">
+                {numberToIndianWords(totals.gstAmount)}
               </p>
 
               {gstSummary.length ? (
                 <div className="mt-2 break-inside-avoid print:mt-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
+                  <p className="text-[12px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                     GST Summary
                   </p>
 
-                  <table className="mt-1 w-full border-collapse text-[10px] print:text-[7px]">
+                  <table className="mt-1 w-full border-collapse text-[12px] print:text-[7px]">
                     <thead>
                       <tr className="bg-background text-heading">
                         <th className="border border-heading px-1.5 py-1 text-left print:px-1 print:py-0.5">
-                          GST Rate
+                          HSN/SAC
                         </th>
 
                         <th className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
                           Taxable
+                        </th>
+
+                        <th className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
+                          GST Rate
                         </th>
 
                         <th className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
@@ -751,11 +793,15 @@ function SaleInvoicePreviewPage() {
                       {gstSummary.map((group) => (
                         <tr key={group.rate}>
                           <td className="border border-heading px-1.5 py-1 print:px-1 print:py-0.5">
-                            {group.rate}%
+                            {valueOrFallback(group.hsnSac)}
                           </td>
 
                           <td className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
                             {formatCurrency(group.taxable)}
+                          </td>
+
+                          <td className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
+                            {group.rate}%
                           </td>
 
                           <td className="border border-heading px-1.5 py-1 text-right print:px-1 print:py-0.5">
@@ -769,7 +815,7 @@ function SaleInvoicePreviewPage() {
               ) : null}
             </div>
 
-            <div className="p-3 text-xs print:p-2 print:text-[8px]">
+            <div className="p-3 text-sm print:p-2 print:text-[8px]">
               <div className="space-y-1 print:space-y-0.5">
                 <div className="flex justify-between gap-3">
                   <span className="text-body">Subtotal</span>
@@ -786,6 +832,26 @@ function SaleInvoicePreviewPage() {
                     {formatCurrency(totals.gstAmount)}
                   </span>
                 </div>
+
+                {Number(totals.freightCharges || 0) ? (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-body">Freight Charges</span>
+
+                    <span className="font-semibold text-heading">
+                      {formatCurrency(totals.freightCharges)}
+                    </span>
+                  </div>
+                ) : null}
+
+                {Number(totals.roundOff || 0) ? (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-body">Round Off</span>
+
+                    <span className="font-semibold text-heading">
+                      {formatCurrency(totals.roundOff)}
+                    </span>
+                  </div>
+                ) : null}
 
                 <div className="flex justify-between gap-3 border-t border-heading pt-1">
                   <span className="font-black uppercase text-heading">
@@ -824,11 +890,11 @@ function SaleInvoicePreviewPage() {
                   className={`p-3 print:p-2 ${showTerms || showNotes ? 'border-r border-heading' : 'col-span-2'
                     }`}
                 >
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
+                  <p className="text-[12px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                     Company&apos;s Bank Details
                   </p>
 
-                  <div className="mt-1 space-y-0.5 text-xs leading-snug text-body print:text-[8px] print:leading-[1.2]">
+                  <div className="mt-1 space-y-0.5 text-sm leading-snug text-body print:text-[8px] print:leading-[1.2]">
                     {isPresent(bankDetails.accountHolderName) ? (
                       <p>
                         Account Holder: {bankDetails.accountHolderName}
@@ -868,11 +934,11 @@ function SaleInvoicePreviewPage() {
                 >
                   {showTerms ? (
                     <>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
+                      <p className="text-[12px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                         Terms & Conditions
                       </p>
 
-                      <ul className="mt-1 space-y-0.5 text-xs leading-snug text-body print:text-[8px]">
+                      <ul className="mt-1 space-y-0.5 text-sm leading-snug text-body print:text-[8px]">
                         {terms.map((term, index) => (
                           <li key={`${term}-${index}`}>
                             {term}
@@ -884,11 +950,11 @@ function SaleInvoicePreviewPage() {
 
                   {showNotes ? (
                     <div className={showTerms ? 'mt-2 print:mt-1' : ''}>
-                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
+                      <p className="text-[12px] font-black uppercase tracking-[0.14em] text-heading print:text-[7px]">
                         Notes
                       </p>
 
-                      <p className="mt-1 whitespace-pre-wrap text-xs leading-snug text-body print:text-[8px]">
+                      <p className="mt-1 whitespace-pre-wrap text-sm leading-snug text-body print:text-[8px]">
                         {sale.notes || sale.remarks}
                       </p>
                     </div>
@@ -900,7 +966,7 @@ function SaleInvoicePreviewPage() {
 
           {/* Footer and signature */}
           <div className="grid min-h-24 break-inside-avoid grid-cols-2 print:min-h-[60px]">
-            <div className="flex flex-col justify-between border-r border-heading p-3 text-[10px] leading-snug text-body print:p-2 print:text-[7px]">
+            <div className="flex flex-col justify-between border-r border-heading p-3 text-[12px] leading-snug text-body print:p-2 print:text-[7px]">
               <p>
                 Certified that the particulars given above are true and correct
                 to the best of available invoice records.
@@ -913,11 +979,11 @@ function SaleInvoicePreviewPage() {
             </div>
 
             <div className="flex flex-col justify-between p-3 text-right print:p-2">
-              <p className="text-xs font-bold text-heading print:text-[8px]">
+              <p className="text-sm font-bold text-heading print:text-[8px]">
                 For {companyName}
               </p>
 
-              <p className="mt-10 text-xs font-bold text-heading print:mt-6 print:text-[8px]">
+              <p className="mt-10 text-sm font-bold text-heading print:mt-6 print:text-[8px]">
                 Authorized Signature
               </p>
             </div>
