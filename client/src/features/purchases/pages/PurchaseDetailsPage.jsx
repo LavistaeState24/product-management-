@@ -273,7 +273,7 @@ function PurchaseDetailsPage() {
               </Badge>
             </div>
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="mt-6 grid gap-4 md:grid-cols-3 lg:grid-cols-3">
               <DetailCard
                 label="Item Name"
                 value={itemName}
