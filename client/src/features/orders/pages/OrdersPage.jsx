@@ -15,9 +15,9 @@ import {
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Input from '@/components/ui/Input';
-import Table from '@/components/ui/Table';
 import Textarea from '@/components/ui/Textarea';
 import { PERMISSIONS } from '@/constants/permissions';
 import { useToast } from '@/hooks/useToast';
@@ -165,6 +165,13 @@ function renderItems(items = [], { showRate = false } = {}) {
       ))}
     </div>
   );
+}
+
+function toDataTableColumns(columns) {
+  return columns.map((column) => ({
+    ...column,
+    render: (row) => (column.render ? column.render(row[column.key], row) : row[column.key]),
+  }));
 }
 
 function OrdersPage() {
@@ -953,9 +960,11 @@ function OrdersPage() {
       ) : null}
 
       {activeTab === 'notifications' ? (
-        <Table
-          columns={notificationColumns}
+        <DataTable
+          columns={toDataTableColumns(notificationColumns)}
           data={notifications}
+          loading={isLoading}
+          loadingContent="Loading notifications..."
           emptyContent={
             <EmptyState
               title="No notifications"
@@ -966,9 +975,11 @@ function OrdersPage() {
       ) : null}
 
       {activeTab === 'ready' ? (
-        <Table
-          columns={readyColumns}
+        <DataTable
+          columns={toDataTableColumns(readyColumns)}
           data={readyOrders}
+          loading={isLoading}
+          loadingContent="Loading ready orders..."
           emptyContent={
             <EmptyState
               title="No ready orders"
@@ -979,9 +990,11 @@ function OrdersPage() {
       ) : null}
 
       {activeTab === 'all' ? (
-        <Table
-          columns={orderColumns}
+        <DataTable
+          columns={toDataTableColumns(orderColumns)}
           data={orders}
+          loading={isLoading}
+          loadingContent="Loading orders..."
           emptyContent={
             <EmptyState
               title="No orders"
@@ -992,9 +1005,11 @@ function OrdersPage() {
       ) : null}
 
       {activeTab === 'messages' ? (
-        <Table
-          columns={messageColumns}
+        <DataTable
+          columns={toDataTableColumns(messageColumns)}
           data={messageLogs}
+          loading={isLoading}
+          loadingContent="Loading message logs..."
           emptyContent={
             <EmptyState
               title="No message logs"

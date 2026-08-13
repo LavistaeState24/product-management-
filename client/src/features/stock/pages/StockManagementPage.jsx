@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Boxes, FlaskConical, PackageOpen } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
-import Table from '@/components/ui/Table';
 import { useToast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
 import { fetchStocks } from '@/features/stock/services/stockService';
@@ -71,22 +71,22 @@ function StockManagementPage() {
       {
         key: 'itemName',
         title: 'Item',
-        render: (value) => <span className="font-semibold">{value}</span>,
+        render: (row) => <span className="font-semibold">{row.itemName}</span>,
       },
       {
         key: 'availableQuantity',
         title: 'Available Quantity',
-        render: (value) => formatQuantity(value),
+        render: (row) => formatQuantity(row.availableQuantity),
       },
       {
         key: 'unit',
         title: 'Unit',
-        render: (value) => <Badge variant="neutral">{value}</Badge>,
+        render: (row) => <Badge variant="neutral">{row.unit}</Badge>,
       },
       {
         key: 'updatedAt',
         title: 'Last Updated',
-        render: (value) => formatDateTime(value),
+        render: (row) => formatDateTime(row.updatedAt),
       },
     ],
     [],
@@ -153,19 +153,19 @@ function StockManagementPage() {
             </div>
           </div>
 
-          {loading ? (
-            <div className="rounded-3xl border border-border bg-background p-8 text-center text-sm text-body">
-              Loading stock records...
-            </div>
-          ) : activeItems.length ? (
-            <Table columns={columns} data={activeItems} />
-          ) : (
-            <EmptyState
-              title={`No ${activeLabel?.toLowerCase()} yet`}
-              description="Stock appears here after purchases are recorded for this inventory type."
-              icon={PackageOpen}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={activeItems}
+            loading={loading}
+            loadingContent="Loading stock records..."
+            emptyContent={
+              <EmptyState
+                title={`No ${activeLabel?.toLowerCase()} yet`}
+                description="Stock appears here after purchases are recorded for this inventory type."
+                icon={PackageOpen}
+              />
+            }
+          />
         </div>
       </section>
     </div>

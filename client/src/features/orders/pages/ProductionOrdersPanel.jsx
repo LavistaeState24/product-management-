@@ -8,10 +8,10 @@ import {
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 import Textarea from '@/components/ui/Textarea';
 import { fetchFinishedGoodsStock } from '@/features/finished-goods-stock/services/finishedGoodsStockService';
 import { PERMISSIONS } from '@/constants/permissions';
@@ -109,6 +109,13 @@ function renderProgressTimeline(updates = []) {
       ))}
     </div>
   );
+}
+
+function toDataTableColumns(columns) {
+  return columns.map((column) => ({
+    ...column,
+    render: (row) => (column.render ? column.render(row[column.key], row) : row[column.key]),
+  }));
 }
 
 function toStockOptions(stockItems = []) {
@@ -540,6 +547,110 @@ function ProductionOrdersPanel() {
     },
   ];
 
+  const readyColumns = [
+    {
+      key: 'orderNo',
+      title: 'Order',
+      render: (_, order) => (
+        <div className="min-w-[760px] space-y-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-heading">
+                {order.orderNo}
+              </h2>
+              <p className="text-sm text-body">
+                Ready By: {formatDate(order.readyByDate)}
+              </p>
+            </div>
+            <Badge>{formatStatus(order.status)}</Badge>
+          </div>
+
+          {order.productReference?.key ? (
+            <div className="rounded-2xl border border-border bg-background p-4">
+              <p className="mb-2 text-sm font-semibold text-heading">
+                Product Reference / Attachment
+              </p>
+              {renderAttachment(order.productReference)}
+            </div>
+          ) : null}
+
+          <div className="space-y-4">
+            {order.items.map((item, index) => {
+              const readyItem = readyItemsByOrder[order.id]?.[index] || {};
+
+              return (
+                <div
+                  key={`${order.id}-${index}`}
+                  className="rounded-2xl border border-border bg-background p-4"
+                >
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <Input label="Product" value={item.itemDesc || ''} readOnly />
+                    <Input label="Size" value={item.size || ''} readOnly />
+                    <Input label="Colour" value={item.colour || ''} readOnly />
+                    <Input label="Hardness" value={item.hardness || ''} readOnly />
+                    <Input label="Quantity" value={item.quantity ?? ''} readOnly />
+                    <Select
+                      label="Stock Item"
+                      options={stockOptions}
+                      placeholder="Manual item number"
+                      value={readyItem.selectedStock || ''}
+                      disabled={!canAssignItemNumbers}
+                      onChange={(event) =>
+                        handleStockSelect(
+                          order.id,
+                          index,
+                          event.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      label="Manual Item Number"
+                      value={readyItem.itemNo || ''}
+                      readOnly={!canAssignItemNumbers}
+                      onChange={(event) =>
+                        handleManualItemNo(
+                          order.id,
+                          index,
+                          event.target.value,
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 w-auto gap-2 rounded-lg px-3"
+              loading={busyKey === `assign-${order.id}`}
+              disabled={!canAssignItemNumbers || isReadyBlocked(order)}
+              onClick={() => handleAssignItemNumbers(order)}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Assign Item No.
+            </Button>
+            {canMarkReady ? (
+              <Button
+                type="button"
+                className="h-10 w-auto gap-2 rounded-lg px-3"
+                loading={busyKey === `ready-${order.id}`}
+                disabled={isReadyBlocked(order)}
+                onClick={() => handleMarkReady(order)}
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Mark Ready
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -578,9 +689,11 @@ function ProductionOrdersPanel() {
       </div>
 
       {activeTab === 'pending' ? (
-        <Table
-          columns={pendingColumns}
+        <DataTable
+          columns={toDataTableColumns(pendingColumns)}
           data={pendingOrders}
+          loading={isLoading}
+          loadingContent="Loading pending orders..."
           emptyContent={
             <EmptyState
               title="No pending orders"
@@ -592,9 +705,11 @@ function ProductionOrdersPanel() {
       ) : null}
 
       {activeTab === 'active' ? (
-        <Table
-          columns={activeColumns}
+        <DataTable
+          columns={toDataTableColumns(activeColumns)}
           data={activeOrders}
+          loading={isLoading}
+          loadingContent="Loading production orders..."
           emptyContent={
             <EmptyState
               title="No active production orders"
@@ -606,120 +721,27 @@ function ProductionOrdersPanel() {
       ) : null}
 
       {activeTab === 'ready' ? (
-        <div className="space-y-4">
-          {markReadyOrders.length ? (
-            markReadyOrders.map((order) => (
-              <div
-                key={order.id}
-                className="rounded-3xl border border-border bg-card p-5"
-              >
-                <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h2 className="text-lg font-semibold text-heading">
-                      {order.orderNo}
-                    </h2>
-                    <p className="text-sm text-body">
-                      Ready By: {formatDate(order.readyByDate)}
-                    </p>
-                  </div>
-                  <Badge>{formatStatus(order.status)}</Badge>
-                </div>
-
-                {order.productReference?.key ? (
-                  <div className="mb-4 rounded-2xl border border-border bg-background p-4">
-                    <p className="mb-2 text-sm font-semibold text-heading">
-                      Product Reference / Attachment
-                    </p>
-                    {renderAttachment(order.productReference)}
-                  </div>
-                ) : null}
-
-                <div className="space-y-4">
-                  {order.items.map((item, index) => {
-                    const readyItem = readyItemsByOrder[order.id]?.[index] || {};
-
-                    return (
-                      <div
-                        key={`${order.id}-${index}`}
-                        className="rounded-2xl border border-border bg-background p-4"
-                      >
-                        <div className="grid gap-4 md:grid-cols-3">
-                          <Input label="Product" value={item.itemDesc || ''} readOnly />
-                          <Input label="Size" value={item.size || ''} readOnly />
-                          <Input label="Colour" value={item.colour || ''} readOnly />
-                          <Input label="Hardness" value={item.hardness || ''} readOnly />
-                          <Input label="Quantity" value={item.quantity ?? ''} readOnly />
-                          <Select
-                            label="Stock Item"
-                            options={stockOptions}
-                            placeholder="Manual item number"
-                            value={readyItem.selectedStock || ''}
-                            disabled={!canAssignItemNumbers}
-                            onChange={(event) =>
-                              handleStockSelect(
-                                order.id,
-                                index,
-                                event.target.value,
-                              )
-                            }
-                          />
-                          <Input
-                            label="Manual Item Number"
-                            value={readyItem.itemNo || ''}
-                            readOnly={!canAssignItemNumbers}
-                            onChange={(event) =>
-                              handleManualItemNo(
-                                order.id,
-                                index,
-                                event.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-4 h-10 w-auto gap-2 rounded-lg px-3"
-                  loading={busyKey === `assign-${order.id}`}
-                  disabled={!canAssignItemNumbers || isReadyBlocked(order)}
-                  onClick={() => handleAssignItemNumbers(order)}
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Assign Item No.
-                </Button>
-                {canMarkReady ? (
-                  <Button
-                    type="button"
-                    className="ml-2 mt-4 h-10 w-auto gap-2 rounded-lg px-3"
-                    loading={busyKey === `ready-${order.id}`}
-                    disabled={isReadyBlocked(order)}
-                    onClick={() => handleMarkReady(order)}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    Mark Ready
-                  </Button>
-                ) : null}
-              </div>
-            ))
-          ) : (
+        <DataTable
+          columns={toDataTableColumns(readyColumns)}
+          data={markReadyOrders}
+          loading={isLoading}
+          loadingContent="Loading orders to mark ready..."
+          emptyContent={
             <EmptyState
               title="No orders to mark Ready"
               description="Accepted or in-production orders will appear here."
               icon={ClipboardList}
             />
-          )}
-        </div>
+          }
+        />
       ) : null}
 
       {activeTab === 'all' ? (
-        <Table
-          columns={allColumns}
+        <DataTable
+          columns={toDataTableColumns(allColumns)}
           data={allOrders}
+          loading={isLoading}
+          loadingContent="Loading production order history..."
           emptyContent={
             <EmptyState
               title="No production orders"
