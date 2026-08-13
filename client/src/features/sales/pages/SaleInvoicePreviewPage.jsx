@@ -561,7 +561,7 @@ function SaleInvoicePreviewPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 text-sm print:text-[12px]">
+            <div className="grid grid-cols-2 text-sm print:text-[10px]">
               {invoiceDetailRows.map(([label, value], index) => {
                 if (!isPresent(value)) return null;
 
