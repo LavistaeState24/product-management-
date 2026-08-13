@@ -3,12 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Ban, Edit, Eye, FileText, PackageSearch, Pencil, Plus, ReceiptText, View } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Modal from '@/components/ui/Modal';
-import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 import Textarea from '@/components/ui/Textarea';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
@@ -21,7 +20,6 @@ import {
 } from '@/features/sales/utils/saleHelpers';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
 import { PERMISSIONS } from '@/constants/permissions';
-import SalesPageSkeleton from '@/features/sales/components/SalesPageSkeleton';
 
 const paymentTypeOptions = [
   { value: '', label: 'All Types' },
@@ -44,7 +42,7 @@ function SalesListPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 10,
+      limit: 15,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -77,6 +75,7 @@ function SalesListPage() {
       try {
         const data = await fetchSales({
           page: Number(searchParams.get('page') || 1),
+          limit: Number(searchParams.get('limit') || 15),
           search: searchParams.get('search') || undefined,
           paymentType: searchParams.get('paymentType') || undefined,
           invoiceStatus: searchParams.get('invoiceStatus') || undefined,
@@ -112,55 +111,55 @@ function SalesListPage() {
       {
         key: 'customer',
         title: 'Party',
-        render: (value, row) => row.customerName || value?.name || '-',
+        render: (row) => row.customerName || row.customer?.name || '-',
       },
       {
         key: 'customerMobile',
         title: 'Mobile',
-        render: (value, row) => value || row.customer?.mobile || '-',
+        render: (row) => row.customerMobile || row.customer?.mobile || '-',
       },
       {
         key: 'invoiceDate',
         title: 'Date',
-        render: (value) => formatDate(value),
+        render: (row) => formatDate(row.invoiceDate),
       },
       {
         key: 'totalAmount',
         title: 'Total',
-        render: (value, row) => formatCurrency(value ?? row.grandTotal),
+        render: (row) => formatCurrency(row.totalAmount ?? row.grandTotal),
       },
       {
         key: 'paidAmount',
         title: 'Paid',
-        render: (value, row) => formatCurrency(value ?? row.paid),
+        render: (row) => formatCurrency(row.paidAmount ?? row.paid),
       },
       {
         key: 'outstandingAmount',
         title: 'Outstanding',
-        render: (value, row) => formatCurrency(value ?? row.outstanding),
+        render: (row) => formatCurrency(row.outstandingAmount ?? row.outstanding),
       },
       {
         key: 'paymentStatus',
         title: 'Payment Status',
-        render: (value, row) => (
+        render: (row) => (
           <Badge variant={getPaymentBadgeVariant(row.paymentType)}>
-            {value || row.paymentType || '-'}
+            {row.paymentStatus || row.paymentType || '-'}
           </Badge>
         ),
       },
       {
         key: 'invoiceStatus',
         title: 'Invoice Status',
-        render: (value) => (
-          <Badge variant={getInvoiceStatusBadgeVariant(value)}>
-            {value || '-'}
+        render: (row) => (
+          <Badge variant={getInvoiceStatusBadgeVariant(row.invoiceStatus)}>
+            {row.invoiceStatus || '-'}
           </Badge>
         ),
       },
       {
         key: 'actions',
         title: 'Actions',
-        render: (_, row) => (
+        render: (row) => (
           <div className="flex flex-wrap gap-2">
             <Link to={`/sales/${row.id}`}>
               <Button type="button" size="sm" variant="primary"  title="View">
@@ -217,6 +216,7 @@ function SalesListPage() {
       nextParams.set('invoiceStatus', filters.invoiceStatus);
     }
 
+    nextParams.set('limit', searchParams.get('limit') || '15');
     nextParams.set('page', '1');
     setSearchParams(nextParams);
   }
@@ -227,7 +227,14 @@ function SalesListPage() {
       paymentType: '',
       invoiceStatus: '',
     });
-    setSearchParams({ page: '1' });
+    setSearchParams({ page: '1', limit: searchParams.get('limit') || '15' });
+  }
+
+  function handleRowsPerPageChange(limit) {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('limit', String(limit));
+    nextParams.set('page', '1');
+    setSearchParams(nextParams);
   }
 
   async function handleCancelSale() {
@@ -264,10 +271,6 @@ function SalesListPage() {
     } finally {
       setCancelLoading(false);
     }
-  }
-
-  if (loading) {
-    return <SalesPageSkeleton />;
   }
 
   const hasActiveFilters = Boolean(
@@ -343,48 +346,45 @@ function SalesListPage() {
         </div>
 
         <div className="mt-6">
-          {state.items.length ? (
-            <Table columns={columns} data={state.items} />
-          ) : (
-            <EmptyState
-              title={hasActiveFilters ? 'No sales match these filters' : 'No sales yet'}
-              description={
-                hasActiveFilters
-                  ? 'Try a broader search or clear one of the active filters.'
-                  : 'Create the first sale to start updating stock and customer receivables.'
-              }
-              actionLabel={
-                hasActiveFilters
-                  ? 'Reset Filters'
-                  : hasPermission(PERMISSIONS.canCreateSales)
-                    ? 'Add Sale'
-                    : undefined
-              }
-              onAction={
-                hasActiveFilters
-                  ? resetFilters
-                  : hasPermission(PERMISSIONS.canCreateSales)
-                    ? () => navigate('/sales/new')
-                    : undefined
-              }
-              icon={hasActiveFilters ? PackageSearch : FileText}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={state.items}
+            loading={loading}
+            loadingContent="Loading sales..."
+            pagination={state.pagination}
+            onPageChange={(page) => {
+              const nextParams = new URLSearchParams(searchParams);
+              nextParams.set('page', String(page));
+              setSearchParams(nextParams);
+            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            emptyContent={
+              <EmptyState
+                title={hasActiveFilters ? 'No sales match these filters' : 'No sales yet'}
+                description={
+                  hasActiveFilters
+                    ? 'Try a broader search or clear one of the active filters.'
+                    : 'Create the first sale to start updating stock and customer receivables.'
+                }
+                actionLabel={
+                  hasActiveFilters
+                    ? 'Reset Filters'
+                    : hasPermission(PERMISSIONS.canCreateSales)
+                      ? 'Add Sale'
+                      : undefined
+                }
+                onAction={
+                  hasActiveFilters
+                    ? resetFilters
+                    : hasPermission(PERMISSIONS.canCreateSales)
+                      ? () => navigate('/sales/new')
+                      : undefined
+                }
+                icon={hasActiveFilters ? PackageSearch : FileText}
+              />
+            }
+          />
         </div>
-
-        {state.items.length && state.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={state.pagination.page}
-              totalPages={state.pagination.totalPages}
-              onPageChange={(page) => {
-                const nextParams = new URLSearchParams(searchParams);
-                nextParams.set('page', String(page));
-                setSearchParams(nextParams);
-              }}
-            />
-          </div>
-        ) : null}
       </section>
 
       <Modal

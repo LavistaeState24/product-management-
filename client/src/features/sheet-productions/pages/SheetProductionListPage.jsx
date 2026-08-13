@@ -3,10 +3,9 @@ import { Eye, FilePenLine, Factory, Plus, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
-import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
-import Table from '@/components/ui/Table';
 import { formatDateTime } from '@/features/purchases/utils/purchaseHelpers';
 import {
   deleteSheetProduction,
@@ -27,7 +26,7 @@ function SheetProductionListPage() {
     items: [],
     pagination: {
       page: 1,
-      limit: 10,
+      limit: 15,
       totalItems: 0,
       totalPages: 1,
     },
@@ -50,6 +49,7 @@ function SheetProductionListPage() {
       try {
         const data = await fetchSheetProductions({
           page: Number(searchParams.get('page') || 1),
+          limit: Number(searchParams.get('limit') || 15),
           search: searchParams.get('search') || undefined,
         });
 
@@ -88,6 +88,7 @@ function SheetProductionListPage() {
       toast.success('Production deleted', 'Raw material and sheet stock were reconciled.');
       const data = await fetchSheetProductions({
         page: Number(searchParams.get('page') || 1),
+        limit: Number(searchParams.get('limit') || 15),
         search: searchParams.get('search') || undefined,
       });
       setState(data);
@@ -103,9 +104,9 @@ function SheetProductionListPage() {
       {
         key: 'batchId',
         title: 'Batch Number',
-        render: (value, row) => (
+        render: (row) => (
           <Link className="font-semibold text-primary" to={`/sheet-productions/${row.id}`}>
-            {value}
+            {row.batchId}
           </Link>
         ),
       },
@@ -116,22 +117,22 @@ function SheetProductionListPage() {
       {
         key: 'quantityUsed',
         title: 'Quantity Used',
-        render: (value) => formatQuantity(value),
+        render: (row) => formatQuantity(row.quantityUsed),
       },
       {
         key: 'sheets',
         title: 'Sheets',
-        render: (value) => <Badge variant="neutral">{value?.length || 0}</Badge>,
+        render: (row) => <Badge variant="neutral">{row.sheets?.length || 0}</Badge>,
       },
       {
         key: 'dateTime',
         title: 'Production Date',
-        render: (value) => formatDateTime(value),
+        render: (row) => formatDateTime(row.dateTime),
       },
       {
         key: 'actions',
         title: 'Actions',
-        render: (_, row) => (
+        render: (row) => (
           <div className="flex items-center gap-2">
             <Button as={Link} to={`/sheet-productions/${row.id}`} size="sm" variant="primary">
               <Eye className="h-4 w-4" />
@@ -159,6 +160,14 @@ function SheetProductionListPage() {
     event.preventDefault();
     const nextParams = new URLSearchParams();
     if (search.trim()) nextParams.set('search', search.trim());
+    nextParams.set('limit', searchParams.get('limit') || '15');
+    nextParams.set('page', '1');
+    setSearchParams(nextParams);
+  }
+
+  function handleRowsPerPageChange(limit) {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('limit', String(limit));
     nextParams.set('page', '1');
     setSearchParams(nextParams);
   }
@@ -186,7 +195,11 @@ function SheetProductionListPage() {
             placeholder="Search batch, raw material, item number, item name, size, colour"
           />
           <Button type="submit">Search</Button>
-          <Button type="button" variant="outline" onClick={() => setSearchParams({ page: '1' })}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setSearchParams({ page: '1', limit: searchParams.get('limit') || '15' })}
+          >
             Reset
           </Button>
         </form>
@@ -205,34 +218,27 @@ function SheetProductionListPage() {
         </div>
 
         <div className="mt-6">
-          {loading ? (
-            <div className="rounded-3xl border border-border bg-background p-8 text-center text-sm text-body">
-              Loading sheet production...
-            </div>
-          ) : state.items.length ? (
-            <Table columns={columns} data={state.items} />
-          ) : (
-            <EmptyState
-              title="No sheet production found"
-              description="Sheet production batches appear here after production is completed."
-              icon={Factory}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={state.items}
+            loading={loading}
+            loadingContent="Loading sheet production..."
+            pagination={state.pagination}
+            onPageChange={(page) => {
+              const nextParams = new URLSearchParams(searchParams);
+              nextParams.set('page', String(page));
+              setSearchParams(nextParams);
+            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            emptyContent={
+              <EmptyState
+                title="No sheet production found"
+                description="Sheet production batches appear here after production is completed."
+                icon={Factory}
+              />
+            }
+          />
         </div>
-
-        {!loading && state.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={state.pagination.page}
-              totalPages={state.pagination.totalPages}
-              onPageChange={(page) => {
-                const nextParams = new URLSearchParams(searchParams);
-                nextParams.set('page', String(page));
-                setSearchParams(nextParams);
-              }}
-            />
-          </div>
-        ) : null}
       </section>
     </div>
   );

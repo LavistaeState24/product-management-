@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Input from '@/components/ui/Input';
-import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 import { formatDateTime } from '@/features/purchases/utils/purchaseHelpers';
 import { useToast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
@@ -33,6 +32,7 @@ function buildInitialFilters(searchParams) {
     colour: searchParams.get('colour') || '',
     metric: searchParams.get('metric') || searchParams.get('weight') || searchParams.get('sellingUnit') || '',
     sort: searchParams.get('sort') || '',
+    limit: Number(searchParams.get('limit') || 15),
   };
 }
 
@@ -42,7 +42,7 @@ function FinishedStockPage({ config }) {
     items: [],
     pagination: {
       page: 1,
-      limit: 10,
+      limit: 15,
       totalItems: 0,
       totalPages: 1,
     },
@@ -69,7 +69,7 @@ function FinishedStockPage({ config }) {
         );
         const data = await config.fetchStock({
           page: hasColumnFilters ? 1 : Number(searchParams.get('page') || 1),
-          limit: hasColumnFilters ? 100 : undefined,
+          limit: hasColumnFilters ? 100 : Number(searchParams.get('limit') || 15),
           search: searchParams.get('search') || undefined,
         });
 
@@ -140,49 +140,52 @@ function FinishedStockPage({ config }) {
       {
         key: 'itemNumber',
         title: 'Item Number',
-        render: (value, row) =>
+        render: (row) =>
           config.getItemLink ? (
             <Link className="font-semibold text-primary" to={config.getItemLink(row)}>
-              {value}
+              {row.itemNumber}
             </Link>
           ) : (
-            <span className="font-semibold text-heading">{value}</span>
+            <span className="font-semibold text-heading">{row.itemNumber}</span>
           ),
       },
       {
         key: config.itemNameKey,
         title: config.itemColumnTitle,
-        render: (value) => value || 'Not available',
+        render: (row) => row[config.itemNameKey] || 'Not available',
       },
       {
         key: 'size',
         title: 'Size',
-        render: (value) => <Badge variant="neutral">{value}</Badge>,
+        render: (row) => <Badge variant="neutral">{row.size}</Badge>,
       },
       {
         key: 'colour',
         title: 'Colour',
-        render: (value) => value || 'Not available',
+        render: (row) => row.colour || 'Not available',
       },
       {
         key: config.metricKey,
         title: config.metricColumnTitle,
-        render: (value) => (config.formatMetric ? config.formatMetric(value) : formatStockNumber(value)),
+        render: (row) =>
+          config.formatMetric
+            ? config.formatMetric(row[config.metricKey])
+            : formatStockNumber(row[config.metricKey]),
       },
       {
         key: 'quantity',
         title: 'Quantity',
-        render: (value) => formatStockNumber(value),
+        render: (row) => formatStockNumber(row.quantity),
       },
       {
         key: config.dateKey || 'productionDate',
         title: config.dateColumnTitle || 'Production Date',
-        render: (value) => formatDateTime(value),
+        render: (row) => formatDateTime(row[config.dateKey || 'productionDate']),
       },
       {
         key: config.batchKey || 'productionBatchId',
         title: config.batchColumnTitle || 'Production Batch ID',
-        render: (value) => resolveBatchId(value),
+        render: (row) => resolveBatchId(row[config.batchKey || 'productionBatchId']),
       },
     ],
     [config],
@@ -201,6 +204,7 @@ function FinishedStockPage({ config }) {
       nextParams.set(config.metricParam || 'metric', filters.metric.trim());
     }
     if (filters.sort) nextParams.set('sort', filters.sort);
+    nextParams.set('limit', String(filters.limit || 15));
 
     nextParams.set('page', '1');
     setSearchParams(nextParams);
@@ -215,13 +219,29 @@ function FinishedStockPage({ config }) {
       colour: '',
       metric: '',
       sort: '',
+      limit: 15,
     });
-    setSearchParams({ page: '1' });
+    setSearchParams({ page: '1', limit: '15' });
+  }
+
+  function handleRowsPerPageChange(limit) {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('limit', String(limit));
+    nextParams.set('page', '1');
+    setSearchParams(nextParams);
   }
 
   const hasActiveFilters = Boolean(
     filters.search ||
       filters.itemNumber ||
+      filters.item ||
+      filters.size ||
+      filters.colour ||
+      filters.metric ||
+      filters.sort,
+  );
+  const hasColumnFilters = Boolean(
+    filters.itemNumber ||
       filters.item ||
       filters.size ||
       filters.colour ||
@@ -319,38 +339,31 @@ function FinishedStockPage({ config }) {
         </div>
 
         <div className="mt-6">
-          {loading ? (
-            <div className="rounded-3xl border border-border bg-background p-8 text-center text-sm text-body">
-              {config.loadingText}
-            </div>
-          ) : visibleItems.length ? (
-            <Table columns={columns} data={visibleItems} />
-          ) : (
-            <EmptyState
-              title={hasActiveFilters ? config.emptyFilteredTitle : config.emptyTitle}
-              description={
-                hasActiveFilters ? config.emptyFilteredDescription : config.emptyDescription
-              }
-              actionLabel={hasActiveFilters ? 'Reset Filters' : undefined}
-              onAction={hasActiveFilters ? resetFilters : undefined}
-              icon={EmptyIcon}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={visibleItems}
+            loading={loading}
+            loadingContent={config.loadingText}
+            pagination={hasColumnFilters ? null : state.pagination}
+            onPageChange={(page) => {
+              const nextParams = new URLSearchParams(searchParams);
+              nextParams.set('page', String(page));
+              setSearchParams(nextParams);
+            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            emptyContent={
+              <EmptyState
+                title={hasActiveFilters ? config.emptyFilteredTitle : config.emptyTitle}
+                description={
+                  hasActiveFilters ? config.emptyFilteredDescription : config.emptyDescription
+                }
+                actionLabel={hasActiveFilters ? 'Reset Filters' : undefined}
+                onAction={hasActiveFilters ? resetFilters : undefined}
+                icon={EmptyIcon}
+              />
+            }
+          />
         </div>
-
-        {!loading && state.items.length && state.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={state.pagination.page}
-              totalPages={state.pagination.totalPages}
-              onPageChange={(page) => {
-                const nextParams = new URLSearchParams(searchParams);
-                nextParams.set('page', String(page));
-                setSearchParams(nextParams);
-              }}
-            />
-          </div>
-        ) : null}
       </section>
     </div>
   );

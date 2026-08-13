@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { CreditCard, History, ReceiptText, SearchX, WalletCards } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
-import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 import Textarea from '@/components/ui/Textarea';
 import { PERMISSION_GROUPS } from '@/constants/permissions';
 import { useCan } from '@/hooks/useCan';
@@ -130,7 +129,7 @@ function PaymentManagementPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 10,
+      limit: 15,
     },
   });
   const [customerState, setCustomerState] = useState({
@@ -139,7 +138,7 @@ function PaymentManagementPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 10,
+      limit: 15,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -170,6 +169,7 @@ function PaymentManagementPage() {
             : fetchPaymentManagementCustomers;
         const data = await loader({
           page: currentState.pagination.page,
+          limit: currentState.pagination.limit,
           search: filters.search.trim() || undefined,
         });
 
@@ -196,7 +196,7 @@ function PaymentManagementPage() {
     return () => {
       ignore = true;
     };
-  }, [activeTab, currentState.pagination.page, filters.search, reloadKey, toast]);
+  }, [activeTab, currentState.pagination.limit, currentState.pagination.page, filters.search, reloadKey, toast]);
 
   useEffect(() => {
     let ignore = false;
@@ -250,50 +250,50 @@ function PaymentManagementPage() {
       {
         key: 'invoiceNumber',
         title: 'Invoice/Purchase No.',
-        render: (value) => value || '-',
+        render: (row) => row.invoiceNumber || '-',
       },
       {
         key: 'supplier',
         title: 'Supplier',
-        render: (value, row) => row.supplierName || value?.name || '-',
+        render: (row) => row.supplierName || row.supplier?.name || '-',
       },
       {
         key: 'totalAmount',
         title: 'Total',
-        render: (value) => formatCurrency(value),
+        render: (row) => formatCurrency(row.totalAmount),
       },
       {
         key: 'paidAmount',
         title: 'Paid',
-        render: (value) => formatCurrency(value),
+        render: (row) => formatCurrency(row.paidAmount),
       },
       {
         key: 'outstandingAmount',
         title: 'Outstanding',
-        render: (value) => (
-          <span className={Number(value || 0) > 0 ? 'font-semibold text-warning' : 'text-success'}>
-            {formatCurrency(value)}
+        render: (row) => (
+          <span className={Number(row.outstandingAmount || 0) > 0 ? 'font-semibold text-warning' : 'text-success'}>
+            {formatCurrency(row.outstandingAmount)}
           </span>
         ),
       },
       {
         key: 'dueDate',
         title: 'Due Date',
-        render: (value) => formatDate(value),
+        render: (row) => formatDate(row.dueDate),
       },
       {
         key: 'paymentStatus',
         title: 'Status',
-        render: (value) => (
-          <Badge variant={getStatusBadgeVariant(value)}>
-            {value || 'Pending'}
+        render: (row) => (
+          <Badge variant={getStatusBadgeVariant(row.paymentStatus)}>
+            {row.paymentStatus || 'Pending'}
           </Badge>
         ),
       },
       {
         key: 'actions',
         title: 'Actions',
-        render: (_, row) => {
+        render: (row) => {
           const outstandingAmount = getOutstandingAmount(row, 'purchases');
 
           return (
@@ -331,50 +331,50 @@ function PaymentManagementPage() {
       {
         key: 'invoiceNumber',
         title: 'Invoice No.',
-        render: (value) => value || '-',
+        render: (row) => row.invoiceNumber || '-',
       },
       {
         key: 'customer',
         title: 'Customer',
-        render: (value, row) => row.customerName || value?.name || '-',
+        render: (row) => row.customerName || row.customer?.name || '-',
       },
       {
         key: 'totalAmount',
         title: 'Total',
-        render: (value) => formatCurrency(value),
+        render: (row) => formatCurrency(row.totalAmount),
       },
       {
         key: 'receivedAmount',
         title: 'Received',
-        render: (value) => formatCurrency(value),
+        render: (row) => formatCurrency(row.receivedAmount),
       },
       {
         key: 'amountReceivable',
         title: 'Receivable',
-        render: (value) => (
-          <span className={Number(value || 0) > 0 ? 'font-semibold text-warning' : 'text-success'}>
-            {formatCurrency(value)}
+        render: (row) => (
+          <span className={Number(row.amountReceivable || 0) > 0 ? 'font-semibold text-warning' : 'text-success'}>
+            {formatCurrency(row.amountReceivable)}
           </span>
         ),
       },
       {
         key: 'dueDate',
         title: 'Due Date',
-        render: (value) => formatDate(value),
+        render: (row) => formatDate(row.dueDate),
       },
       {
         key: 'paymentStatus',
         title: 'Status',
-        render: (value) => (
-          <Badge variant={getStatusBadgeVariant(value)}>
-            {value || 'Pending'}
+        render: (row) => (
+          <Badge variant={getStatusBadgeVariant(row.paymentStatus)}>
+            {row.paymentStatus || 'Pending'}
           </Badge>
         ),
       },
       {
         key: 'actions',
         title: 'Actions',
-        render: (_, row) => {
+        render: (row) => {
           const outstandingAmount = getOutstandingAmount(row, 'customers');
 
           return (
@@ -481,6 +481,29 @@ function PaymentManagementPage() {
       pagination: {
         ...current.pagination,
         page,
+      },
+    }));
+  }
+
+  function handleRowsPerPageChange(limit) {
+    if (activeTab === 'purchases') {
+      setPurchaseState((current) => ({
+        ...current,
+        pagination: {
+          ...current.pagination,
+          limit,
+          page: 1,
+        },
+      }));
+      return;
+    }
+
+    setCustomerState((current) => ({
+      ...current,
+      pagination: {
+        ...current.pagination,
+        limit,
+        page: 1,
       },
     }));
   }
@@ -668,41 +691,29 @@ function PaymentManagementPage() {
         </div>
 
         <div className="mt-6">
-          {loading ? (
-            <div className="grid gap-3">
-              {Array.from({ length: 6 }, (_, index) => (
-                <div
-                  key={index}
-                  className="h-16 animate-pulse rounded-2xl border border-border bg-background"
-                />
-              ))}
-            </div>
-          ) : filteredItems.length ? (
-            <Table columns={columns} data={filteredItems} />
-          ) : (
-            <EmptyState
-              title={hasActiveFilters ? 'No payment records match these filters' : 'No payment records found'}
-              description={
-                hasActiveFilters
-                  ? 'Try a broader search or clear the status filter.'
-                  : 'Records will appear here when purchase or sales invoices are available.'
-              }
-              actionLabel={hasActiveFilters ? 'Reset Filters' : undefined}
-              onAction={hasActiveFilters ? resetFilters : undefined}
-              icon={hasActiveFilters ? SearchX : activeTab === 'purchases' ? ReceiptText : WalletCards}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={filteredItems}
+            loading={loading}
+            loadingContent="Loading payment records..."
+            pagination={currentState.pagination}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            emptyContent={
+              <EmptyState
+                title={hasActiveFilters ? 'No payment records match these filters' : 'No payment records found'}
+                description={
+                  hasActiveFilters
+                    ? 'Try a broader search or clear the status filter.'
+                    : 'Records will appear here when purchase or sales invoices are available.'
+                }
+                actionLabel={hasActiveFilters ? 'Reset Filters' : undefined}
+                onAction={hasActiveFilters ? resetFilters : undefined}
+                icon={hasActiveFilters ? SearchX : activeTab === 'purchases' ? ReceiptText : WalletCards}
+              />
+            }
+          />
         </div>
-
-        {!loading && currentState.items.length && currentState.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={currentState.pagination.page}
-              totalPages={currentState.pagination.totalPages}
-              onPageChange={handlePageChange}
-            />
-          </div>
-        ) : null}
       </section>
 
       <Modal
@@ -915,27 +926,27 @@ function PaymentManagementPage() {
                 ))}
               </div>
             ) : historyItems.length ? (
-              <Table
+              <DataTable
                 columns={[
                   {
                     key: 'paymentDate',
                     title: 'Payment Date',
-                    render: (value) => formatDate(value),
+                    render: (row) => formatDate(row.paymentDate),
                   },
                   {
                     key: 'amount',
                     title: 'Amount',
-                    render: (value) => formatCurrency(value),
+                    render: (row) => formatCurrency(row.amount),
                   },
                   {
                     key: 'paymentMethod',
                     title: 'Method',
-                    render: (value, row) => (
+                    render: (row) => (
                       <div className="space-y-1">
-                        <Badge variant={value === 'Cheque' ? 'warning' : 'success'}>
-                          {value}
+                        <Badge variant={row.paymentMethod === 'Cheque' ? 'warning' : 'success'}>
+                          {row.paymentMethod}
                         </Badge>
-                        {value === 'Cheque' ? (
+                        {row.paymentMethod === 'Cheque' ? (
                           <div className="text-xs text-body">
                             <p>Cheque {row.chequeNumber}</p>
                             <p>{formatDate(row.chequeDate)}</p>
@@ -948,12 +959,12 @@ function PaymentManagementPage() {
                   {
                     key: 'remarks',
                     title: 'Remarks',
-                    render: (value) => value || '-',
+                    render: (row) => row.remarks || '-',
                   },
                   {
                     key: 'recordedBy',
                     title: 'Recorded By',
-                    render: (value) => getRecordedByName(value),
+                    render: (row) => getRecordedByName(row.recordedBy),
                   },
                 ]}
                 data={historyItems}

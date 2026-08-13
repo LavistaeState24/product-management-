@@ -12,12 +12,11 @@ import {
 
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Input from '@/components/ui/Input';
 import Modal from '@/components/ui/Modal';
-import Pagination from '@/components/ui/Pagination';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 
 import {
   ASSIGNABLE_ROLES,
@@ -206,7 +205,7 @@ function UsersPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 20,
+      limit: 15,
     },
   });
 
@@ -302,6 +301,7 @@ function UsersPage() {
       try {
         const data = await fetchUsers({
           page: state.pagination.page,
+          limit: state.pagination.limit,
           search:
             appliedSearch || undefined,
         });
@@ -331,6 +331,7 @@ function UsersPage() {
   }, [
     appliedSearch,
     reloadKey,
+    state.pagination.limit,
     state.pagination.page,
     toast,
   ]);
@@ -530,10 +531,10 @@ function UsersPage() {
     {
       key: 'name',
       title: 'User',
-      render: (value, row) => (
+      render: (row) => (
         <div>
           <p className="font-semibold text-heading">
-            {value}
+            {row.name}
           </p>
 
           <p className="mt-1 text-xs text-body">
@@ -545,39 +546,39 @@ function UsersPage() {
     {
       key: 'role',
       title: 'Role',
-      render: (value) => (
+      render: (row) => (
         <Badge
           variant={getRoleBadgeVariant(
-            value,
+            row.role,
           )}
         >
-          {value}
+          {row.role}
         </Badge>
       ),
     },
     {
       key: 'permissions',
       title: 'Permissions',
-      render: (value, row) => (
+      render: (row) => (
         <span className="text-sm text-body">
           {row.role === ROLES.Boss
             ? 'Full access'
-            : `${value?.length || 0} assigned`}
+            : `${row.permissions?.length || 0} assigned`}
         </span>
       ),
     },
     {
       key: 'isActive',
       title: 'Status',
-      render: (value) => (
+      render: (row) => (
         <Badge
           variant={
-            value
+            row.isActive
               ? 'success'
               : 'danger'
           }
         >
-          {value
+          {row.isActive
             ? 'Active'
             : 'Inactive'}
         </Badge>
@@ -586,7 +587,7 @@ function UsersPage() {
     {
       key: 'actions',
       title: 'Actions',
-      render: (_, row) => (
+      render: (row) => (
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -679,68 +680,56 @@ function UsersPage() {
         </div>
       </div>
 
-      <form
-        className="panel flex flex-col gap-3 p-4 sm:flex-row"
-        onSubmit={handleSearchSubmit}
-      >
-        <Input
-          leftIcon={Search}
-          placeholder="Search by name, email, or role"
-          value={search}
-          onChange={(event) =>
-            setSearch(
-              event.target.value,
-            )
-          }
-        />
-
-        <Button
-          type="submit"
-          className="h-12 sm:w-32"
-        >
-          Search
-        </Button>
-      </form>
-
-      {loading ? (
-        <div className="panel p-8 text-center text-sm text-body">
-          Loading users...
-        </div>
-      ) : state.items.length ? (
-        <>
-          <Table
-            columns={columns}
-            data={state.items}
-          />
-
-          <div className="flex justify-end">
-            <Pagination
-              page={
-                state.pagination.page
-              }
-              totalPages={
-                state.pagination
-                  .totalPages
-              }
-              onPageChange={(page) =>
-                setState((current) => ({
-                  ...current,
-                  pagination: {
-                    ...current.pagination,
-                    page,
-                  },
-                }))
+      <DataTable
+        columns={columns}
+        data={state.items}
+        loading={loading}
+        loadingContent="Loading users..."
+        pagination={state.pagination}
+        onPageChange={(page) =>
+          setState((current) => ({
+            ...current,
+            pagination: {
+              ...current.pagination,
+              page,
+            },
+          }))
+        }
+        onRowsPerPageChange={(limit) =>
+          setState((current) => ({
+            ...current,
+            pagination: {
+              ...current.pagination,
+              limit,
+              page: 1,
+            },
+          }))
+        }
+        filters={
+          <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleSearchSubmit}>
+            <Input
+              leftIcon={Search}
+              placeholder="Search by name, email, or role"
+              value={search}
+              onChange={(event) =>
+                setSearch(
+                  event.target.value,
+                )
               }
             />
-          </div>
-        </>
-      ) : (
-        <EmptyState
-          title="No users found"
-          description="Create a user or adjust the search filters."
-          icon={ShieldCheck}
-        />
-      )}
+            <Button type="submit" className="h-12 w-auto px-4">
+              Search
+            </Button>
+          </form>
+        }
+        emptyContent={
+          <EmptyState
+            title="No users found"
+            description="Create a user or adjust the search filters."
+            icon={ShieldCheck}
+          />
+        }
+      />
 
       <Modal
         open={formOpen}

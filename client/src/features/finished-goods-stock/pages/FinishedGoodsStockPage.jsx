@@ -3,11 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { AlertCircle, PackageSearch, Warehouse } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
-import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 import { formatDateTime } from '@/features/purchases/utils/purchaseHelpers';
 import { formatStockNumber } from '@/features/production/components/FinishedStockPage';
 import { fetchFinishedGoodsStock } from '@/features/finished-goods-stock/services/finishedGoodsStockService';
@@ -47,6 +46,7 @@ function getSelectedType(searchParams) {
 function buildParams(searchParams) {
   return {
     page: Number(searchParams.get('page') || 1),
+    limit: Number(searchParams.get('limit') || 15),
     search: searchParams.get('search') || '',
     sortBy: searchParams.get('sortBy') || 'productionDate',
     sortOrder: searchParams.get('sortOrder') || 'desc',
@@ -60,7 +60,7 @@ function normalizeResponse(payload) {
     summary: payload?.summary || { totalItems: 0, byType: {} },
     pagination: payload?.pagination || {
       page: 1,
-      limit: 10,
+      limit: 15,
       totalItems: 0,
       totalPages: 1,
     },
@@ -83,7 +83,7 @@ function FinishedGoodsStockPage() {
     summary: { totalItems: 0, byType: {} },
     pagination: {
       page: 1,
-      limit: 10,
+      limit: 15,
       totalItems: 0,
       totalPages: 1,
     },
@@ -111,6 +111,7 @@ function FinishedGoodsStockPage() {
       try {
         const data = await fetchFinishedGoodsStock({
           page: Number(searchParams.get('page') || 1),
+          limit: Number(searchParams.get('limit') || 15),
           search: searchParams.get('search') || undefined,
           sortBy: searchParams.get('sortBy') || 'productionDate',
           sortOrder: searchParams.get('sortOrder') || 'desc',
@@ -145,30 +146,32 @@ function FinishedGoodsStockPage() {
       {
         key: 'itemNumber',
         title: 'Item Number',
-        render: (value) => renderOptionalValue(value),
+        render: (row) => renderOptionalValue(row.itemNumber),
       },
       {
         key: 'productName',
         title: 'Product Name',
-        render: (value) => <span className="font-semibold">{renderOptionalValue(value)}</span>,
+        render: (row) => <span className="font-semibold">{renderOptionalValue(row.productName)}</span>,
       },
       {
         key: 'size',
         title: 'Size',
-        render: (value) => renderOptionalValue(value),
+        render: (row) => renderOptionalValue(row.size),
       },
       {
         key: 'colour',
         title: 'Colour',
-        render: (value) => renderOptionalValue(value),
+        render: (row) => renderOptionalValue(row.colour),
       },
       {
         key: 'weight',
         title: 'Weight',
-        render: (value, row) => (
+        render: (row) => (
           <div>
             <p className="font-semibold text-heading">
-              {typeof value === 'number' ? formatStockNumber(value) : renderOptionalValue(value)}
+              {typeof row.weight === 'number'
+                ? formatStockNumber(row.weight)
+                : renderOptionalValue(row.weight)}
             </p>
             {row.sellingUnit ? <p className="mt-1 text-xs text-body">{row.sellingUnit}</p> : null}
           </div>
@@ -177,17 +180,17 @@ function FinishedGoodsStockPage() {
       {
         key: 'quantity',
         title: 'Quantity',
-        render: (value) => formatStockNumber(value),
+        render: (row) => formatStockNumber(row.quantity),
       },
       {
         key: 'sellingUnit',
         title: 'Selling Unit',
-        render: (value) => renderOptionalValue(value),
+        render: (row) => renderOptionalValue(row.sellingUnit),
       },
       {
         key: 'productionDate',
         title: 'Production Date',
-        render: (value) => formatOptionalDateTime(value),
+        render: (row) => formatOptionalDateTime(row.productionDate),
       },
     ],
     [],
@@ -201,6 +204,7 @@ function FinishedGoodsStockPage() {
     if (filters.type) nextParams.set('type', filters.type);
     if (filters.sortBy) nextParams.set('sortBy', filters.sortBy);
     if (filters.sortOrder) nextParams.set('sortOrder', filters.sortOrder);
+    nextParams.set('limit', String(filters.limit || 15));
     nextParams.set('page', '1');
     setSearchParams(nextParams);
   }
@@ -217,6 +221,7 @@ function FinishedGoodsStockPage() {
     if (nextFilters.type) nextParams.set('type', nextFilters.type);
     if (nextFilters.sortBy) nextParams.set('sortBy', nextFilters.sortBy);
     if (nextFilters.sortOrder) nextParams.set('sortOrder', nextFilters.sortOrder);
+    nextParams.set('limit', String(nextFilters.limit || 15));
     nextParams.set('page', '1');
 
     setFilters(nextFilters);
@@ -228,6 +233,7 @@ function FinishedGoodsStockPage() {
       search: '',
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
+      limit: filters.limit,
       type,
       page: 1,
     });
@@ -239,6 +245,7 @@ function FinishedGoodsStockPage() {
       type,
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
+      limit: String(filters.limit || 15),
       page: '1',
     });
   }
@@ -248,8 +255,16 @@ function FinishedGoodsStockPage() {
       type: filters.type,
       sortBy: filters.sortBy,
       sortOrder: filters.sortOrder,
+      limit: String(filters.limit || 15),
       page: '1',
     });
+  }
+
+  function handleRowsPerPageChange(limit) {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('limit', String(limit));
+    nextParams.set('page', '1');
+    setSearchParams(nextParams);
   }
 
   function retryLoad() {
@@ -363,11 +378,7 @@ function FinishedGoodsStockPage() {
         </div>
 
         <div className="mt-6">
-          {loading ? (
-            <div className="rounded-3xl border border-border bg-background p-8 text-center text-sm text-body">
-              Loading finished goods stock...
-            </div>
-          ) : error ? (
+          {error ? (
             <EmptyState
               title="Unable to load finished goods stock"
               description={error}
@@ -375,36 +386,35 @@ function FinishedGoodsStockPage() {
               onAction={retryLoad}
               icon={AlertCircle}
             />
-          ) : state.data.length ? (
-            <Table columns={columns} data={state.data} />
           ) : (
-            <EmptyState
-              title="No finished stock records found for this category."
-              description={
-                hasFilters
-                  ? 'Try a broader search or clear the active filters.'
-                  : `${typeLabels[selectedType]} records appear here when backend stock exists for this category.`
-              }
-              actionLabel={hasFilters ? 'Reset Filters' : undefined}
-              onAction={hasFilters ? resetFilters : undefined}
-              icon={PackageSearch}
-            />
-          )}
-        </div>
-
-        {!loading && !error && state.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={state.pagination.page}
-              totalPages={state.pagination.totalPages}
+            <DataTable
+              columns={columns}
+              data={state.data}
+              loading={loading}
+              loadingContent="Loading finished goods stock..."
+              pagination={state.pagination}
               onPageChange={(page) => {
                 const nextParams = new URLSearchParams(searchParams);
                 nextParams.set('page', String(page));
                 setSearchParams(nextParams);
               }}
+              onRowsPerPageChange={handleRowsPerPageChange}
+              emptyContent={
+                <EmptyState
+                  title="No finished stock records found for this category."
+                  description={
+                    hasFilters
+                      ? 'Try a broader search or clear the active filters.'
+                      : `${typeLabels[selectedType]} records appear here when backend stock exists for this category.`
+                  }
+                  actionLabel={hasFilters ? 'Reset Filters' : undefined}
+                  onAction={hasFilters ? resetFilters : undefined}
+                  icon={PackageSearch}
+                />
+              }
             />
-          </div>
-        ) : null}
+          )}
+        </div>
       </section>
     </div>
   );
