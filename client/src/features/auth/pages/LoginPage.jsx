@@ -17,8 +17,8 @@ function LoginPage() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: 'boss@operationscrm.com',
-      password: 'Boss@12345',
+      email: '',
+      password: '',
     },
   });
 
@@ -73,6 +73,7 @@ function LoginPage() {
               <Input
                 label="Email address"
                 leftIcon={Mail}
+                placeholder="Enter your email"
                 type="email"
                 error={errors.email?.message}
                 {...register('email', {
@@ -83,6 +84,7 @@ function LoginPage() {
                 label="Password"
                 leftIcon={KeyRound}
                 type="password"
+                placeholder="Enter your password"
                 error={errors.password?.message}
                 {...register('password', {
                   required: 'Password is required.',
