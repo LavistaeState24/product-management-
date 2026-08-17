@@ -249,7 +249,7 @@ function PaymentManagementPage() {
     () => [
       {
         key: 'invoiceNumber',
-        title: 'Invoice/Purchase No.',
+        title: 'Invoice No.',
         render: (row) => row.invoiceNumber || '-',
       },
       {
