@@ -25,6 +25,10 @@ import {
 
 import { useToast } from '@/hooks/useToast';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
+import {
+  formatUserLastLogin,
+  formatUserLastSeen,
+} from '@/utils/userActivity';
 
 import {
   createUser,
@@ -566,6 +570,27 @@ function UsersPage() {
             : `${row.permissions?.length || 0} assigned`}
         </span>
       ),
+    },
+    {
+      key: 'lastLoginAt',
+      title: 'Last Login',
+      render: (row) => (
+        <span className="text-sm text-body">
+          {formatUserLastLogin(row)}
+        </span>
+      ),
+    },
+    {
+      key: 'lastSeenAt',
+      title: 'Last Seen',
+      render: (row) =>
+        row.isOnline ? (
+          <Badge variant="success">Online</Badge>
+        ) : (
+          <span className="text-sm text-body">
+            {formatUserLastSeen(row)}
+          </span>
+        ),
     },
     {
       key: 'isActive',

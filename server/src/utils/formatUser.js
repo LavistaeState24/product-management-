@@ -1,4 +1,5 @@
 import { getEffectivePermissions } from './permissions.js';
+import { isUserOnline } from './userActivity.js';
 
 export function formatUser(user) {
   return {
@@ -8,6 +9,9 @@ export function formatUser(user) {
     role: user.role,
     permissions: getEffectivePermissions(user),
     isActive: user.isActive,
+    lastLoginAt: user.lastLoginAt || null,
+    lastSeenAt: user.lastSeenAt || null,
+    isOnline: isUserOnline(user),
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };

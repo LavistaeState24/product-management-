@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Boxes, FlaskConical, PackageOpen } from 'lucide-react';
+import { Boxes, FlaskConical, PackageOpen, TestTubeDiagonal } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
@@ -19,7 +19,16 @@ const stockTabs = [
     label: 'PU Chemical Stock',
     icon: FlaskConical,
   },
+  {
+    key: 'mocaStock',
+    label: 'MOCA Stock',
+    icon: TestTubeDiagonal,
+  },
 ];
+
+function isMocaStock(stock) {
+  return String(stock?.itemName || '').trim().toLowerCase().includes('moca');
+}
 
 function formatQuantity(value) {
   return new Intl.NumberFormat('en-IN', {
@@ -29,7 +38,7 @@ function formatQuantity(value) {
 
 function StockManagementPage() {
   const [activeTab, setActiveTab] = useState('rawMaterials');
-  const [stocks, setStocks] = useState({ rawMaterials: [], puChemicals: [] });
+  const [stocks, setStocks] = useState({ rawMaterials: [], puChemicals: [], mocaStock: [] });
   const [loading, setLoading] = useState(true);
   const toast = useToast();
 
@@ -41,11 +50,13 @@ function StockManagementPage() {
 
       try {
         const data = await fetchStocks();
+        const puChemicalRecords = data.puChemicals || [];
 
         if (!cancelled) {
           setStocks({
             rawMaterials: data.rawMaterials || [],
-            puChemicals: data.puChemicals || [],
+            puChemicals: puChemicalRecords.filter((stock) => !isMocaStock(stock)),
+            mocaStock: puChemicalRecords.filter(isMocaStock),
           });
         }
       } catch (error) {
@@ -107,7 +118,7 @@ function StockManagementPage() {
             </p>
           </div>
           <Badge variant="info">
-            {stocks.rawMaterials.length + stocks.puChemicals.length} stock items
+            {stocks.rawMaterials.length + stocks.puChemicals.length + stocks.mocaStock.length} stock items
           </Badge>
         </div>
       </section>
