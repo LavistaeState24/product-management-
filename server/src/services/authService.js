@@ -42,5 +42,19 @@ export async function authenticateUser(email, password) {
     role: user.role,
   });
 
+  const now = new Date();
+  await User.updateOne(
+    { _id: user._id },
+    {
+      $set: {
+        lastLoginAt: now,
+        lastSeenAt: now,
+      },
+    },
+  );
+
+  user.lastLoginAt = now;
+  user.lastSeenAt = now;
+
   return user;
 }
