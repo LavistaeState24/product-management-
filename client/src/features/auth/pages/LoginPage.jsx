@@ -20,13 +20,20 @@ import { useAuth } from '@/hooks/useAuth';
 import logo from '../../../assets/invoice.png';
 import loginBg from '../../../assets/front.jpg';
 
+import logo from '../../../assets/invoice.png';
+import loginBg from '../../../assets/front.jpg';
+
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+
   const { signIn, isSubmitting } = useAuth();
 
+
   const [serverError, setServerError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
 
   const {

@@ -38,9 +38,7 @@ function AppSidebar({ open, onClose, collapsed }) {
             : '-translate-x-full md:translate-x-0',
         )}
       >
-        {/* ======================================================
-            HEADER / LOGO
-        ====================================================== */}
+        {/* Header / Logo */}
         <div
           className={cn(
             'flex shrink-0 items-center border-b border-card-soft px-6 py-3',
@@ -78,20 +76,12 @@ function AppSidebar({ open, onClose, collapsed }) {
           </button>
         </div>
 
-        {/* ======================================================
-            SCROLLABLE NAVIGATION
-        ====================================================== */}
+        {/* Navigation */}
         <nav
           className={cn(
             'min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-4 py-3',
-
-            /* Firefox */
             '[scrollbar-width:none]',
-
-            /* Old Microsoft browsers */
             '[-ms-overflow-style:none]',
-
-            /* Chrome / Edge / Safari */
             '[&::-webkit-scrollbar]:hidden',
           )}
         >
@@ -128,9 +118,7 @@ function AppSidebar({ open, onClose, collapsed }) {
           })}
         </nav>
 
-        {/* ======================================================
-            FOOTER
-        ====================================================== */}
+        {/* Footer */}
         {!collapsed && (
           <div className="m-3 shrink-0 rounded-xl border border-card-soft bg-sidebar p-4">
             <p className="text-sm font-semibold text-card">
