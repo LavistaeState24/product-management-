@@ -74,6 +74,8 @@ export function calculateSaleInvoice({
   paymentType,
   invoiceDate,
   creditDays = 0,
+  freightCharges = 0,
+  roundOff = 0,
   cancelled = false,
 }) {
   const calculatedItems = items.map((item) => ({
@@ -86,7 +88,11 @@ export function calculateSaleInvoice({
   const gstAmount = roundCurrency(
     calculatedItems.reduce((total, item) => total + item.gstAmount, 0),
   );
-  const grandTotal = roundCurrency(subtotal + gstAmount);
+  const normalizedFreightCharges = Math.max(roundCurrency(freightCharges), 0);
+  const normalizedRoundOff = roundCurrency(roundOff);
+  const grandTotal = roundCurrency(
+    subtotal + gstAmount + normalizedFreightCharges + normalizedRoundOff,
+  );
   const normalizedPaidAmount = paymentType === 'Cash'
     ? grandTotal
     : roundCurrency(paidAmount);
@@ -103,6 +109,8 @@ export function calculateSaleInvoice({
     items: calculatedItems,
     subtotal,
     gstAmount,
+    freightCharges: normalizedFreightCharges,
+    roundOff: normalizedRoundOff,
     grandTotal,
     totalAmount: grandTotal,
     paidAmount: normalizedPaidAmount,

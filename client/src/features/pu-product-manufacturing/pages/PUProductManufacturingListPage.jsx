@@ -3,10 +3,9 @@ import { Eye, Factory, FilePenLine, Plus, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
-import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
-import Table from '@/components/ui/Table';
 import { formatDateTime } from '@/features/purchases/utils/purchaseHelpers';
 import { formatStockNumber } from '@/features/production/components/FinishedStockPage';
 import {
@@ -22,7 +21,7 @@ function PUProductManufacturingListPage() {
     items: [],
     pagination: {
       page: 1,
-      limit: 10,
+      limit: 15,
       totalItems: 0,
       totalPages: 1,
     },
@@ -45,6 +44,7 @@ function PUProductManufacturingListPage() {
       try {
         const data = await fetchPUProductManufacturing({
           page: Number(searchParams.get('page') || 1),
+          limit: Number(searchParams.get('limit') || 15),
           search: searchParams.get('search') || undefined,
         });
 
@@ -84,6 +84,7 @@ function PUProductManufacturingListPage() {
 
       const data = await fetchPUProductManufacturing({
         page: Number(searchParams.get('page') || 1),
+        limit: Number(searchParams.get('limit') || 15),
         search: searchParams.get('search') || undefined,
       });
       setState(data);
@@ -99,9 +100,9 @@ function PUProductManufacturingListPage() {
       {
         key: 'batchId',
         title: 'Batch Number',
-        render: (value, row) => (
+        render: (row) => (
           <Link className="font-semibold text-primary" to={`/pu-product-manufacturing/${row.id}`}>
-            {value}
+            {row.batchId}
           </Link>
         ),
       },
@@ -112,7 +113,7 @@ function PUProductManufacturingListPage() {
       {
         key: 'itemNumber',
         title: 'Item Number',
-        render: (value) => <span className="font-semibold text-heading">{value}</span>,
+        render: (row) => <span className="font-semibold text-heading">{row.itemNumber}</span>,
       },
       {
         key: 'puChemicalItem',
@@ -125,22 +126,22 @@ function PUProductManufacturingListPage() {
       {
         key: 'quantity',
         title: 'Quantity',
-        render: (value) => formatStockNumber(value),
+        render: (row) => formatStockNumber(row.quantity),
       },
       {
         key: 'sellingUnit',
         title: 'Selling Unit',
-        render: (value) => <Badge variant="neutral">{value}</Badge>,
+        render: (row) => <Badge variant="neutral">{row.sellingUnit}</Badge>,
       },
       {
         key: 'dateTime',
         title: 'Date',
-        render: (value) => formatDateTime(value),
+        render: (row) => formatDateTime(row.dateTime),
       },
       {
         key: 'actions',
         title: 'Actions',
-        render: (_, row) => (
+        render: (row) => (
           <div className="flex items-center gap-2">
             <Button as={Link} to={`/pu-product-manufacturing/${row.id}`} size="sm" variant="primary">
               <Eye className="h-4 w-4" />
@@ -169,6 +170,14 @@ function PUProductManufacturingListPage() {
 
     const nextParams = new URLSearchParams();
     if (search.trim()) nextParams.set('search', search.trim());
+    nextParams.set('limit', searchParams.get('limit') || '15');
+    nextParams.set('page', '1');
+    setSearchParams(nextParams);
+  }
+
+  function handleRowsPerPageChange(limit) {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('limit', String(limit));
     nextParams.set('page', '1');
     setSearchParams(nextParams);
   }
@@ -196,7 +205,11 @@ function PUProductManufacturingListPage() {
             placeholder="Search batch, product, chemical, MOCA, size, colour"
           />
           <Button type="submit">Search</Button>
-          <Button type="button" variant="outline" onClick={() => setSearchParams({ page: '1' })}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setSearchParams({ page: '1', limit: searchParams.get('limit') || '15' })}
+          >
             Reset
           </Button>
         </form>
@@ -215,34 +228,27 @@ function PUProductManufacturingListPage() {
         </div>
 
         <div className="mt-6">
-          {loading ? (
-            <div className="rounded-3xl border border-border bg-background p-8 text-center text-sm text-body">
-              Loading PU product manufacturing...
-            </div>
-          ) : state.items.length ? (
-            <Table columns={columns} data={state.items} />
-          ) : (
-            <EmptyState
-              title="No PU product manufacturing found"
-              description="PU product manufacturing batches appear here after manufacturing is completed."
-              icon={Factory}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={state.items}
+            loading={loading}
+            loadingContent="Loading PU product manufacturing..."
+            pagination={state.pagination}
+            onPageChange={(page) => {
+              const nextParams = new URLSearchParams(searchParams);
+              nextParams.set('page', String(page));
+              setSearchParams(nextParams);
+            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            emptyContent={
+              <EmptyState
+                title="No PU product manufacturing found"
+                description="PU product manufacturing batches appear here after manufacturing is completed."
+                icon={Factory}
+              />
+            }
+          />
         </div>
-
-        {!loading && state.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={state.pagination.page}
-              totalPages={state.pagination.totalPages}
-              onPageChange={(page) => {
-                const nextParams = new URLSearchParams(searchParams);
-                nextParams.set('page', String(page));
-                setSearchParams(nextParams);
-              }}
-            />
-          </div>
-        ) : null}
       </section>
     </div>
   );

@@ -2,12 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Download, FileSpreadsheet, Printer, SearchX } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Input from '@/components/ui/Input';
-import Pagination from '@/components/ui/Pagination';
-import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 import { fetchReport } from '@/features/reports/services/reportService';
 import { formatCurrency, formatDate } from '@/features/sales/utils/saleHelpers';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
@@ -412,6 +410,10 @@ function buildParams(filters, page) {
   }, {});
 }
 
+function renderReportCell(column, row) {
+  return column.render ? column.render(row[column.key], row) : row[column.key];
+}
+
 function flattenValue(value) {
   if (value === null || value === undefined) {
     return '';
@@ -536,7 +538,7 @@ function ReportsPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 10,
+      limit: 15,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -553,7 +555,7 @@ function ReportsPage() {
         page: 1,
         totalPages: 1,
         totalItems: 0,
-        limit: 10,
+        limit: 15,
       },
     }));
   }, [activeReport, config]);
@@ -565,7 +567,10 @@ function ReportsPage() {
       setLoading(true);
 
       try {
-        const data = await fetchReport(activeTab.endpoint, buildParams(appliedFilters, state.pagination.page));
+        const data = await fetchReport(activeTab.endpoint, {
+          ...buildParams(appliedFilters, state.pagination.page),
+          limit: state.pagination.limit,
+        });
 
         if (!ignore) {
           setState(data);
@@ -587,9 +592,17 @@ function ReportsPage() {
     return () => {
       ignore = true;
     };
-  }, [activeTab.endpoint, appliedFilters, state.pagination.page, toast]);
+  }, [activeTab.endpoint, appliedFilters, state.pagination.limit, state.pagination.page, toast]);
 
   const columns = useMemo(() => config.columns || [], [config]);
+  const dataTableColumns = useMemo(
+    () =>
+      columns.map((column) => ({
+        ...column,
+        render: (row) => renderReportCell(column, row),
+      })),
+    [columns],
+  );
   const exportRows = state.items || [];
   const hasActiveFilters = Object.values(appliedFilters).some(Boolean);
 
@@ -676,33 +689,6 @@ function ReportsPage() {
           ))}
         </div>
 
-        <form
-          className="mt-6 grid gap-4 rounded-3xl border border-border bg-background p-4 md:grid-cols-2 xl:grid-cols-4"
-          onSubmit={applyFilters}
-        >
-          <SearchBox
-            label="Search"
-            value={filters.search || ''}
-            onChange={(event) => updateFilter('search', event.target.value)}
-            placeholder={config.searchPlaceholder}
-          />
-          {(config.filters || []).map((filter) => (
-            <FilterControl
-              key={filter.key}
-              filter={filter}
-              value={filters[filter.key] || ''}
-              onChange={updateFilter}
-            />
-          ))}
-          <div className="flex items-end gap-3">
-            <Button type="submit" className="h-12">
-              Apply
-            </Button>
-            <Button type="button" variant="outline" className="h-12" onClick={resetFilters}>
-              Reset
-            </Button>
-          </div>
-        </form>
       </section>
 
       <section className="panel p-6">
@@ -742,49 +728,75 @@ function ReportsPage() {
         ) : null}
 
         <div className="mt-6">
-          {loading ? (
-            <div className="grid gap-3">
-              {Array.from({ length: 6 }, (_, index) => (
-                <div
-                  key={index}
-                  className="h-16 animate-pulse rounded-2xl border border-border bg-background"
+          <DataTable
+            columns={dataTableColumns}
+            data={exportRows}
+            loading={loading}
+            loadingContent="Loading report rows..."
+            pagination={state.pagination}
+            onPageChange={(page) =>
+              setState((current) => ({
+                ...current,
+                pagination: {
+                  ...current.pagination,
+                  page,
+                },
+              }))
+            }
+            onRowsPerPageChange={(limit) =>
+              setState((current) => ({
+                ...current,
+                pagination: {
+                  ...current.pagination,
+                  limit,
+                  page: 1,
+                },
+              }))
+            }
+            filters={
+              <form
+                className="grid gap-4 md:grid-cols-2 xl:grid-cols-4"
+                onSubmit={applyFilters}
+              >
+                <Input
+                  label="Search"
+                  value={filters.search || ''}
+                  onChange={(event) => updateFilter('search', event.target.value)}
+                  placeholder={config.searchPlaceholder}
                 />
-              ))}
-            </div>
-          ) : exportRows.length ? (
-            <Table columns={columns} data={exportRows} />
-          ) : (
-            <EmptyState
-              title={hasActiveFilters ? 'No report rows match these filters' : 'No report rows found'}
-              description={
-                hasActiveFilters
-                  ? 'Try a broader search or clear one of the active filters.'
-                  : 'Rows will appear here when backend records are available.'
-              }
-              actionLabel={hasActiveFilters ? 'Reset Filters' : undefined}
-              onAction={hasActiveFilters ? resetFilters : undefined}
-              icon={SearchX}
-            />
-          )}
+                {(config.filters || []).map((filter) => (
+                  <FilterControl
+                    key={filter.key}
+                    filter={filter}
+                    value={filters[filter.key] || ''}
+                    onChange={updateFilter}
+                  />
+                ))}
+                <div className="flex items-end gap-3">
+                  <Button type="submit" className="h-12 w-auto px-4">
+                    Apply
+                  </Button>
+                  <Button type="button" variant="outline" className="h-12 w-auto px-4" onClick={resetFilters}>
+                    Reset
+                  </Button>
+                </div>
+              </form>
+            }
+            emptyContent={
+              <EmptyState
+                title={hasActiveFilters ? 'No report rows match these filters' : 'No report rows found'}
+                description={
+                  hasActiveFilters
+                    ? 'Try a broader search or clear one of the active filters.'
+                    : 'Rows will appear here when backend records are available.'
+                }
+                actionLabel={hasActiveFilters ? 'Reset Filters' : undefined}
+                onAction={hasActiveFilters ? resetFilters : undefined}
+                icon={SearchX}
+              />
+            }
+          />
         </div>
-
-        {!loading && exportRows.length && state.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={state.pagination.page}
-              totalPages={state.pagination.totalPages}
-              onPageChange={(page) =>
-                setState((current) => ({
-                  ...current,
-                  pagination: {
-                    ...current.pagination,
-                    page,
-                  },
-                }))
-              }
-            />
-          </div>
-        ) : null}
       </section>
     </div>
   );

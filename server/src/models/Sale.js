@@ -122,6 +122,62 @@ const saleSchema = new mongoose.Schema(
       uppercase: true,
       default: '',
     },
+    deliveryNote: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    referenceNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    referenceDate: {
+      type: Date,
+      default: null,
+    },
+    buyerOrderNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    buyerOrderDate: {
+      type: Date,
+      default: null,
+    },
+    dispatchDocumentNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    dispatchThrough: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    dispatchDate: {
+      type: Date,
+      default: null,
+    },
+    destination: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    termsOfDelivery: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    freightCharges: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
+    roundOff: {
+      type: Number,
+      default: 0,
+    },
     bankDetails: {
       type: mongoose.Schema.Types.Mixed,
       default: {},
@@ -220,6 +276,11 @@ const saleSchema = new mongoose.Schema(
             default: null,
           },
           sellingUnit: {
+            type: String,
+            trim: true,
+            default: '',
+          },
+          hsnSac: {
             type: String,
             trim: true,
             default: '',

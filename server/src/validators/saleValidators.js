@@ -129,6 +129,49 @@ const vehicleNumberValidator = body('vehicleNumber')
   .isLength({ max: 30 })
   .withMessage('Vehicle number must be 30 characters or fewer.');
 
+function optionalTextValidator(field, label, max = 120) {
+  return body(field)
+    .optional({ values: 'falsy' })
+    .trim()
+    .isLength({ max })
+    .withMessage(`${label} must be ${max} characters or fewer.`);
+}
+
+function optionalDateValidator(field, label) {
+  return body(field)
+    .optional({ values: 'falsy' })
+    .isISO8601()
+    .withMessage(`${label} must be a valid date.`);
+}
+
+const deliveryNoteValidator = optionalTextValidator('deliveryNote', 'Delivery note');
+const referenceNumberValidator = optionalTextValidator('referenceNumber', 'Reference number');
+const referenceDateValidator = optionalDateValidator('referenceDate', 'Reference date');
+const buyerOrderNumberValidator = optionalTextValidator('buyerOrderNumber', 'Buyer order number');
+const buyerOrderDateValidator = optionalDateValidator('buyerOrderDate', 'Buyer order date');
+const dispatchDocumentNumberValidator = optionalTextValidator(
+  'dispatchDocumentNumber',
+  'Dispatch document number',
+);
+const dispatchThroughValidator = optionalTextValidator('dispatchThrough', 'Dispatch through');
+const dispatchDateValidator = optionalDateValidator('dispatchDate', 'Dispatch date');
+const destinationValidator = optionalTextValidator('destination', 'Destination');
+const termsOfDeliveryValidator = optionalTextValidator(
+  'termsOfDelivery',
+  'Terms of delivery',
+  500,
+);
+const freightChargesValidator = body('freightCharges')
+  .optional({ values: 'falsy' })
+  .isFloat({ min: 0 })
+  .withMessage('Freight charges must be 0 or greater.')
+  .toFloat();
+const roundOffValidator = body('roundOff')
+  .optional({ values: 'falsy' })
+  .isFloat()
+  .withMessage('Round off must be a valid number.')
+  .toFloat();
+
 const notesValidator = body('notes')
   .optional()
   .trim()
@@ -176,6 +219,18 @@ const itemGstRateValidator = body('items.*.gstRate')
   .withMessage('GST rate must be between 0 and 100.')
   .toFloat();
 
+const itemHsnSacValidator = body('items.*.hsnSac')
+  .optional({ values: 'falsy' })
+  .trim()
+  .isLength({ max: 30 })
+  .withMessage('HSN/SAC must be 30 characters or fewer.');
+
+const legacyHsnSacValidator = body('hsnSac')
+  .optional({ values: 'falsy' })
+  .trim()
+  .isLength({ max: 30 })
+  .withMessage('HSN/SAC must be 30 characters or fewer.');
+
 const termsValidator = body('termsAndConditions')
   .optional()
   .isArray()
@@ -200,6 +255,18 @@ export const createSaleValidator = [
   parcelCountValidator,
   transportNameValidator,
   vehicleNumberValidator,
+  deliveryNoteValidator,
+  referenceNumberValidator,
+  referenceDateValidator,
+  buyerOrderNumberValidator,
+  buyerOrderDateValidator,
+  dispatchDocumentNumberValidator,
+  dispatchThroughValidator,
+  dispatchDateValidator,
+  destinationValidator,
+  termsOfDeliveryValidator,
+  freightChargesValidator,
+  roundOffValidator,
   notesValidator,
   remarksValidator,
   termsValidator,
@@ -209,6 +276,8 @@ export const createSaleValidator = [
   itemQuantityValidator,
   itemSellingPriceValidator,
   itemGstRateValidator,
+  itemHsnSacValidator,
+  legacyHsnSacValidator,
 ];
 
 export const updateSaleValidator = [...createSaleValidator];

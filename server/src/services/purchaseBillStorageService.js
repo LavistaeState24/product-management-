@@ -79,25 +79,27 @@ function sanitizeOriginalName(originalName = '') {
     .slice(0, 255);
 }
 
-function validateFile(file) {
+function validateFile(file, options = {}) {
+  const label = options.label || 'File';
+
   if (!file) {
     throw createHttpError(
       400,
-      'Purchase bill file is required.',
+      `${label} is required.`,
     );
   }
 
   if (!file.buffer) {
     throw createHttpError(
       500,
-      'Bill file buffer is missing. Multer must use memoryStorage().',
+      `${label} buffer is missing. Multer must use memoryStorage().`,
     );
   }
 
   if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {
     throw createHttpError(
       400,
-      'Unsupported bill file type. Only PDF, JPG, PNG and WEBP are allowed.',
+      `Unsupported ${label.toLowerCase()} type. Only PDF, JPG, PNG and WEBP are allowed.`,
     );
   }
 
@@ -108,30 +110,34 @@ function validateFile(file) {
   if (!extension) {
     throw createHttpError(
       400,
-      'Unsupported bill file extension.',
+      `Unsupported ${label.toLowerCase()} extension.`,
     );
   }
 
   if (!Number.isFinite(file.size) || file.size <= 0) {
     throw createHttpError(
       400,
-      'Purchase bill file is empty.',
+      `${label} is empty.`,
     );
   }
 
   return extension;
 }
 
-export async function uploadPurchaseBill(file) {
+export async function uploadFileToS3(file, options = {}) {
   if (!file) return null;
 
-  const extension = validateFile(file);
+  const extension = validateFile(file, {
+    label: options.label,
+  });
 
   const filename =
     `${Date.now()}-${crypto.randomUUID()}${extension}`;
 
-  const storagePath =
-    `purchase-bills/${filename}`;
+  const prefix = String(options.prefix || 'uploads')
+    .replace(/^\/+|\/+$/g, '');
+
+  const key = `${prefix}/${filename}`;
 
   const originalName = sanitizeOriginalName(
     file.originalname,
@@ -140,7 +146,7 @@ export async function uploadPurchaseBill(file) {
   await getS3Client().send(
     new PutObjectCommand({
       Bucket: getBucketName(),
-      Key: storagePath,
+      Key: key,
       Body: file.buffer,
       ContentType: file.mimetype,
 
@@ -155,33 +161,26 @@ export async function uploadPurchaseBill(file) {
     filename,
     mimeType: file.mimetype,
     size: file.size,
-    storagePath,
+    key,
     url: null,
     uploadedAt: new Date(),
   };
 }
 
-export async function deletePurchaseBill(
-  storagePath,
-) {
-  if (!storagePath) return;
+export async function deleteStoredFile(key) {
+  if (!key) return;
 
   await getS3Client().send(
     new DeleteObjectCommand({
       Bucket: getBucketName(),
-      Key: storagePath,
+      Key: key,
     }),
   );
 }
 
-export async function getPurchaseBillSignedUrl(
-  storagePath,
-  options = {},
-) {
-  if (!storagePath) {
-    throw new Error(
-      'Purchase bill storage path is required.',
-    );
+export async function getStoredFileSignedUrl(key, options = {}) {
+  if (!key) {
+    throw new Error('File storage key is required.');
   }
 
   const expiresIn = Math.min(
@@ -195,12 +194,12 @@ export async function getPurchaseBillSignedUrl(
   const originalName =
     sanitizeOriginalName(
       options.originalName ||
-        'purchase-bill',
+        'attachment',
     );
 
   const command = new GetObjectCommand({
     Bucket: getBucketName(),
-    Key: storagePath,
+    Key: key,
 
     ResponseContentDisposition:
       `inline; filename="${originalName}"`,
@@ -213,4 +212,67 @@ export async function getPurchaseBillSignedUrl(
       expiresIn,
     },
   );
+}
+
+export async function uploadPurchaseBill(file) {
+  if (!file) return null;
+
+  const uploadedFile = await uploadFileToS3(file, {
+    prefix: 'purchase-bills',
+    label: 'Purchase bill file',
+  });
+
+  return {
+    originalName: uploadedFile.originalName,
+    filename: uploadedFile.filename,
+    mimeType: uploadedFile.mimeType,
+    size: uploadedFile.size,
+    storagePath: uploadedFile.key,
+    url: uploadedFile.url,
+    uploadedAt: uploadedFile.uploadedAt,
+  };
+}
+
+export async function deletePurchaseBill(
+  storagePath,
+) {
+  await deleteStoredFile(storagePath);
+}
+
+export async function getPurchaseBillSignedUrl(
+  storagePath,
+  options = {},
+) {
+  if (!storagePath) {
+    throw new Error(
+      'Purchase bill storage path is required.',
+    );
+  }
+
+  return getStoredFileSignedUrl(
+    storagePath,
+    {
+      ...options,
+      originalName:
+        options.originalName ||
+        'purchase-bill',
+    },
+  );
+}
+
+export async function uploadOrderProductReference(file) {
+  if (!file) return null;
+
+  const uploadedFile = await uploadFileToS3(file, {
+    prefix: 'order-product-references',
+    label: 'Product reference file',
+  });
+
+  return {
+    url: uploadedFile.url,
+    key: uploadedFile.key,
+    originalName: uploadedFile.originalName,
+    mimeType: uploadedFile.mimeType,
+    size: uploadedFile.size,
+  };
 }

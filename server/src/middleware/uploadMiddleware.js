@@ -8,13 +8,15 @@ const allowedMimeTypes = new Set([
   'image/webp',
 ]);
 
+export const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
+
 const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
 
   limits: {
-    fileSize: 10 * 1024 * 1024,
+    fileSize: MAX_UPLOAD_SIZE_BYTES,
     files: 1,
   },
 
@@ -23,7 +25,7 @@ const upload = multer({
       cb(
         createHttpError(
           400,
-          'Only PDF, JPG, PNG, and WEBP bill files are allowed.',
+          'Only PDF, JPG, PNG, and WEBP files are allowed.',
         ),
       );
       return;
@@ -34,3 +36,4 @@ const upload = multer({
 });
 
 export const uploadBill = upload.single('billUpload');
+export const uploadOrderProductReference = upload.single('productReference');

@@ -3,12 +3,11 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FileText, PackageSearch, Pencil, Plus, Trash2, Eye } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
+import DataTable from '@/components/ui/DataTable';
 import EmptyState from '@/components/ui/EmptyState';
 import Modal from '@/components/ui/Modal';
-import Pagination from '@/components/ui/Pagination';
 import SearchBox from '@/components/ui/SearchBox';
 import Select from '@/components/ui/Select';
-import Table from '@/components/ui/Table';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import {
@@ -24,7 +23,6 @@ import {
 } from '@/features/purchases/utils/purchaseHelpers';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
 import { PERMISSIONS } from '@/constants/permissions';
-import PurchasePageSkeleton from '@/features/purchases/components/PurchasePageSkeleton';
 
 const paymentTypeOptions = [
   { value: '', label: 'All Types' },
@@ -48,7 +46,7 @@ function PurchaseListPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 10,
+      limit: 15,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -80,6 +78,7 @@ function PurchaseListPage() {
       try {
         const data = await fetchPurchases({
           page: Number(searchParams.get('page') || 1),
+          limit: Number(searchParams.get('limit') || 15),
           search: searchParams.get('search') || undefined,
           paymentType: searchParams.get('paymentType') || undefined,
           purchaseType: searchParams.get('purchaseType') || undefined,
@@ -111,7 +110,7 @@ function PurchaseListPage() {
       {
         key: 'supplier',
         title: 'Supplier',
-        render: (_, row) => (
+        render: (row) => (
           <div>
             <p className="font-semibold text-heading">{row.supplierName || row.supplier?.name}</p>
             <p className="text-xs text-body">{row.supplierAddress || 'Address not available'}</p>
@@ -124,18 +123,18 @@ function PurchaseListPage() {
       {
         key: 'purchaseType',
         title: 'Type',
-        render: (value) => (
-          <Badge variant={value === 'PU Chemical' ? 'warning' : 'neutral'}>
-            {value || 'Raw Material'}
+        render: (row) => (
+          <Badge variant={row.purchaseType === 'PU Chemical' ? 'warning' : 'neutral'}>
+            {row.purchaseType || 'Raw Material'}
           </Badge>
         ),
       },
       {
         key: 'itemName',
         title: 'Item',
-        render: (value, row) => (
+        render: (row) => (
           <div>
-            <p className="font-semibold text-heading">{value || row.product?.name}</p>
+            <p className="font-semibold text-heading">{row.itemName || row.product?.name}</p>
             <p className="text-xs text-body">
               {row.unit || 'Unit not set'} | Qty {row.quantity}
             </p>
@@ -148,14 +147,16 @@ function PurchaseListPage() {
       {
         key: 'recordedAt',
         title: 'Recorded',
-        render: (value) => formatDateTime(value),
+        render: (row) => formatDateTime(row.recordedAt),
       },
       {
         key: 'paymentType',
         title: 'Payment',
-        render: (value, row) => (
+        render: (row) => (
           <div className="space-y-1">
-            <Badge variant={getPaymentBadgeVariant(value, row.dueAmount)}>{value}</Badge>
+            <Badge variant={getPaymentBadgeVariant(row.paymentType, row.dueAmount)}>
+              {row.paymentType}
+            </Badge>
             <p className="text-xs text-body">
               Due: {row.dueDate ? formatDate(row.dueDate) : 'Not applicable'}
             </p>
@@ -165,28 +166,28 @@ function PurchaseListPage() {
       {
         key: 'gstType',
         title: 'GST',
-        render: (value, row) =>
-          value === 'None' ? 'None' : `${formatGstTypeLabel(value)} ${row.gstRate}%`,
+        render: (row) =>
+          row.gstType === 'None' ? 'None' : `${formatGstTypeLabel(row.gstType)} ${row.gstRate}%`,
       },
       {
         key: 'totalAmount',
         title: 'Total',
-        render: (value) => formatCurrency(value),
+        render: (row) => formatCurrency(row.totalAmount),
       },
       {
         key: 'dueAmount',
         title: 'Due',
-        render: (value) => formatCurrency(value),
+        render: (row) => formatCurrency(row.dueAmount),
       },
       {
         key: 'remarks',
         title: 'Remarks',
-        render: (value) => value || 'No remarks',
+        render: (row) => row.remarks || 'No remarks',
       },
       {
         key: 'actions',
         title: 'Actions',
-        render: (_, row) => (
+        render: (row) => (
           <div className="flex items-center gap-2">
             <Link to={`/purchases/${row.id}`}>
               <Button type="button" size="sm" variant="primary">
@@ -237,13 +238,21 @@ function PurchaseListPage() {
       nextParams.set('purchaseType', filters.purchaseType);
     }
 
+    nextParams.set('limit', searchParams.get('limit') || '15');
     nextParams.set('page', '1');
     setSearchParams(nextParams);
   }
 
   function resetFilters() {
     setFilters({ search: '', paymentType: '', purchaseType: '' });
-    setSearchParams({ page: '1' });
+    setSearchParams({ page: '1', limit: searchParams.get('limit') || '15' });
+  }
+
+  function handleRowsPerPageChange(limit) {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('limit', String(limit));
+    nextParams.set('page', '1');
+    setSearchParams(nextParams);
   }
 
   async function handleDeletePurchase() {
@@ -273,11 +282,7 @@ function PurchaseListPage() {
     }
   }
 
-  if (loading) {
-    return <PurchasePageSkeleton />;
-  }
-
-  const hasActiveFilters = Boolean(filters.search || filters.paymentType);
+  const hasActiveFilters = Boolean(filters.search || filters.paymentType || filters.purchaseType);
 
   return (
     <div className="space-y-6">
@@ -353,48 +358,45 @@ function PurchaseListPage() {
         </div>
 
         <div className="mt-6">
-          {state.items.length ? (
-            <Table columns={columns} data={state.items} />
-          ) : (
-            <EmptyState
-              title={hasActiveFilters ? 'No purchases match these filters' : 'No purchases yet'}
-              description={
-                hasActiveFilters
-                  ? 'Try a broader search or clear the payment filter.'
-                  : 'Create the first raw material purchase to start updating stock and supplier balances.'
-              }
-              actionLabel={
-                hasActiveFilters
-                  ? 'Reset Filters'
-                  : hasPermission(PERMISSIONS.canCreatePurchase)
-                    ? 'Add Purchase'
-                    : undefined
-              }
-              onAction={
-                hasActiveFilters
-                  ? resetFilters
-                  : hasPermission(PERMISSIONS.canCreatePurchase)
-                    ? () => navigate('/purchases/new')
-                    : undefined
-              }
-              icon={hasActiveFilters ? PackageSearch : FileText}
-            />
-          )}
+          <DataTable
+            columns={columns}
+            data={state.items}
+            loading={loading}
+            loadingContent="Loading purchases..."
+            pagination={state.pagination}
+            onPageChange={(page) => {
+              const nextParams = new URLSearchParams(searchParams);
+              nextParams.set('page', String(page));
+              setSearchParams(nextParams);
+            }}
+            onRowsPerPageChange={handleRowsPerPageChange}
+            emptyContent={
+              <EmptyState
+                title={hasActiveFilters ? 'No purchases match these filters' : 'No purchases yet'}
+                description={
+                  hasActiveFilters
+                    ? 'Try a broader search or clear the payment filter.'
+                    : 'Create the first raw material purchase to start updating stock and supplier balances.'
+                }
+                actionLabel={
+                  hasActiveFilters
+                    ? 'Reset Filters'
+                    : hasPermission(PERMISSIONS.canCreatePurchase)
+                      ? 'Add Purchase'
+                      : undefined
+                }
+                onAction={
+                  hasActiveFilters
+                    ? resetFilters
+                    : hasPermission(PERMISSIONS.canCreatePurchase)
+                      ? () => navigate('/purchases/new')
+                      : undefined
+                }
+                icon={hasActiveFilters ? PackageSearch : FileText}
+              />
+            }
+          />
         </div>
-
-        {state.items.length && state.pagination.totalPages > 1 ? (
-          <div className="mt-6 flex justify-end">
-            <Pagination
-              page={state.pagination.page}
-              totalPages={state.pagination.totalPages}
-              onPageChange={(page) => {
-                const nextParams = new URLSearchParams(searchParams);
-                nextParams.set('page', String(page));
-                setSearchParams(nextParams);
-              }}
-            />
-          </div>
-        ) : null}
       </section>
 
       <Modal

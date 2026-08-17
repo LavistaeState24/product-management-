@@ -6,6 +6,7 @@ import {
   ASSIGNABLE_ROLES,
   getDefaultPermissionsForRole,
   getEffectivePermissions,
+  PERMISSIONS,
   ROLE_PERMISSIONS,
   ROLES,
 } from './permissions.js';
@@ -49,5 +50,102 @@ test('Boss effective permissions always include all permissions', () => {
       permissions: [],
     }),
     [...ALL_PERMISSIONS],
+  );
+});
+
+test('Production receives only production-safe order permissions', () => {
+  const productionPermissions = new Set(ROLE_PERMISSIONS[ROLES.Production]);
+
+  assert.equal(productionPermissions.has(PERMISSIONS.canViewOrders), true);
+  assert.equal(productionPermissions.has(PERMISSIONS.canAcceptOrder), true);
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canUpdateOrderProduction),
+    true,
+  );
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canAssignOrderItemNumber),
+    true,
+  );
+  assert.equal(productionPermissions.has(PERMISSIONS.canMarkOrderReady), true);
+
+  assert.equal(productionPermissions.has(PERMISSIONS.canCreateOrder), false);
+  assert.equal(productionPermissions.has(PERMISSIONS.canDispatchOrder), false);
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canViewOrderClientDetails),
+    false,
+  );
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canViewClientMessageLog),
+    false,
+  );
+  assert.equal(
+    productionPermissions.has(PERMISSIONS.canShareOrderMessageOnWhatsApp),
+    false,
+  );
+});
+
+test('client-facing roles receive order create and client detail access', () => {
+  for (const role of [ROLES['Sales Person'], ROLES.Staff, ROLES.User]) {
+    const permissions = new Set(ROLE_PERMISSIONS[role]);
+
+    assert.equal(permissions.has(PERMISSIONS.canViewOrders), true);
+    assert.equal(permissions.has(PERMISSIONS.canCreateOrder), true);
+    assert.equal(
+      permissions.has(PERMISSIONS.canViewOrderClientDetails),
+      true,
+    );
+    assert.equal(permissions.has(PERMISSIONS.canDispatchOrder), false);
+    assert.equal(
+      permissions.has(PERMISSIONS.canViewClientMessageLog),
+      false,
+    );
+    assert.equal(
+      permissions.has(PERMISSIONS.canShareOrderMessageOnWhatsApp),
+      false,
+    );
+  }
+});
+
+test('Accountant receives read-only order client detail access', () => {
+  const permissions = new Set(ROLE_PERMISSIONS[ROLES.Accountant]);
+
+  assert.equal(permissions.has(PERMISSIONS.canViewOrders), true);
+  assert.equal(
+    permissions.has(PERMISSIONS.canViewOrderClientDetails),
+    true,
+  );
+  assert.equal(permissions.has(PERMISSIONS.canCreateOrder), false);
+  assert.equal(permissions.has(PERMISSIONS.canDispatchOrder), false);
+  assert.equal(
+    permissions.has(PERMISSIONS.canViewClientMessageLog),
+    false,
+  );
+  assert.equal(
+    permissions.has(PERMISSIONS.canShareOrderMessageOnWhatsApp),
+    false,
+  );
+});
+
+test('Stock Incharge receives production-safe assignment access only', () => {
+  const permissions = new Set(ROLE_PERMISSIONS[ROLES['Stock Incharge']]);
+
+  assert.equal(permissions.has(PERMISSIONS.canViewOrders), true);
+  assert.equal(
+    permissions.has(PERMISSIONS.canAssignOrderItemNumber),
+    true,
+  );
+  assert.equal(permissions.has(PERMISSIONS.canCreateOrder), false);
+  assert.equal(permissions.has(PERMISSIONS.canDispatchOrder), false);
+  assert.equal(
+    permissions.has(PERMISSIONS.canViewOrderClientDetails),
+    false,
+  );
+  assert.equal(
+    permissions.has(PERMISSIONS.canViewClientMessageLog),
+    false,
+  );
+  assert.equal(
+    permissions.has(PERMISSIONS.canShareOrderMessageOnWhatsApp),
+    false,
   );
 });

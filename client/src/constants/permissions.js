@@ -39,6 +39,17 @@ export const PERMISSIONS = {
   canCreateReports: 'canCreateReports',
   canEditReports: 'canEditReports',
   canDeleteReports: 'canDeleteReports',
+
+  canViewOrders: 'canViewOrders',
+  canCreateOrder: 'canCreateOrder',
+  canAcceptOrder: 'canAcceptOrder',
+  canUpdateOrderProduction: 'canUpdateOrderProduction',
+  canAssignOrderItemNumber: 'canAssignOrderItemNumber',
+  canMarkOrderReady: 'canMarkOrderReady',
+  canDispatchOrder: 'canDispatchOrder',
+  canViewOrderClientDetails: 'canViewOrderClientDetails',
+  canViewClientMessageLog: 'canViewClientMessageLog',
+  canShareOrderMessageOnWhatsApp: 'canShareOrderMessageOnWhatsApp',
 };
 
 export const ROLES = {
@@ -166,5 +177,22 @@ export const PERMISSION_GROUPS = {
 
   deleteReports: [
     PERMISSIONS.canDeleteReports,
+  ],
+
+  viewOrders: [
+    PERMISSIONS.canViewOrders,
+  ],
+
+  createOrders: [
+    PERMISSIONS.canCreateOrder,
+  ],
+
+  manageBossOrders: [
+    PERMISSIONS.canViewOrders,
+    PERMISSIONS.canCreateOrder,
+    PERMISSIONS.canDispatchOrder,
+    PERMISSIONS.canViewOrderClientDetails,
+    PERMISSIONS.canViewClientMessageLog,
+    PERMISSIONS.canShareOrderMessageOnWhatsApp,
   ],
 };
