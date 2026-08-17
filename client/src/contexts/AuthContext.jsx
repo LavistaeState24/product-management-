@@ -5,6 +5,8 @@ import { ROLES } from '@/constants/permissions';
 
 export const AuthContext = createContext(null);
 
+const ACTIVITY_REFRESH_INTERVAL_MS = 60 * 1000;
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
@@ -32,6 +34,35 @@ export function AuthProvider({ children }) {
 
     bootstrap();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      return undefined;
+    }
+
+    const refreshActivity = async () => {
+      if (document.visibilityState !== 'visible') {
+        return;
+      }
+
+      try {
+        const response = await fetchCurrentUser();
+        setUser(response.user);
+      } catch (error) {
+        if (error?.response?.status === 401) {
+          logoutUser();
+          setUser(null);
+        }
+      }
+    };
+
+    const intervalId = window.setInterval(
+      refreshActivity,
+      ACTIVITY_REFRESH_INTERVAL_MS,
+    );
+
+    return () => window.clearInterval(intervalId);
+  }, [user?.id]);
 
   async function signIn(values) {
     setIsSubmitting(true);

@@ -40,18 +40,6 @@ copy .env.example .env
 
 Required backend variables:
 
-<!-- ```text
-NODE_ENV=development
-PORT=5000
-MONGO_URI=mongodb://127.0.0.1:27017/operations-crm-dev
-JWT_SECRET=super-secret-change-me
-JWT_EXPIRES_IN=1d
-CLIENT_URL=http://localhost:5173
-AWS_REGION=ap-south-1
-AWS_S3_BUCKET=your-bucket-name
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-``` -->
 
 For Render production, set at least:
 

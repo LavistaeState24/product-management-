@@ -17,8 +17,8 @@ function LoginPage() {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      email: 'boss@operationscrm.com',
-      password: 'Boss@12345',
+      email: '',
+      password: '',
     },
   });
 
@@ -50,11 +50,11 @@ function LoginPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div className="rounded-3xl border border-card-soft bg-card-soft p-5">
               <p className="text-sm text-card-muted">Roles</p>
-              <p className="mt-3 text-3xl font-bold text-card">4</p>
+              <p className="mt-3 text-3xl font-bold text-card">12</p>
             </div>
             <div className="rounded-3xl border border-card-soft bg-card-soft p-5">
               <p className="text-sm text-card-muted">Permissions</p>
-              <p className="mt-3 text-3xl font-bold text-card">15</p>
+              <p className="mt-3 text-3xl font-bold text-card">20</p>
             </div>
           </div>
         </section>
@@ -73,6 +73,7 @@ function LoginPage() {
               <Input
                 label="Email address"
                 leftIcon={Mail}
+                placeholder="Enter your email"
                 type="email"
                 error={errors.email?.message}
                 {...register('email', {
@@ -83,6 +84,7 @@ function LoginPage() {
                 label="Password"
                 leftIcon={KeyRound}
                 type="password"
+                placeholder="Enter your password"
                 error={errors.password?.message}
                 {...register('password', {
                   required: 'Password is required.',

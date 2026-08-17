@@ -3,6 +3,10 @@ import { LogOut, Menu, UserRound } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  formatUserLastLogin,
+  formatUserLastSeen,
+} from "@/utils/userActivity";
 
 function AppNavbar({ onMenuClick, onToggleCollapse }) {
   const { user, signOut } = useAuth();
@@ -35,7 +39,11 @@ function AppNavbar({ onMenuClick, onToggleCollapse }) {
             className="relative flex h-12 w-12 items-center justify-center rounded-full border-2 border-border bg-card transition hover:border-primary"
           >
             <UserRound className="h-6 w-6 text-primary" />
-            <span className="absolute right-1 top-1 h-3 w-3 rounded-full border-2 border-card bg-emerald-400" />
+            <span
+              className={`absolute right-1 top-1 h-3 w-3 rounded-full border-2 border-card ${
+                user?.isOnline ? "bg-emerald-400" : "bg-body-muted"
+              }`}
+            />
           </button>
 
           {profileOpen && (
@@ -44,7 +52,11 @@ function AppNavbar({ onMenuClick, onToggleCollapse }) {
                 <div className="flex items-center gap-4">
                   <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
                     <UserRound className="h-6 w-6 text-primary" />
-                    <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-emerald-400" />
+                    <span
+                      className={`absolute -right-1 -top-1 h-3 w-3 rounded-full ${
+                        user?.isOnline ? "bg-emerald-400" : "bg-body-muted"
+                      }`}
+                    />
                   </div>
 
                   <div>
@@ -57,7 +69,9 @@ function AppNavbar({ onMenuClick, onToggleCollapse }) {
                   </div>
                 </div>
 
-                <Badge variant="success">Online</Badge>
+                <Badge variant={user?.isOnline ? "success" : "neutral"}>
+                  {user?.isOnline ? "Online" : "Away"}
+                </Badge>
               </div>
 
               <div className="space-y-5 border-b border-border px-6 py-5">
@@ -75,7 +89,7 @@ function AppNavbar({ onMenuClick, onToggleCollapse }) {
                     Last Login
                   </p>
                   <p className="mt-2 text-sm font-medium text-heading">
-                    {user?.lastLogin || "Not available"}
+                    {formatUserLastLogin(user)}
                   </p>
                 </div>
 
@@ -84,7 +98,7 @@ function AppNavbar({ onMenuClick, onToggleCollapse }) {
                     Last Seen
                   </p>
                   <p className="mt-2 text-sm font-medium text-heading">
-                    Online
+                    {formatUserLastSeen(user)}
                   </p>
                 </div>
               </div>
