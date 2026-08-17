@@ -5,7 +5,7 @@ import { SIDEBAR_ITEMS } from '@/constants/navigation';
 import { useCan } from '@/hooks/useCan';
 import { cn } from '@/utils/cn';
 
-import logo from '../../assets/logo.png';
+import logo from '../../src/assets/logo.png';
 
 function AppSidebar({ open, onClose, collapsed }) {
   const can = useCan();
@@ -38,7 +38,7 @@ function AppSidebar({ open, onClose, collapsed }) {
       >
         <div
           className={cn(
-            'flex items-center border-b border-card-soft px-6 py-3',
+            'flex shrink-0 items-center border-b border-card-soft px-6 py-3',
             collapsed
               ? 'md:justify-center md:px-3'
               : 'justify-between',
@@ -67,7 +67,12 @@ function AppSidebar({ open, onClose, collapsed }) {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-2 h-screen overflow-y-auto scrollbar-hide px-4 py-2">
+        <nav
+          className={cn(
+            'min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-3',
+            '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+          )}
+        >
           {visibleItems.map((item) => {
             const Icon = item.icon;
 
@@ -90,18 +95,24 @@ function AppSidebar({ open, onClose, collapsed }) {
                 }
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
+
+                {!collapsed && (
+                  <span className="truncate">
+                    {item.label}
+                  </span>
+                )}
               </NavLink>
             );
           })}
         </nav>
 
         {!collapsed && (
-          <div className="m-3 rounded-xl border border-card-soft bg-sidebar p-4">
+          <div className="m-3 shrink-0 rounded-xl border border-card-soft bg-sidebar p-4">
             <p className="text-sm font-semibold text-card">
               Operations CRM
             </p>
-            <p className="mt-2 text-sm text-white">
+
+            <p className="mt-2 text-sm leading-5 text-white">
               Manage purchases, stock, production, sales, payments,
               reports, and users from one place.
             </p>
