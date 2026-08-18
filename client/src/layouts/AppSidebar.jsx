@@ -16,9 +16,10 @@ function AppSidebar({ open, onClose, collapsed }) {
 
   return (
     <>
+      {/* Mobile Overlay */}
       <div
         className={cn(
-          'fixed inset-0 z-30 bg-overlay transition md:hidden',
+          'fixed inset-0 z-30 bg-overlay transition-opacity duration-300 md:hidden',
           open
             ? 'pointer-events-auto opacity-100'
             : 'pointer-events-none opacity-0',
@@ -26,6 +27,7 @@ function AppSidebar({ open, onClose, collapsed }) {
         onClick={onClose}
       />
 
+      {/* Sidebar */}
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-40 flex w-80 flex-col overflow-hidden bg-sidebar text-card shadow-lg backdrop-blur transition-all duration-300',
@@ -36,6 +38,9 @@ function AppSidebar({ open, onClose, collapsed }) {
             : '-translate-x-full md:translate-x-0',
         )}
       >
+        {/* ======================================================
+            HEADER / LOGO
+        ====================================================== */}
         <div
           className={cn(
             'flex shrink-0 items-center border-b border-card-soft px-6 py-3',
@@ -44,7 +49,12 @@ function AppSidebar({ open, onClose, collapsed }) {
               : 'justify-between',
           )}
         >
-          <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              'flex items-center',
+              collapsed ? 'md:justify-center' : 'gap-3',
+            )}
+          >
             <img
               src={logo}
               alt="Customized Polycast"
@@ -57,20 +67,32 @@ function AppSidebar({ open, onClose, collapsed }) {
             />
           </div>
 
+          {/* Mobile Close */}
           <button
             type="button"
             onClick={onClose}
             aria-label="Close sidebar"
-            className="rounded-lg p-2 text-white transition hover:bg-sidebar-hover md:hidden"
+            className="rounded-lg p-2 text-white transition-colors hover:bg-sidebar-hover focus:outline-none focus:ring-0 md:hidden"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
+        {/* ======================================================
+            SCROLLABLE NAVIGATION
+        ====================================================== */}
         <nav
           className={cn(
-            'min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-3',
-            '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
+            'min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain px-4 py-3',
+
+            /* Firefox */
+            '[scrollbar-width:none]',
+
+            /* Old Microsoft browsers */
+            '[-ms-overflow-style:none]',
+
+            /* Chrome / Edge / Safari */
+            '[&::-webkit-scrollbar]:hidden',
           )}
         >
           {visibleItems.map((item) => {
@@ -84,9 +106,9 @@ function AppSidebar({ open, onClose, collapsed }) {
                 title={collapsed ? item.label : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center rounded-2xl px-4 py-3 text-sm font-semibold transition',
+                    'flex items-center rounded-2xl px-4 py-3 text-sm font-semibold transition-all duration-200',
                     collapsed
-                      ? 'md:justify-center md:gap-0'
+                      ? 'md:justify-center md:gap-0 md:px-3'
                       : 'gap-3',
                     isActive
                       ? 'bg-success text-white'
@@ -106,6 +128,9 @@ function AppSidebar({ open, onClose, collapsed }) {
           })}
         </nav>
 
+        {/* ======================================================
+            FOOTER
+        ====================================================== */}
         {!collapsed && (
           <div className="m-3 shrink-0 rounded-xl border border-card-soft bg-sidebar p-4">
             <p className="text-sm font-semibold text-card">
@@ -113,8 +138,8 @@ function AppSidebar({ open, onClose, collapsed }) {
             </p>
 
             <p className="mt-2 text-sm leading-5 text-white">
-              Manage purchases, stock, production, sales, payments,
-              reports, and users from one place.
+              Manage purchases, stock, production, sales,
+              payments, reports, and users from one place.
             </p>
           </div>
         )}
