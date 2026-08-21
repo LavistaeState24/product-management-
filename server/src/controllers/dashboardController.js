@@ -483,21 +483,46 @@ function formatStockAlert(type, item, priority) {
   };
 }
 
-async function getStockAlertItems(Model, type, quantityField = 'quantity', match = {}) {
+async function getStockAlertItems(
+  Model,
+  type,
+  quantityField = 'quantity',
+  match = {},
+) {
   const [outOfStock, lowStock] = await Promise.all([
-    Model.find({ ...match, [quantityField]: { $lte: 0 } })
+    Model.find({
+      ...match,
+      [quantityField]: { $lte: 0 },
+    })
       .sort({ updatedAt: -1 })
-      .limit(5)
       .lean(),
-    Model.find({ ...match, [quantityField]: { $gt: 0, $lte: LOW_STOCK_THRESHOLD } })
-      .sort({ [quantityField]: 1, updatedAt: -1 })
-      .limit(5)
+
+    Model.find({
+      ...match,
+      [quantityField]: {
+        $gt: 0,
+        $lte: LOW_STOCK_THRESHOLD,
+      },
+    })
+      .sort({
+        [quantityField]: 1,
+        updatedAt: -1,
+      })
       .lean(),
   ]);
 
   return [
-    ...outOfStock.map((item) => formatStockAlert(type, item, 1)),
-    ...lowStock.map((item) => formatStockAlert(type, item, 2)),
+    ...outOfStock.map((item) => ({
+      ...formatStockAlert(type, item, 1),
+      id: String(item._id),
+      createdAt: item.updatedAt || item.createdAt,
+    })),
+
+    ...lowStock.map((item) => ({
+      ...formatStockAlert(type, item, 2),
+      id: String(item._id),
+      createdAt: item.updatedAt || item.createdAt,
+    })),
   ];
 }
 
@@ -510,19 +535,28 @@ async function getSupplierOverdueAlerts(today) {
     .populate('supplier', 'name')
     .populate('purchase', 'bill supplierName')
     .sort({ dueDate: 1 })
-    .limit(5)
     .lean();
 
   return items.map((item) => ({
+    id: String(item._id),
     type: 'Supplier Payment Overdue',
     priority: 3,
+
     supplier: {
       id: item.supplier?._id || item.supplier,
-      name: item.supplier?.name || item.purchase?.supplierName || 'Supplier',
+      name:
+        item.supplier?.name ||
+        item.purchase?.supplierName ||
+        'Supplier',
     },
-    invoiceNumber: item.purchase?.bill?.originalName || `PUR-${item.purchase?._id || item.purchase}`,
+
+    invoiceNumber:
+      item.purchase?.bill?.originalName ||
+      `PUR-${item.purchase?._id || item.purchase}`,
+
     outstandingAmount: roundNumber(item.amount),
     dueDate: item.dueDate,
+    createdAt: item.updatedAt || item.createdAt,
   }));
 }
 
@@ -541,13 +575,12 @@ async function getCustomerOverdueAlerts(today) {
       },
     })
     .sort({ updatedAt: -1 })
-    .limit(10)
     .lean();
 
   return items
     .filter((item) => item.sale)
-    .slice(0, 5)
     .map((item) => ({
+      id: String(item._id),
       type: 'Customer Payment Overdue',
       priority: 4,
       customer: {
@@ -557,10 +590,11 @@ async function getCustomerOverdueAlerts(today) {
       invoiceNumber: item.sale?.invoiceNumber || `SAL-${item.sale?._id || item.sale}`,
       amountReceivable: roundNumber(item.amount),
       dueDate: item.sale?.dueDate,
+      createdAt: item.updatedAt || item.createdAt,
     }));
 }
 
-async function getImportantAlerts(today) {
+async function getAllAlerts(today) {
   const stockAlerts = await Promise.all([
     getStockAlertItems(RawMaterialStock, 'Raw Material Stock'),
     getStockAlertItems(PuChemicalStock, 'PU Chemical Stock'),
@@ -575,8 +609,7 @@ async function getImportantAlerts(today) {
   ]);
 
   return [...stockAlerts.flat(), ...supplierOverdue, ...customerOverdue]
-    .sort((left, right) => left.priority - right.priority)
-    .slice(0, 5);
+    .sort((left, right) => left.priority - right.priority);
 }
 
 export async function getDashboard(req, res) {
@@ -588,14 +621,14 @@ export async function getDashboard(req, res) {
     payments,
     businessSummary,
     graphData,
-    importantAlerts,
+    allAlerts,
   ] = await Promise.all([
     getStockSummary(),
     getAlertCounts(),
     getPaymentSummary(today),
     getBusinessSummary(range),
     getGraphData(range),
-    getImportantAlerts(today),
+    getAllAlerts(today),
   ]);
 
   return res.status(200).json({
@@ -609,6 +642,8 @@ export async function getDashboard(req, res) {
     payments,
     businessSummary,
     graphData,
-    importantAlerts,
+    importantAlerts: allAlerts.slice(0, 5),
+    notificationAlerts: allAlerts,
+    notificationCount: allAlerts.length,
   });
 }
