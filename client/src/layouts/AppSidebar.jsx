@@ -32,7 +32,7 @@ function AppSidebar({ open, onClose, collapsed }) {
         className={cn(
           'fixed inset-y-0 left-0 z-40 flex w-80 flex-col overflow-hidden bg-sidebar text-card shadow-lg backdrop-blur transition-all duration-300',
           'md:sticky md:top-0 md:h-screen md:translate-x-0',
-          collapsed ? 'md:w-24' : 'md:w-64',
+          collapsed ? 'md:w-16' : 'md:w-64',
           open
             ? 'translate-x-0'
             : '-translate-x-full md:translate-x-0',

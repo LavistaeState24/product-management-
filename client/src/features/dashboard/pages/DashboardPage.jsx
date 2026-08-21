@@ -325,7 +325,10 @@ function DashboardPage() {
       setError('');
 
       try {
-        const data = await fetchDashboard({ period });
+        const data = await fetchDashboard(
+          { period },
+          { force: reloadKey > 0 },
+        );
 
         if (!ignore) {
           setDashboard(data);
