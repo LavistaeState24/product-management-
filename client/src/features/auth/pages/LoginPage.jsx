@@ -81,7 +81,7 @@ function LoginPage() {
 
   return (
     <main
-      className="relative min-h-[100dvh] overflow-hidden bg-slate-950"
+      className="relative min-h-screen overflow-hidden bg-slate-950"
       style={{
         backgroundImage: `url(${loginBg})`,
         backgroundSize: 'cover',
@@ -133,21 +133,21 @@ function LoginPage() {
             LEFT SIDE
         ========================================================== */}
 
-        <section className="hidden min-h-[100dvh] min-w-0 flex-col justify-between px-8 py-8 lg:flex xl:px-12 xl:py-10">
+        <section className="hidden min-h-screen min-w-0 flex-col justify-between px-8 py-8 lg:flex xl:px-12 xl:py-10">
 
           {/* Logo */}
           <div className="shrink-0">
-            <div className="inline-flex rounded-[22px] bg-white px-5 py-3 shadow-[0_15px_40px_rgba(0,0,0,0.20)]">
+            <div className="inline-flex rounded-[22px] bg-white px-5 py-3">
               <img
                 src={logo}
                 alt="Customized Polycast"
-                className="h-[30px] w-auto max-w-[220px] sm:justify-center object-contain xl:h-[62px] xl:max-w-[240px]"
+                className="h-[52px] sm:hiddedn w-auto max-w-[220px] object-contain xl:h-[62px] xl:max-w-[240px]"
               />
             </div>
           </div>
 
           {/* Hero Content */}
-          <div className="my-4 max-w-[650px]">
+          <div className="my-7 max-w-[650px]">
             <div className="flex items-center gap-3">
               <span className="h-[2px] w-10 bg-[#8bcf32]" />
 
@@ -167,14 +167,14 @@ function LoginPage() {
               <span className="text-[#8bcf32]">.</span>
             </h1>
 
-            <p className="mt-6 max-w-[540px] text-[14px] leading-7 text-white/75 xl:text-[16px] xl:leading-8">
+            <p className="mt-5 max-w-[540px] text-[14px] leading-7 text-white/75 xl:text-[16px] xl:leading-8">
               Purchasing, stock, production, orders, dispatch,
               payments and reports — connected in one secure
               workspace.
             </p>
 
             {/* Feature Cards */}
-            <div className="mt-8 grid max-w-[650px] grid-cols-4 gap-2 2xl:grid-cols-4 2xl:gap-3">
+            <div className="mt-5 grid max-w-[650px] grid-cols-2 gap-3 2xl:grid-cols-4">
               {features.map((feature) => {
                 const Icon = feature.icon;
 
@@ -208,16 +208,41 @@ function LoginPage() {
             RIGHT LOGIN SIDE
         ========================================================== */}
 
-        <section className="relative flex min-h-[100dvh] items-center justify-center px-4 pb-6 pt-24 sm:px-6 sm:pt-28 md:px-10 lg:px-8 lg:py-8 xl:px-10">
+        <section className="relative flex min-h-[100dvh] items-center justify-center px-4 pb-6 pt-24 sm:px-6 sm:pt-28 md:px-10 lg:px-8 lg:py-8 xl:px-12">
+
+          {/* Mobile Logo */}
+          <div
+            className="
+            absolute
+            left-4
+            top-4
+        
+            sm:left-1/2
+            sm:top-6
+            sm:-translate-x-1/2
+        
+            md:left-1/2
+            md:-translate-x-1/2
+            sm:hidden
+            "
+          >
+            <div className="rounded-2xl bg-white px-4 py-2 shadow-[0_12px_35px_rgba(0,0,0,0.25)]">
+              <img
+                src={logo}
+                alt="Customized Polycast"
+                className="h-11 w-auto max-w-[200px] object-contain sm:h-12 "
+              />
+            </div>
+          </div>
 
           {/* Login Container */}
-          <div className="relative z-10 w-full max-w-[450px]">
+          <div className="relative z-10 w-full max-w-[580px]">
 
             {/* Login Card */}
-            <div className="rounded-[24px] border border-white/60 bg-white/[0.96] px-5 py-6 shadow-[0_30px_90px_rgba(0,0,0,0.30)] backdrop-blur-xl sm:rounded-[28px] sm:px-8 sm:py-5 xl:rounded-[30px] xl:px-10 xl:py-5">
+            <div className="rounded-[24px] border border-white/60 bg-white/[0.96] px-5 py-6 shadow-[0_30px_90px_rgba(0,0,0,0.30)] backdrop-blur-xl sm:rounded-[28px] sm:px-8 sm:py-8 xl:rounded-[30px] xl:px-10 xl:py-9">
 
               {/* Secure Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#eff9e9] px-3.5 py-1">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#eff9e9] px-3.5 py-2">
                 <ShieldCheck
                   size={17}
                   className="text-[#63b52b]"
@@ -229,7 +254,7 @@ function LoginPage() {
               </div>
 
               {/* Header */}
-              <div className=" sm:mt-6">
+              <div className="sm:mt-6">
                 <h2 className="text-[30px] font-bold tracking-[-0.035em] text-[#07182c] sm:text-[36px] xl:text-[40px]">
                   Welcome back!
                 </h2>
@@ -245,13 +270,13 @@ function LoginPage() {
 
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="mt-2 space-y-6 sm:mt-4 sm:space-y-5"
+                className="mt-5 space-y-5 sm:mt-8"
               >
                 {/* EMAIL */}
                 <div>
                   <label
                     htmlFor="email"
-                    className="mb-4 block text-md font-bold text-[#0b1f35]"
+                    className="mb-2 block text-md font-bold text-[#0b1f35]"
                   >
                     Email address
                   </label>
@@ -279,11 +304,10 @@ function LoginPage() {
                         flex-1
                         border-none
                         bg-transparent
-                        text-[12px]
+                        text-[14px]
                         text-[#07182c]
                         outline-none
                         ring-0
-                        focus:bg-none
                         placeholder:text-slate-400
                         focus:border-none
                         focus:outline-none
@@ -309,7 +333,7 @@ function LoginPage() {
                 <div>
                   <label
                     htmlFor="password"
-                    className="mb-4 block text-sm font-bold text-[#0b1f35]"
+                    className="mb-2 block text-md font-bold text-[#0b1f35]"
                   >
                     Password
                   </label>
@@ -333,12 +357,11 @@ function LoginPage() {
                       placeholder="Enter your password"
                       className="
                         h-full
-                        focus:bg-none
                         min-w-0
                         flex-1
                         border-none
                         bg-transparent
-                        text-[12px]
+                        text-[14px]
                         text-[#07182c]
                         outline-none
                         ring-0
@@ -466,22 +489,19 @@ function LoginPage() {
               </form>
 
               {/* Footer */}
-              <div className="mt-2 border-t border-slate-200 pt-1 text-center">
+              <div className="mt-7 border-t border-slate-200 pt-5 text-center">
                 <div className="flex items-center justify-center gap-2">
                   <ShieldCheck
                     size={15}
                     className="text-slate-400"
                   />
 
-                  <p className="text-[16px] text-slate-400 sm:text-xs">
+                  <p className="text-[10px] text-slate-400 sm:text-xs">
                     Customized Polycast Operations CRM
                   </p>
                 </div>
               </div>
             </div>
-
-            {/* Copyright */}
-
           </div>
         </section>
       </div>

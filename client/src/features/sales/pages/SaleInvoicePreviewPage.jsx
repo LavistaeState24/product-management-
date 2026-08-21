@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { PERMISSIONS } from '@/constants/permissions';
 import { getApiErrorMessage } from '@/utils/getApiErrorMessage';
-import invoice from "../../../../assets/invoice.png";
+import invoice from "../../../assets/invoice.png";
 import '@/features/sales/styles/invoice-print.css';
 
 const fallback = '-';
@@ -449,7 +449,7 @@ function SaleInvoicePreviewPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-row gap-3">
           <Link to={`/sales/${currentSaleId}`}>
             <Button type="button" variant="outline">
               <ArrowLeft className="h-4 w-4" />

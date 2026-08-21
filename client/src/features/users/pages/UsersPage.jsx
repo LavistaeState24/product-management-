@@ -613,7 +613,7 @@ function UsersPage() {
       key: 'actions',
       title: 'Actions',
       render: (row) => (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-row gap-2">
           <Button
             type="button"
             size="sm"
