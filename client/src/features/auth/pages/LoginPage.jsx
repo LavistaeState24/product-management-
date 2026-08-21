@@ -97,7 +97,7 @@ function LoginPage() {
       <div className="pointer-events-none absolute inset-0 bg-[#031923]/30" />
 
       {/* Desktop gradient */}
-      <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-[#021824]/95 via-[#032638]/60 to-[#071c2a]/20 lg:block" />
+      <div className="pointer-events-none absolute inset-0 hidden bg-gradient-to-r from-[#021824]/80 via-[#032638]/10 to-[#071c2a]/10 lg:block" />
 
       {/* Mobile / tablet overlay */}
       <div className="pointer-events-none absolute inset-0 bg-[#021824]/65 lg:hidden" />
@@ -148,13 +148,6 @@ function LoginPage() {
 
           {/* Hero Content */}
           <div className="my-7 max-w-[650px]">
-            <div className="flex items-center gap-3">
-              <span className="h-[2px] w-10 bg-[#8bcf32]" />
-
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#8bcf32] xl:text-sm">
-                Operations CRM
-              </p>
-            </div>
 
             <h1 className="mt-5 text-[40px] font-bold leading-[1.03] tracking-[-0.045em] text-white xl:text-[52px] 2xl:text-[62px]">
               Manage your entire
@@ -210,31 +203,6 @@ function LoginPage() {
 
         <section className="relative flex min-h-[100dvh] items-center justify-center px-4 pb-6 pt-24 sm:px-6 sm:pt-28 md:px-10 lg:px-8 lg:py-8 xl:px-12">
 
-          {/* Mobile Logo */}
-          <div
-            className="
-            absolute
-            left-4
-            top-4
-        
-            sm:left-1/2
-            sm:top-6
-            sm:-translate-x-1/2
-        
-            md:left-1/2
-            md:-translate-x-1/2
-            sm:hidden
-            "
-          >
-            <div className="rounded-2xl bg-white px-4 py-2 shadow-[0_12px_35px_rgba(0,0,0,0.25)]">
-              <img
-                src={logo}
-                alt="Customized Polycast"
-                className="h-11 w-auto max-w-[200px] object-contain sm:h-12 "
-              />
-            </div>
-          </div>
-
           {/* Login Container */}
           <div className="relative z-10 w-full max-w-[580px]">
 
@@ -255,7 +223,7 @@ function LoginPage() {
 
               {/* Header */}
               <div className="sm:mt-6">
-                <h2 className="text-[30px] font-bold tracking-[-0.035em] text-[#07182c] sm:text-[36px] xl:text-[40px]">
+                <h2 className="text-[22px] font-bold tracking-[-0.035em] text-[#07182c] sm:text-[32px] xl:text-[36px]">
                   Welcome back!
                 </h2>
 
