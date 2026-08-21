@@ -111,7 +111,6 @@ function StockManagementPage() {
       <section className="panel p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-primary">Stock Management</p>
             <h1 className="mt-2 text-3xl font-bold text-heading">Stock Management</h1>
             <p className="mt-2 max-w-2xl text-sm text-body">
               Review live raw material and PU chemical inventory from purchase stock records.

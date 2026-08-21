@@ -289,9 +289,6 @@ function PurchaseListPage() {
       <section className="panel p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-primary">
-              Purchase Module
-            </p>
             <h1 className="mt-2 text-3xl font-bold text-heading">Purchases</h1>
             <p className="mt-2 max-w-2xl text-sm text-body">
               Track raw material and PU chemical purchases, stock impact, bills, and pending balances.

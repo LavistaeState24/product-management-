@@ -418,9 +418,6 @@ function DashboardPage() {
 
           {/* Left Side */}
           <div className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.24em] text-primary">
-              Management Overview
-            </p>
 
             <h1 className="mt-2 text-3xl font-bold text-heading lg:text-4xl">
               Dashboard
