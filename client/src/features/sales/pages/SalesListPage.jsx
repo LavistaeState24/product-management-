@@ -160,7 +160,7 @@ function SalesListPage() {
         key: 'actions',
         title: 'Actions',
         render: (row) => (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-row gap-2">
             <Link to={`/sales/${row.id}`}>
               <Button type="button" size="sm" variant="primary"  title="View">
                 <Eye className="h-4 w-4"/>
@@ -405,7 +405,7 @@ function SalesListPage() {
             label="Cancellation Reason"
             value={cancelReason}
             onChange={(event) => setCancelReason(event.target.value)}
-            rows={4}
+            rows={2}
             placeholder="Enter reason"
           />
           <div className="flex justify-end gap-3">

@@ -249,7 +249,7 @@ function PaymentManagementPage() {
     () => [
       {
         key: 'invoiceNumber',
-        title: 'Invoice/Purchase No.',
+        title: 'Invoice No.',
         render: (row) => row.invoiceNumber || '-',
       },
       {
@@ -297,7 +297,7 @@ function PaymentManagementPage() {
           const outstandingAmount = getOutstandingAmount(row, 'purchases');
 
           return (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-row gap-2">
               {canManagePayments ? (
                 <Button
                   type="button"

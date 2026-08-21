@@ -316,9 +316,9 @@ function OrdersPage() {
       items: current.items.map((item, itemIndex) =>
         itemIndex === index
           ? {
-              ...item,
-              [field]: value,
-            }
+            ...item,
+            [field]: value,
+          }
           : item,
       ),
     }));
@@ -507,7 +507,9 @@ function OrdersPage() {
       key: 'message',
       title: 'Message',
       render: (value) => (
-        <p className="max-w-xl whitespace-pre-wrap leading-6">{value}</p>
+        <p className="max-w-xl truncate whitespace-pre-wrap leading-6">
+          {value}
+        </p>
       ),
     },
     {
@@ -611,7 +613,7 @@ function OrdersPage() {
           onClick={() => handleDispatch(order.id)}
         >
           <Send className="h-4 w-4" />
-            Dispatch
+          Dispatch
         </Button>
       ),
     },
@@ -649,9 +651,18 @@ function OrdersPage() {
   ];
 
   const messageColumns = [
-    { key: 'orderNo', title: 'Order No.' },
-    { key: 'clientName', title: 'Client' },
-    { key: 'clientMobile', title: 'Mobile' },
+    {
+      key: 'orderNo',
+      title: 'Order No.',
+    },
+    {
+      key: 'clientName',
+      title: 'Client',
+    },
+    {
+      key: 'clientMobile',
+      title: 'Mobile',
+    },
     {
       key: 'kind',
       title: 'Message Type',
@@ -661,14 +672,30 @@ function OrdersPage() {
       key: 'message',
       title: 'Message',
       render: (value) => (
-        <p className="max-w-xl whitespace-pre-wrap truncate leading-6">{value}</p>
+        <p
+          className="
+          block
+          max-w-[160px]
+          truncate
+          sm:max-w-[200px]
+          md:max-w-[240px]
+          lg:max-w-[280px]
+          xl:max-w-[320px]
+          2xl:max-w-[380px]
+        "
+          title={value}
+        >
+          {value || '-'}
+        </p>
       ),
     },
     {
       key: 'status',
       title: 'Status',
       render: (value) => (
-        <Badge variant={value === 'opened' ? 'success' : 'warning'}>
+        <Badge
+          variant={value === 'opened' ? 'success' : 'warning'}
+        >
           {formatMessageStatus(value)}
         </Badge>
       ),
@@ -682,24 +709,31 @@ function OrdersPage() {
       key: 'actions',
       title: 'Actions',
       render: (_, messageLog) => (
-        <div className="flex flex-row gap-2">
+        <div className="flex flex-row items-center gap-2">
           <Button
             type="button"
             variant="outline"
             title="Copy message to clipboard"
             className="h-10 w-auto gap-2 rounded-lg px-3"
-            onClick={() => handleCopyMessage(messageLog.message)}
+            onClick={() =>
+              handleCopyMessage(messageLog.message)
+            }
           >
             <Clipboard className="h-4 w-4" />
           </Button>
+
           <Button
             type="button"
             variant="success"
             title="Open in WhatsApp"
             className="h-10 w-auto gap-2 rounded-lg px-3"
-            loading={busyKey === `whatsapp-${messageLog.id}`}
+            loading={
+              busyKey === `whatsapp-${messageLog.id}`
+            }
             disabled={!canShareWhatsApp}
-            onClick={() => handleOpenWhatsApp(messageLog.id)}
+            onClick={() =>
+              handleOpenWhatsApp(messageLog.id)
+            }
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
