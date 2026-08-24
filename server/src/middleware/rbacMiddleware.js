@@ -1,6 +1,6 @@
 import { ROLES } from '../utils/permissions.js';
 
-function canAccess(user, permissions = []) {
+export function canAccess(user, permissions = []) {
   if (!user) {
     return false;
   }

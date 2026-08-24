@@ -66,6 +66,9 @@ AWS_ACCESS_KEY_ID=<key>
 AWS_SECRET_ACCESS_KEY=<secret>
 ```
 
+Use comma-separated origins when multiple production frontends should call the
+API, for example `CLIENT_URL=https://your-app.vercel.app,https://www.example.com`.
+
 `MONGO_URL` is accepted as a compatibility alias, but `MONGO_URI` is preferred.
 If your MongoDB Atlas username or password contains special characters, URL
 encode them before placing them in `MONGO_URI`.

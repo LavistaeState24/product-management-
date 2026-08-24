@@ -636,7 +636,7 @@ function DashboardPage() {
             subtitle="Top five issues ordered by stock and payment urgency."
           />
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
+          <div className="mt-5 grid gap-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4">
             {importantAlerts.length ? (
               importantAlerts.map((alert, index) => (
                 <div
@@ -681,7 +681,7 @@ function DashboardPage() {
                 </div>
               ))
             ) : (
-              <div className="md:col-span-2">
+              <div className="md:col-span-5">
                 <EmptyState
                   title="No important alerts"
                   description="Critical stock and payment alerts will appear here."

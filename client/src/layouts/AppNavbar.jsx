@@ -1,9 +1,16 @@
 import { useState } from "react";
 import {
   Bell,
+  ClipboardCheck,
+  Factory,
+  IndianRupee,
   LogOut,
   Menu,
+  PackageMinus,
+  PackageX,
+  Truck,
   UserRound,
+  Wallet,
 } from "lucide-react";
 
 import Badge from "@/components/ui/Badge";
@@ -93,24 +100,57 @@ function AppNavbar({
       return "danger";
     }
 
-    if (type === "Low Stock") {
+    if (
+      type === "Low Stock" ||
+      type === "Supplier Payment Due Soon" ||
+      type === "Customer Payment Due Soon"
+    ) {
       return "warning";
+    }
+
+    if (type === "Order Ready for Dispatch") {
+      return "success";
     }
 
     return "info";
   };
+
+  const NOTIFICATION_ICONS = {
+    "Out of Stock": PackageX,
+    "Low Stock": PackageMinus,
+    "Supplier Payment Overdue": Wallet,
+    "Supplier Payment Due Soon": Wallet,
+    "Customer Payment Overdue": IndianRupee,
+    "Customer Payment Due Soon": IndianRupee,
+    "Order Accepted": ClipboardCheck,
+    "Order Progress": Factory,
+    "Order Ready for Dispatch": Truck,
+  };
+
+  const NOTIFICATION_ICON_STYLES = {
+    danger: "bg-danger-tint text-danger",
+    warning: "bg-warning-tint text-warning",
+    info: "bg-info-tint text-info",
+    success: "bg-success-tint text-success",
+  };
+
+  const getNotificationIcon = (type) => NOTIFICATION_ICONS[type] || Bell;
 
   const getNotificationTitle = (notification) => {
     if (notification.title) {
       return notification.title;
     }
 
-    if (notification.type === "Supplier Payment Overdue") {
-      return notification.supplier?.name || "Supplier payment overdue";
+    if (notification.supplier) {
+      return notification.supplier?.name || "Supplier payment reminder";
     }
 
-    if (notification.type === "Customer Payment Overdue") {
-      return notification.customer?.name || "Customer payment overdue";
+    if (notification.customer) {
+      return notification.customer?.name || "Customer payment reminder";
+    }
+
+    if (notification.orderNo) {
+      return `Order ${notification.orderNo}`;
     }
 
     return notification.itemName || "Stock reminder";
@@ -121,7 +161,7 @@ function AppNavbar({
       return notification.message || notification.description;
     }
 
-    if (notification.type === "Supplier Payment Overdue") {
+    if (notification.supplier) {
       const invoice = notification.invoiceNumber
         ? ` for ${notification.invoiceNumber}`
         : "";
@@ -129,7 +169,7 @@ function AppNavbar({
       return `${formatCurrency(notification.outstandingAmount)} outstanding${invoice}`;
     }
 
-    if (notification.type === "Customer Payment Overdue") {
+    if (notification.customer) {
       const invoice = notification.invoiceNumber
         ? ` for ${notification.invoiceNumber}`
         : "";
@@ -274,6 +314,8 @@ function AppNavbar({
                         notification.id ||
                         index;
                       const meta = getNotificationMeta(notification);
+                      const variant = getNotificationVariant(notification.type);
+                      const NotificationIcon = getNotificationIcon(notification.type);
 
                       return (
                         <button
@@ -298,9 +340,14 @@ function AppNavbar({
                             bg-card
                           `}
                         >
-                          {/* Active Dot */}
-                          <div className="pt-1.5">
-                            <span className="block h-2.5 w-2.5 rounded-full bg-primary" />
+                          {/* Type Icon */}
+                          <div
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                              NOTIFICATION_ICON_STYLES[variant] ||
+                              NOTIFICATION_ICON_STYLES.info
+                            }`}
+                          >
+                            <NotificationIcon className="h-4 w-4" />
                           </div>
 
                           {/* Content */}
@@ -314,9 +361,7 @@ function AppNavbar({
 
                               {notification.type && (
                                 <Badge
-                                  variant={getNotificationVariant(
-                                    notification.type,
-                                  )}
+                                  variant={variant}
                                   className="shrink-0"
                                 >
                                   {notification.type}

@@ -7,9 +7,25 @@ import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
+function corsOrigin(origin, callback) {
+  if (!origin) {
+    callback(null, true);
+    return;
+  }
+
+  const normalizedOrigin = origin.replace(/\/+$/, '');
+
+  if (env.clientUrls.includes(normalizedOrigin)) {
+    callback(null, true);
+    return;
+  }
+
+  callback(new Error(`CORS origin not allowed: ${origin}`));
+}
+
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: corsOrigin,
   }),
 );
 app.use(express.json());

@@ -11,10 +11,21 @@ import Sale from '../models/Sale.js';
 import SheetProductionBatch from '../models/SheetProductionBatch.js';
 import SheetStock from '../models/SheetStock.js';
 import SupplierPayable from '../models/SupplierPayable.js';
+import { canAccess } from '../middleware/rbacMiddleware.js';
+import { listOrderNotifications } from '../services/orderService.js';
+import { resolveReminderType } from '../services/paymentHistoryService.js';
+import { PERMISSIONS } from '../utils/permissions.js';
 import { DASHBOARD_PERIODS } from '../validators/dashboardValidators.js';
 
 const LOW_STOCK_THRESHOLD = 10;
+const DUE_SOON_DAYS = 3;
 const DEFAULT_PERIOD = 'this-month';
+
+const ORDER_NOTIFICATION_TYPES = {
+  accepted: 'Order Accepted',
+  progress: 'Order Progress',
+  ready: 'Order Ready for Dispatch',
+};
 
 function roundNumber(value) {
   return Number((Number(value || 0)).toFixed(2));
@@ -24,6 +35,12 @@ function getStartOfToday() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return today;
+}
+
+function getDueSoonThreshold(today) {
+  const threshold = new Date(today);
+  threshold.setDate(threshold.getDate() + DUE_SOON_DAYS + 1);
+  return threshold;
 }
 
 function addMonths(date, delta) {
@@ -197,9 +214,9 @@ async function getStockSummary() {
       legacyProduct: legacyProductStock,
       totalQuantity: roundNumber(
         rodStock.byUnit.PCS +
-          sheetStock.byUnit.PCS +
-          puProductStock.totalQuantity +
-          legacyProductStock.totalQuantity,
+        sheetStock.byUnit.PCS +
+        puProductStock.totalQuantity +
+        legacyProductStock.totalQuantity,
       ),
     },
   };
@@ -470,97 +487,82 @@ async function getGraphData({ graphMonths, endDate }) {
   };
 }
 
-function formatStockAlert(type, item, priority) {
+function formatStockAlert(type, item, priority, routeKey) {
   const quantity = Number(item.quantity ?? item.currentStock ?? 0);
 
   return {
+    id: String(item._id),
     type: priority === 1 ? 'Out of Stock' : 'Low Stock',
     priority,
     stockType: type,
+    routeKey,
+    stockId: String(item._id),
     itemName: item.itemName || item.item || item.productName || item.name || 'Stock item',
     itemNumber: item.itemNumber || '',
     quantity: roundNumber(quantity),
   };
 }
 
-async function getStockAlertItems(
-  Model,
-  type,
-  quantityField = 'quantity',
-  match = {},
-) {
+async function getStockAlertItems(Model, type, quantityField = 'quantity', match = {}, routeKey = 'stock') {
   const [outOfStock, lowStock] = await Promise.all([
-    Model.find({
-      ...match,
-      [quantityField]: { $lte: 0 },
-    })
+    Model.find({ ...match, [quantityField]: { $lte: 0 } })
       .sort({ updatedAt: -1 })
+      .limit(5)
       .lean(),
-
-    Model.find({
-      ...match,
-      [quantityField]: {
-        $gt: 0,
-        $lte: LOW_STOCK_THRESHOLD,
-      },
-    })
-      .sort({
-        [quantityField]: 1,
-        updatedAt: -1,
-      })
+    Model.find({ ...match, [quantityField]: { $gt: 0, $lte: LOW_STOCK_THRESHOLD } })
+      .sort({ [quantityField]: 1, updatedAt: -1 })
+      .limit(5)
       .lean(),
   ]);
 
   return [
-    ...outOfStock.map((item) => ({
-      ...formatStockAlert(type, item, 1),
-      id: String(item._id),
-      createdAt: item.updatedAt || item.createdAt,
-    })),
-
-    ...lowStock.map((item) => ({
-      ...formatStockAlert(type, item, 2),
-      id: String(item._id),
-      createdAt: item.updatedAt || item.createdAt,
-    })),
+    ...outOfStock.map((item) => formatStockAlert(type, item, 1, routeKey)),
+    ...lowStock.map((item) => formatStockAlert(type, item, 2, routeKey)),
   ];
 }
 
-async function getSupplierOverdueAlerts(today) {
+async function getSupplierPaymentAlerts(today, soonThreshold) {
   const items = await SupplierPayable.find({
     amount: { $gt: 0 },
     status: 'pending',
-    dueDate: { $lt: today },
+    dueDate: { $lt: soonThreshold },
   })
     .populate('supplier', 'name')
     .populate('purchase', 'bill supplierName')
     .sort({ dueDate: 1 })
     .lean();
 
-  return items.map((item) => ({
-    id: String(item._id),
-    type: 'Supplier Payment Overdue',
-    priority: 3,
+  return items.map((item) => {
+    const isOverdue = resolveReminderType(item.dueDate, today) === 'Overdue';
 
-    supplier: {
-      id: item.supplier?._id || item.supplier,
-      name:
-        item.supplier?.name ||
-        item.purchase?.supplierName ||
-        'Supplier',
-    },
+    return {
+      id: String(item._id),
+      type: isOverdue ? 'Supplier Payment Overdue' : 'Supplier Payment Due Soon',
+      priority: isOverdue ? 3 : 5,
+      isOverdue,
+      routeKey: 'purchase',
+      purchaseId: item.purchase?._id ? String(item.purchase._id) : null,
 
-    invoiceNumber:
-      item.purchase?.bill?.originalName ||
-      `PUR-${item.purchase?._id || item.purchase}`,
+      supplier: {
+        id: item.supplier?._id || item.supplier,
+        name:
+          item.supplier?.name ||
+          item.purchase?.supplierName ||
+          'Supplier',
+      },
 
-    outstandingAmount: roundNumber(item.amount),
-    dueDate: item.dueDate,
-    createdAt: item.updatedAt || item.createdAt,
-  }));
+      invoiceNumber:
+        item.purchase?.bill?.originalName ||
+        `PUR-${item.purchase?._id || item.purchase}`,
+
+      outstandingAmount: roundNumber(item.amount),
+      dueDate: item.dueDate,
+      createdAt: item.updatedAt || item.createdAt,
+    };
+  });
 }
 
-async function getCustomerOverdueAlerts(today) {
+async function getCustomerPaymentAlerts(today, soonThreshold) {
   const items = await CustomerReceivable.find({
     amount: { $gt: 0 },
     status: 'pending',
@@ -570,7 +572,7 @@ async function getCustomerOverdueAlerts(today) {
       path: 'sale',
       select: 'invoiceNumber customerName dueDate invoiceStatus',
       match: {
-        dueDate: { $lt: today },
+        dueDate: { $lt: soonThreshold },
         invoiceStatus: { $ne: 'Cancelled' },
       },
     })
@@ -579,37 +581,85 @@ async function getCustomerOverdueAlerts(today) {
 
   return items
     .filter((item) => item.sale)
-    .map((item) => ({
-      id: String(item._id),
-      type: 'Customer Payment Overdue',
-      priority: 4,
-      customer: {
-        id: item.customer?._id || item.customer,
-        name: item.customer?.name || item.sale?.customerName || 'Customer',
-      },
-      invoiceNumber: item.sale?.invoiceNumber || `SAL-${item.sale?._id || item.sale}`,
-      amountReceivable: roundNumber(item.amount),
-      dueDate: item.sale?.dueDate,
-      createdAt: item.updatedAt || item.createdAt,
-    }));
+    .map((item) => {
+      const isOverdue = resolveReminderType(item.sale.dueDate, today) === 'Overdue';
+
+      return {
+        id: String(item._id),
+        type: isOverdue ? 'Customer Payment Overdue' : 'Customer Payment Due Soon',
+        priority: isOverdue ? 4 : 6,
+        isOverdue,
+        routeKey: 'sale',
+        saleId: item.sale?._id ? String(item.sale._id) : null,
+        customer: {
+          id: item.customer?._id || item.customer,
+          name: item.customer?.name || item.sale?.customerName || 'Customer',
+        },
+        invoiceNumber: item.sale?.invoiceNumber || `SAL-${item.sale?._id || item.sale}`,
+        amountReceivable: roundNumber(item.amount),
+        dueDate: item.sale?.dueDate,
+        createdAt: item.updatedAt || item.createdAt,
+      };
+    });
 }
 
-async function getAllAlerts(today) {
+function formatOrderNotificationAlert(notification) {
+  return {
+    id: String(notification._id),
+    type: ORDER_NOTIFICATION_TYPES[notification.kind] || 'Order Update',
+    priority: notification.seen ? 8 : 0,
+    routeKey: 'order',
+    orderId: notification.order ? String(notification.order) : null,
+    orderNo: notification.orderNo,
+    message: notification.message,
+    seen: notification.seen,
+    createdAt: notification.createdAt,
+  };
+}
+
+async function getOrderNotificationAlerts(user) {
+  if (!canAccess(user, [PERMISSIONS.canViewOrderClientDetails])) {
+    return [];
+  }
+
+  const notifications = await listOrderNotifications();
+  return notifications.map(formatOrderNotificationAlert);
+}
+
+async function getImportantAlerts(today, user) {
+  const soonThreshold = getDueSoonThreshold(today);
   const stockAlerts = await Promise.all([
-    getStockAlertItems(RawMaterialStock, 'Raw Material Stock'),
-    getStockAlertItems(PuChemicalStock, 'PU Chemical Stock'),
-    getStockAlertItems(RodStock, 'Rod Stock'),
-    getStockAlertItems(SheetStock, 'Sheet Stock'),
-    getStockAlertItems(PUProductStock, 'Finished Product Stock'),
-    getStockAlertItems(Product, 'Finished Product Stock', 'currentStock', { isActive: true }),
+    getStockAlertItems(RawMaterialStock, 'Raw Material Stock', 'quantity', {}, 'raw-material'),
+    getStockAlertItems(PuChemicalStock, 'PU Chemical Stock', 'quantity', {}, 'pu-chemical'),
+    getStockAlertItems(RodStock, 'Rod Stock', 'quantity', {}, 'rod'),
+    getStockAlertItems(SheetStock, 'Sheet Stock', 'quantity', {}, 'sheet'),
+    getStockAlertItems(PUProductStock, 'Finished Product Stock', 'quantity', {}, 'pu-product'),
+    getStockAlertItems(Product, 'Finished Product Stock', 'currentStock', { isActive: true }, 'legacy-product'),
   ]);
-  const [supplierOverdue, customerOverdue] = await Promise.all([
-    getSupplierOverdueAlerts(today),
-    getCustomerOverdueAlerts(today),
+  const [supplierAlerts, customerAlerts, orderAlerts] = await Promise.all([
+    getSupplierPaymentAlerts(today, soonThreshold),
+    getCustomerPaymentAlerts(today, soonThreshold),
+    getOrderNotificationAlerts(user),
   ]);
 
-  return [...stockAlerts.flat(), ...supplierOverdue, ...customerOverdue]
-    .sort((left, right) => left.priority - right.priority);
+  const flatStockAlerts = stockAlerts.flat();
+
+  const importantAlerts = [
+    ...flatStockAlerts,
+    ...supplierAlerts.filter((alert) => alert.isOverdue),
+    ...customerAlerts.filter((alert) => alert.isOverdue),
+  ]
+    .sort((left, right) => left.priority - right.priority)
+    .slice(0, 5);
+
+  const notificationFeed = [
+    ...flatStockAlerts,
+    ...supplierAlerts,
+    ...customerAlerts,
+    ...orderAlerts,
+  ].sort((left, right) => left.priority - right.priority);
+
+  return { importantAlerts, notificationFeed };
 }
 
 export async function getDashboard(req, res) {
@@ -621,14 +671,14 @@ export async function getDashboard(req, res) {
     payments,
     businessSummary,
     graphData,
-    allAlerts,
+    alertsResult,
   ] = await Promise.all([
     getStockSummary(),
     getAlertCounts(),
     getPaymentSummary(today),
     getBusinessSummary(range),
     getGraphData(range),
-    getAllAlerts(today),
+    getImportantAlerts(today, req.user),
   ]);
 
   return res.status(200).json({
@@ -642,8 +692,7 @@ export async function getDashboard(req, res) {
     payments,
     businessSummary,
     graphData,
-    importantAlerts: allAlerts.slice(0, 5),
-    notificationAlerts: allAlerts,
-    notificationCount: allAlerts.length,
+    importantAlerts: alertsResult.importantAlerts,
+    notificationFeed: alertsResult.notificationFeed,
   });
 }

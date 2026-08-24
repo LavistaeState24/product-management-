@@ -83,6 +83,14 @@ function optionalBoolean(name, fallback = false) {
   return ['1', 'true', 'yes', 'on'].includes(value.toLowerCase());
 }
 
+function parseOriginList(value) {
+  return String(value || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+    .map((origin) => origin.replace(/\/+$/, ''));
+}
+
 function redact(value) {
   return value ? '[set]' : '[not set]';
 }
@@ -153,7 +161,11 @@ function assertProductionConfig(config) {
     );
   }
 
-  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(config.clientUrl)) {
+  if (
+    config.clientUrls.some((clientUrl) =>
+      /^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(clientUrl),
+    )
+  ) {
     throw new Error(
       'CLIENT_URL must point to the deployed frontend when NODE_ENV=production.',
     );
@@ -174,6 +186,11 @@ const mongoUri = required('MONGO_URI', {
     : 'mongodb://127.0.0.1:27017/operations-crm-dev',
 });
 const mongoInfo = parseMongoUri(mongoUri);
+const clientUrl = required('CLIENT_URL', {
+  fallback: isProduction
+    ? undefined
+    : 'http://localhost:5173',
+});
 
 export const env = {
   nodeEnv,
@@ -191,11 +208,8 @@ export const env = {
       : 'super-secret-change-me',
   }),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  clientUrl: required('CLIENT_URL', {
-    fallback: isProduction
-      ? undefined
-      : 'http://localhost:5173',
-  }),
+  clientUrl,
+  clientUrls: parseOriginList(clientUrl),
   bossName: optional('BOSS_NAME', 'Operations Boss'),
   bossEmail: optional(
     'BOSS_EMAIL',
