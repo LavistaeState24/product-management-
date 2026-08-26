@@ -54,6 +54,13 @@ export const SIDEBAR_ITEMS = [
   },
 
   {
+    label: 'Rod Product',
+    path: '/rod-product-manufacturing/new',
+    icon: Factory,
+    permission: PERMISSION_GROUPS.createRodProduct,
+  },
+
+  {
     label: 'Sheet Production',
     path: '/sheet-productions',
     icon: Factory,
@@ -72,6 +79,13 @@ export const SIDEBAR_ITEMS = [
     path: '/sheet-stock',
     icon: PackageSearch,
     permission: PERMISSIONS.canViewSheetStock,
+  },
+
+  {
+    label: 'Sheet Product',
+    path: '/sheet-product-manufacturing/new',
+    icon: Factory,
+    permission: PERMISSION_GROUPS.createSheetProduct,
   },
 
   {

@@ -152,7 +152,7 @@ export function validateStockAvailability({
   if (nextQuantity < 0) {
     throw createHttpError(
       400,
-      `Insufficient ${itemLabel} for "${stock.itemName}". Available: ${stock[quantityField]}, required: ${quantityUsed}.`,
+      `Insufficient ${itemLabel} for "${stock.itemName || stock.item}". Available: ${stock[quantityField]}, required: ${quantityUsed}.`,
     );
   }
 

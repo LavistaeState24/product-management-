@@ -29,6 +29,14 @@ export const PERMISSIONS = {
   canDeleteSheetProduction: 'canDeleteSheetProduction',
   canViewSheetStock: 'canViewSheetStock',
 
+  canViewRodProduct: 'canViewRodProduct',
+  canCreateRodProduct: 'canCreateRodProduct',
+  canViewRodProductStock: 'canViewRodProductStock',
+
+  canViewSheetProduct: 'canViewSheetProduct',
+  canCreateSheetProduct: 'canCreateSheetProduct',
+  canViewSheetProductStock: 'canViewSheetProductStock',
+
   canViewPayments: 'canViewPayments',
   canManagePayments: 'canManagePayments',
   canCreatePayments: 'canCreatePayments',
@@ -194,5 +202,21 @@ export const PERMISSION_GROUPS = {
     PERMISSIONS.canViewOrderClientDetails,
     PERMISSIONS.canViewClientMessageLog,
     PERMISSIONS.canShareOrderMessageOnWhatsApp,
+  ],
+
+  viewRodProduct: [
+    PERMISSIONS.canViewRodProduct,
+  ],
+
+  createRodProduct: [
+    PERMISSIONS.canCreateRodProduct,
+  ],
+
+  viewSheetProduct: [
+    PERMISSIONS.canViewSheetProduct,
+  ],
+
+  createSheetProduct: [
+    PERMISSIONS.canCreateSheetProduct,
   ],
 };

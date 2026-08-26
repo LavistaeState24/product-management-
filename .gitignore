@@ -6,5 +6,4 @@ client/dist/
 # Environment files may contain secrets. Keep all local env variants out of Git.
 .env*
 **/.env*
-
 npm-debug.log*
