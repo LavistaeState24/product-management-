@@ -1,5 +1,7 @@
 import PUProductStock from '../models/PUProductStock.js';
+import RodProductStock from '../models/RodProductStock.js';
 import RodStock from '../models/RodStock.js';
+import SheetProductStock from '../models/SheetProductStock.js';
 import SheetStock from '../models/SheetStock.js';
 import { createHttpError } from '../utils/httpError.js';
 import { buildPagination, buildSearchFilter } from '../utils/queryHelpers.js';
@@ -50,10 +52,16 @@ const TYPE_CONFIGS = {
     normalize: normalizeSheetStock,
   },
   rodProduct: {
-    missing: true,
+    Model: RodProductStock,
+    searchFields: ['itemNumber', 'productName', 'size', 'colour', 'sellingUnit'],
+    populate: ['manufacturingBatchId'],
+    normalize: normalizeRodProductStock,
   },
   sheetProduct: {
-    missing: true,
+    Model: SheetProductStock,
+    searchFields: ['itemNumber', 'productName', 'size', 'colour', 'sellingUnit'],
+    populate: ['manufacturingBatchId'],
+    normalize: normalizeSheetProductStock,
   },
   puProduct: {
     Model: PUProductStock,
@@ -107,6 +115,44 @@ function normalizeSheetStock(stock) {
     productionBatch: resolveBatchReference(stock.productionBatchId),
     productionDate: stock.productionDate,
     stockType: STOCK_TYPES.sheet,
+    updatedAt: stock.updatedAt,
+  };
+}
+
+function normalizeRodProductStock(stock) {
+  return {
+    id: `rod-product:${stock._id}`,
+    stockId: stock._id,
+    type: 'rod-product',
+    itemNumber: stock.itemNumber,
+    productName: stock.productName,
+    size: stock.size,
+    colour: stock.colour,
+    weight: null,
+    quantity: stock.quantity,
+    sellingUnit: stock.sellingUnit,
+    productionBatch: resolveBatchReference(stock.manufacturingBatchId),
+    productionDate: stock.productionDate,
+    stockType: STOCK_TYPES.rodProduct,
+    updatedAt: stock.updatedAt,
+  };
+}
+
+function normalizeSheetProductStock(stock) {
+  return {
+    id: `sheet-product:${stock._id}`,
+    stockId: stock._id,
+    type: 'sheet-product',
+    itemNumber: stock.itemNumber,
+    productName: stock.productName,
+    size: stock.size,
+    colour: stock.colour,
+    weight: null,
+    quantity: stock.quantity,
+    sellingUnit: stock.sellingUnit,
+    productionBatch: resolveBatchReference(stock.manufacturingBatchId),
+    productionDate: stock.productionDate,
+    stockType: STOCK_TYPES.sheetProduct,
     updatedAt: stock.updatedAt,
   };
 }

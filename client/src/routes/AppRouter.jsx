@@ -89,6 +89,10 @@ const RodStockPage = lazy(() =>
   import('@/features/rod-productions/pages/RodStockPage'),
 );
 
+const AddRodProductPage = lazy(() =>
+  import('@/features/rod-productions/pages/AddRodProductPage'),
+);
+
 const SheetProductionListPage = lazy(() =>
   import(
     '@/features/sheet-productions/pages/SheetProductionListPage'
@@ -123,6 +127,10 @@ const SheetStockDetailsPage = lazy(() =>
   import(
     '@/features/sheet-productions/pages/SheetStockDetailsPage'
   ),
+);
+
+const AddSheetProductPage = lazy(() =>
+  import('@/features/sheet-productions/pages/AddSheetProductPage'),
 );
 
 const PUProductManufacturingListPage = lazy(() =>
@@ -443,6 +451,22 @@ function AppRouter() {
               />
             </Route>
 
+            {/* Rod Product */}
+            <Route
+              element={
+                <ProtectedRoute
+                  permission={
+                    PERMISSION_GROUPS.createRodProduct
+                  }
+                />
+              }
+            >
+              <Route
+                path="/rod-product-manufacturing/new"
+                element={<AddRodProductPage />}
+              />
+            </Route>
+
             {/* Sheet Production */}
             <Route
               element={
@@ -522,6 +546,22 @@ function AppRouter() {
                 element={
                   <SheetStockDetailsPage />
                 }
+              />
+            </Route>
+
+            {/* Sheet Product */}
+            <Route
+              element={
+                <ProtectedRoute
+                  permission={
+                    PERMISSION_GROUPS.createSheetProduct
+                  }
+                />
+              }
+            >
+              <Route
+                path="/sheet-product-manufacturing/new"
+                element={<AddSheetProductPage />}
               />
             </Route>
 

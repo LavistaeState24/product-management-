@@ -29,6 +29,14 @@ export const PERMISSIONS = {
   canDeleteSheetProduction: 'canDeleteSheetProduction',
   canViewSheetStock: 'canViewSheetStock',
 
+  canViewRodProduct: 'canViewRodProduct',
+  canCreateRodProduct: 'canCreateRodProduct',
+  canViewRodProductStock: 'canViewRodProductStock',
+
+  canViewSheetProduct: 'canViewSheetProduct',
+  canCreateSheetProduct: 'canCreateSheetProduct',
+  canViewSheetProductStock: 'canViewSheetProductStock',
+
   canViewPayments: 'canViewPayments',
   canManagePayments: 'canManagePayments',
   canCreatePayments: 'canCreatePayments',
@@ -256,6 +264,9 @@ export const ROLE_PERMISSIONS = {
 
     PERMISSIONS.canViewOrders,
     PERMISSIONS.canAssignOrderItemNumber,
+
+    PERMISSIONS.canViewRodProductStock,
+    PERMISSIONS.canViewSheetProductStock,
   ],
 
   [ROLES.Production]: [
@@ -271,6 +282,14 @@ export const ROLE_PERMISSIONS = {
     PERMISSIONS.canViewSheetProduction,
     PERMISSIONS.canCreateSheetProduction,
     PERMISSIONS.canUpdateSheetProduction,
+
+    PERMISSIONS.canViewRodProduct,
+    PERMISSIONS.canCreateRodProduct,
+    PERMISSIONS.canViewRodProductStock,
+
+    PERMISSIONS.canViewSheetProduct,
+    PERMISSIONS.canCreateSheetProduct,
+    PERMISSIONS.canViewSheetProductStock,
 
     PERMISSIONS.canViewOrders,
     PERMISSIONS.canAcceptOrder,
