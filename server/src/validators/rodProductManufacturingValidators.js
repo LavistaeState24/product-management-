@@ -32,6 +32,16 @@ export const createRodProductManufacturingValidator = [
     .withMessage('Colour is required.')
     .isLength({ max: 80 })
     .withMessage('Colour must be 80 characters or fewer.'),
+  body('drawingNumber')
+    .optional({ values: 'falsy' })
+    .trim()
+    .isLength({ max: 120 })
+    .withMessage('Drawing number must be 120 characters or fewer.'),
+  body('photo')
+    .optional({ values: 'falsy' })
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Photo must be 500 characters or fewer.'),
   body('sellingUnit')
     .notEmpty()
     .withMessage('Selling unit is required.')

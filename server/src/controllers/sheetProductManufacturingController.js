@@ -34,6 +34,8 @@ function parseSheetProductManufacturingPayload(body) {
     productName: body.productName?.trim(),
     size: body.size?.trim(),
     colour: body.colour?.trim(),
+    drawingNumber: body.drawingNumber?.trim() || '',
+    photo: body.photo?.trim() || '',
     sellingUnit: body.sellingUnit,
     quantity: Number(body.quantity),
     itemNumber: body.itemNumber?.trim() || '',
