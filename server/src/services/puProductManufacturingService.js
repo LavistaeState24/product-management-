@@ -106,6 +106,8 @@ function buildPUProductStockDocument({ payload, batch, createdBy }) {
     productName: payload.productName,
     size: payload.size,
     colour: payload.colour,
+    drawingNumber: payload.drawingNumber || '',
+    photo: payload.photo || '',
     sellingUnit: payload.sellingUnit,
     quantity: payload.quantity,
     productionDate: payload.dateTime,
@@ -121,6 +123,8 @@ export function formatPUProductStock(stock) {
     productName: stock.productName,
     size: stock.size,
     colour: stock.colour,
+    drawingNumber: stock.drawingNumber || '',
+    photo: stock.photo || '',
     sellingUnit: stock.sellingUnit,
     quantity: stock.quantity,
     productionDate: stock.productionDate,
@@ -143,6 +147,8 @@ export function formatPUProductManufacturingBatch(batch) {
     productName: batch.productName,
     size: batch.size,
     colour: batch.colour,
+    drawingNumber: batch.drawingNumber || '',
+    photo: batch.photo || '',
     sellingUnit: batch.sellingUnit,
     quantity: batch.quantity,
     itemNumber: batch.itemNumber,
@@ -195,6 +201,8 @@ export async function createPUProductManufacturingBatch({ payload, createdBy }) 
           productName: payload.productName,
           size: payload.size,
           colour: payload.colour,
+          drawingNumber: payload.drawingNumber || '',
+          photo: payload.photo || '',
           sellingUnit: payload.sellingUnit,
           quantity: payload.quantity,
           itemNumber,
@@ -312,6 +320,8 @@ export async function updatePUProductManufacturingBatch({ batchId, payload }) {
       existingBatch.productName = payload.productName;
       existingBatch.size = payload.size;
       existingBatch.colour = payload.colour;
+      existingBatch.drawingNumber = payload.drawingNumber || '';
+      existingBatch.photo = payload.photo || '';
       existingBatch.sellingUnit = payload.sellingUnit;
       existingBatch.quantity = payload.quantity;
       existingBatch.itemNumber = itemNumber;

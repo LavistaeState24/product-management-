@@ -54,6 +54,16 @@ const puProductManufacturingBatchSchema = new mongoose.Schema(
       trim: true,
       index: true,
     },
+    drawingNumber: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    photo: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     sellingUnit: {
       type: String,
       enum: ['Per PCS', 'Per Kg'],

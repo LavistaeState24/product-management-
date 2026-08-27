@@ -23,6 +23,8 @@ function buildInitialForm() {
     productName: '',
     size: '',
     colour: '',
+    drawingNumber: '',
+    photo: '',
     sellingUnit: 'Per PCS',
     quantity: '1',
     itemNumber: '',
@@ -116,6 +118,8 @@ function AddSheetProductPage() {
         productName: form.productName.trim(),
         size: form.size.trim(),
         colour: form.colour.trim(),
+        drawingNumber: form.drawingNumber.trim(),
+        photo: form.photo.trim(),
         sellingUnit: form.sellingUnit,
         quantity: Number(form.quantity),
         itemNumber: form.itemNumber.trim(),
@@ -200,6 +204,8 @@ function AddSheetProductPage() {
           <Input label="Product Name" value={form.productName} error={errors.productName} onChange={(event) => updateField('productName', event.target.value)} />
           <Input label="Size" value={form.size} error={errors.size} onChange={(event) => updateField('size', event.target.value)} />
           <Input label="Colour" value={form.colour} error={errors.colour} onChange={(event) => updateField('colour', event.target.value)} />
+          <Input label="Drawing No." placeholder="For new sizes" value={form.drawingNumber} onChange={(event) => updateField('drawingNumber', event.target.value)} />
+          <Input label="Photo (URL/Description)" placeholder="Image URL or description" value={form.photo} onChange={(event) => updateField('photo', event.target.value)} />
           <Select label="Selling Unit" options={sellingUnitOptions} value={form.sellingUnit} error={errors.sellingUnit} onChange={(event) => updateField('sellingUnit', event.target.value)} />
           <Input label="Quantity" type="number" min="1" step="1" value={form.quantity} error={errors.quantity} onChange={(event) => updateField('quantity', event.target.value)} />
           <Input label="Item Number" placeholder="Auto-generated if blank" value={form.itemNumber} onChange={(event) => updateField('itemNumber', event.target.value)} />
