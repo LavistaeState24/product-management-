@@ -103,8 +103,18 @@ function StockManagementPage() {
     [],
   );
 
-  const activeItems = stocks[activeTab] || [];
-  const activeLabel = stockTabs.find((tab) => tab.key === activeTab)?.label;
+  // const activeItems = stocks[activeTab] || [];
+  // const activeLabel = stockTabs.find((tab) => tab.key === activeTab)?.label;
+
+  const activeItems = useMemo(() => {
+  const items = stocks[activeTab] || [];
+  return [...items].sort((a, b) => {
+    const dateA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+    const dateB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+    return dateB - dateA;
+  });
+}, [stocks, activeTab]);
+const activeLabel = stockTabs.find((tab) => tab.key === activeTab)?.label;
 
   return (
     <div className="space-y-6">
