@@ -129,7 +129,7 @@ function PaymentManagementPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 15,
+      limit: 5,
     },
   });
   const [customerState, setCustomerState] = useState({
@@ -138,7 +138,7 @@ function PaymentManagementPage() {
       page: 1,
       totalPages: 1,
       totalItems: 0,
-      limit: 15,
+      limit: 5,
     },
   });
   const [loading, setLoading] = useState(true);
@@ -683,7 +683,7 @@ function PaymentManagementPage() {
             <h2 className="section-title">{activeTabLabel}</h2>
             <p className="section-copy mt-2">
               {activeTab === 'purchases'
-                ? 'Supplier payable invoices from purchase records.'
+                ? 'Supplier payable invoices from .'
                 : 'Customer receivable invoices from sales records.'}
             </p>
           </div>

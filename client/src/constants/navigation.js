@@ -33,7 +33,7 @@ export const SIDEBAR_ITEMS = [
   },
 
   {
-    label: 'Raw Stock',
+    label: 'Raw Materials',
     path: '/stock',
     icon: Boxes,
     permission: PERMISSIONS.canViewStock,
@@ -54,7 +54,7 @@ export const SIDEBAR_ITEMS = [
   },
 
   {
-    label: 'Rod Product',
+    label: 'Rod Products',
     path: '/rod-product-manufacturing/new',
     icon: Factory,
     permission: PERMISSION_GROUPS.createRodProduct,
@@ -68,7 +68,7 @@ export const SIDEBAR_ITEMS = [
   },
 
   {
-    label: 'New Sheet',
+    label: 'Add Sheet',
     path: '/sheet-productions/new',
     icon: Factory,
     permission: PERMISSION_GROUPS.createProduction,
@@ -82,7 +82,7 @@ export const SIDEBAR_ITEMS = [
   },
 
   {
-    label: 'Sheet Product',
+    label: 'Sheet Products',
     path: '/sheet-product-manufacturing/new',
     icon: Factory,
     permission: PERMISSION_GROUPS.createSheetProduct,
@@ -96,14 +96,14 @@ export const SIDEBAR_ITEMS = [
   },
 
   {
-    label: 'New PU',
+    label: 'Add PU Product',
     path: '/pu-product-manufacturing/new',
     icon: Factory,
     permission: PERMISSION_GROUPS.createProduction,
   },
 
   {
-    label: 'PU Stock',
+    label: 'PU Products',
     path: '/pu-product-stock',
     icon: PackageSearch,
     permission: PERMISSIONS.canViewStock,

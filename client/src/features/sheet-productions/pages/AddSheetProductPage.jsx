@@ -83,7 +83,7 @@ function AddSheetProductPage() {
     () =>
       sheetStocks.map((stock) => ({
         value: stock.id,
-        label: `${stock.itemName} - ${stock.size}/${stock.colour} (qty ${formatQuantity(stock.quantity)})`,
+        label: `${stock.itemNumber} - ${stock.itemName} - ${stock.size}/${stock.colour} (qty ${formatQuantity(stock.quantity)})`,
       })),
     [sheetStocks],
   );

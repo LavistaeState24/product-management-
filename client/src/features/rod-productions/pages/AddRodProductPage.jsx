@@ -83,7 +83,7 @@ function AddRodProductPage() {
     () =>
       rodStocks.map((stock) => ({
         value: stock.id,
-        label: `${stock.item} - ${stock.size}/${stock.colour} (qty ${formatQuantity(stock.quantity)})`,
+        label: `${stock.itemNumber} - ${stock.item} - ${stock.size}/${stock.colour} (qty ${formatQuantity(stock.quantity)})`,
       })),
     [rodStocks],
   );
