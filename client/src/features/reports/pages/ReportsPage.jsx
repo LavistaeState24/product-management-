@@ -53,6 +53,7 @@ const invoiceStatusOptions = [
 const purchaseTypeOptions = [
   { value: 'Raw Material', label: 'Raw Material' },
   { value: 'PU Chemical', label: 'PU Chemical' },
+  { value: 'Mocha Chemical', label: 'Mocha Chemical' },
 ];
 
 const productionTypeOptions = [

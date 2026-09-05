@@ -36,7 +36,13 @@ const purchaseTypeOptions = [
   { value: '', label: 'All Purchase Types' },
   { value: 'Raw Material', label: 'Raw Material' },
   { value: 'PU Chemical', label: 'PU Chemical' },
+  { value: 'Mocha Chemical', label: 'Mocha Chemical' },
 ];
+
+const purchaseTypeDisplayLabels = {
+  'PU Chemical': 'PU Chemical',
+  'Mocha Chemical': 'Mocha',
+};
 
 function PurchaseListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -125,7 +131,7 @@ function PurchaseListPage() {
         title: 'Type',
         render: (row) => (
           <Badge variant={row.purchaseType === 'PU Chemical' ? 'warning' : 'neutral'}>
-            {row.purchaseType || 'Raw Material'}
+            {purchaseTypeDisplayLabels[row.purchaseType] || row.purchaseType || 'Raw Material'}
           </Badge>
         ),
       },

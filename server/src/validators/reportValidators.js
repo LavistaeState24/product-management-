@@ -2,7 +2,7 @@ import { query } from 'express-validator';
 import { PURCHASE_GST_TYPES, PURCHASE_PAYMENT_TYPES } from '../utils/purchaseMath.js';
 import { SALE_INVOICE_STATUSES, SALE_PAYMENT_TYPES, SALE_STOCK_TYPES } from '../utils/saleMath.js';
 
-const PURCHASE_TYPES = ['Raw Material', 'PU Chemical'];
+const PURCHASE_TYPES = ['Raw Material', 'PU Chemical', 'Mocha Chemical'];
 const PRODUCTION_TYPES = ['rod', 'sheet', 'pu-product'];
 const STOCK_CATEGORIES = [
   'raw-material',
@@ -68,7 +68,7 @@ export const purchaseReportValidator = [
   query('purchaseType')
     .optional({ values: 'falsy' })
     .isIn(PURCHASE_TYPES)
-    .withMessage('Purchase type must be Raw Material or PU Chemical.'),
+    .withMessage('Purchase type must be Raw Material, PU Chemical, or Mocha Chemical.'),
   query('status')
     .optional({ values: 'falsy' })
     .isIn(['Paid', 'Partially Paid', 'Pending'])

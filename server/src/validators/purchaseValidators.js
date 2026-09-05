@@ -14,6 +14,7 @@ import {
 const PURCHASE_TYPES = [
   'Raw Material',
   'PU Chemical',
+  'Mocha Chemical',
 ];
 
 const PURCHASE_UNITS = [
@@ -95,7 +96,7 @@ const purchaseTypeValidator =
     .default('Raw Material')
     .isIn(PURCHASE_TYPES)
     .withMessage(
-      'Purchase type must be Raw Material or PU Chemical.',
+      'Purchase type must be Raw Material, PU Chemical, or Mocha Chemical.',
     );
 
 const itemValidator =
@@ -542,7 +543,7 @@ export const listPurchaseValidator =
         PURCHASE_TYPES,
       )
       .withMessage(
-        'Purchase type must be Raw Material or PU Chemical.',
+        'Purchase type must be Raw Material, PU Chemical, or Mocha Chemical.',
       ),
 
     query('fromDate')

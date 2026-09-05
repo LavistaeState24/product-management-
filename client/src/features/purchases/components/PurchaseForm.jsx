@@ -22,6 +22,7 @@ const paymentOptions = [
 const purchaseTypeOptions = [
   { value: 'Raw Material', label: 'Raw Material' },
   { value: 'PU Chemical', label: 'PU Chemical' },
+  { value: 'Mocha Chemical', label: 'Mocha Chemical' },
 ];
 
 function PurchaseForm({
