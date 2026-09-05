@@ -121,7 +121,7 @@ export async function getRawMaterialStock(itemName, unit) {
   }).lean();
 }
 
-export async function adjustPuChemicalStock({ itemName, unit, delta }) {
+export async function adjustPuChemicalStock({ itemName, unit, delta, category }) {
   if (!itemName || !unit || !delta) {
     return null;
   }
@@ -146,6 +146,7 @@ export async function adjustPuChemicalStock({ itemName, unit, delta }) {
       normalizedItemName,
       unit,
       quantity: roundCurrency(delta),
+      category: category || 'PU Chemical',
     });
 
     return stock;
@@ -162,6 +163,11 @@ export async function adjustPuChemicalStock({ itemName, unit, delta }) {
 
   stock.itemName = itemName;
   stock.quantity = nextQuantity;
+
+  if (category) {
+    stock.category = category;
+  }
+
   await stock.save();
 
   return stock;

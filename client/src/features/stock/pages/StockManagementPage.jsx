@@ -27,6 +27,15 @@ const stockTabs = [
 ];
 
 function isMocaStock(stock) {
+  if (stock?.category === 'Mocha Chemical') {
+    return true;
+  }
+
+  if (stock?.category === 'PU Chemical') {
+    return false;
+  }
+
+  // Legacy records predate the purchase-type category field; fall back to item name.
   return String(stock?.itemName || '').trim().toLowerCase().includes('moca');
 }
 

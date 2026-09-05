@@ -28,6 +28,12 @@ const puChemicalStockSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    category: {
+      type: String,
+      enum: ['PU Chemical', 'Mocha Chemical'],
+      default: 'PU Chemical',
+      index: true,
+    },
   },
   {
     timestamps: true,
