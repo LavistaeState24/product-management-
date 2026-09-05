@@ -7,6 +7,7 @@ function formatStockItem(stock) {
     itemName: stock.itemName,
     availableQuantity: stock.quantity,
     unit: stock.unit,
+    category: stock.category || null,
     updatedAt: stock.updatedAt,
   };
 }

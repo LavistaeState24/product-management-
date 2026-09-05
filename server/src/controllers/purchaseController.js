@@ -227,7 +227,10 @@ async function getPurchaseRelatedStock(purchase) {
     return null;
   }
 
-  if (purchaseType === 'PU Chemical') {
+  if (
+    purchaseType === 'PU Chemical' ||
+    purchaseType === 'Mocha Chemical'
+  ) {
     return getPuChemicalStock(
       itemName,
       purchase.unit,
@@ -246,11 +249,15 @@ async function adjustPurchaseStock({
   unit,
   delta,
 }) {
-  if (purchaseType === 'PU Chemical') {
+  if (
+    purchaseType === 'PU Chemical' ||
+    purchaseType === 'Mocha Chemical'
+  ) {
     return adjustPuChemicalStock({
       itemName,
       unit,
       delta,
+      category: purchaseType,
     });
   }
 
