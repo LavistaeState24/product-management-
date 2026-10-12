@@ -5,6 +5,8 @@ import {
   listUsers,
   setUserActiveStatus,
   updateUser,
+  getRolePermissionProfiles,
+  updateRolePermissions,
 } from '../services/userService.js';
 
 import { formatUser } from '../utils/formatUser.js';
@@ -13,15 +15,29 @@ import {
   ALL_PERMISSIONS,
   ASSIGNABLE_ROLES,
   CRM_MODULE_PERMISSIONS,
-  ROLE_PERMISSIONS,
 } from '../utils/permissions.js';
 
 export async function getUserManagementOptions(req, res) {
+  const rolePermissions = await getRolePermissionProfiles();
+
   return res.status(200).json({
     roles: ASSIGNABLE_ROLES,
     permissions: ALL_PERMISSIONS,
     modulePermissions: CRM_MODULE_PERMISSIONS,
-    rolePermissions: ROLE_PERMISSIONS,
+    rolePermissions,
+  });
+}
+
+export async function updateRolePermissionsController(req, res) {
+  const permissions = await updateRolePermissions(
+    req.body.role,
+    req.body.permissions,
+  );
+
+  return res.status(200).json({
+    message: `${req.body.role} permissions updated successfully.`,
+    role: req.body.role,
+    permissions,
   });
 }
 

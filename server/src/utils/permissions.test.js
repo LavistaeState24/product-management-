@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   ALL_PERMISSIONS,
   ASSIGNABLE_ROLES,
+  CRM_MODULE_PERMISSIONS,
   getDefaultPermissionsForRole,
   getEffectivePermissions,
   PERMISSIONS,
@@ -30,6 +31,22 @@ test('role permission profiles only contain known permissions', () => {
         `${role} includes unknown permission ${permission}`,
       );
     }
+  }
+});
+
+test('the permission matrix exposes every permission in the system', () => {
+  const exposedPermissions = new Set(
+    Object.values(CRM_MODULE_PERMISSIONS)
+      .flatMap((modulePermissions) =>
+        Object.values(modulePermissions),
+      ),
+  );
+
+  for (const permission of ALL_PERMISSIONS) {
+    assert.ok(
+      exposedPermissions.has(permission),
+      `${permission} must be configurable in the permission matrix`,
+    );
   }
 });
 

@@ -127,6 +127,33 @@ export const updateUserValidator = [
   isActiveValidator,
 ];
 
+export const updateRolePermissionsValidator = [
+  body('role')
+    .exists()
+    .withMessage('Role is required.')
+    .bail()
+    .isIn(roleValues)
+    .withMessage(`Role must be one of ${roleValues.join(', ')}.`),
+  body('permissions')
+    .exists()
+    .withMessage('Permissions are required.')
+    .bail()
+    .isArray()
+    .withMessage('Permissions must be an array.')
+    .bail()
+    .custom((permissions) => {
+      const unknownPermissions = permissions.filter(
+        (permission) => !permissionValues.has(permission),
+      );
+
+      if (unknownPermissions.length) {
+        throw new Error(`Unknown permissions: ${unknownPermissions.join(', ')}.`);
+      }
+
+      return true;
+    }),
+];
+
 export const setUserActiveStatusValidator = [
   userIdParamValidator,
   body('isActive')

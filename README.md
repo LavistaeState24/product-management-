@@ -118,6 +118,18 @@ npm run dev
 For production, set `BOSS_EMAIL` and `BOSS_PASSWORD` before running
 `npm run seed:boss`.
 
+## Managing User and Role Permissions
+
+Sign in as a Boss user and open **Users & Permissions**. The role access
+profiles let you configure module permissions for each non-Boss role, including
+view, create, edit, delete, and the available order-specific actions. Saving a
+role profile updates all existing users assigned to that role (replacing any
+individual permission overrides) and is also used as the default for new users.
+Edit an individual user afterward to give that account a custom permission set.
+
+Role profiles are stored in the configured MongoDB database. Boss accounts
+always retain full access.
+
 ## Default Local URLs
 
 - Frontend: `http://localhost:5173`

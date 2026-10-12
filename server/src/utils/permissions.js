@@ -106,11 +106,23 @@ export const CRM_MODULE_PERMISSIONS = {
     delete: PERMISSIONS.canDeleteProduction,
   },
 
+  'Sheet Production': {
+    view: PERMISSIONS.canViewSheetProduction,
+    create: PERMISSIONS.canCreateSheetProduction,
+    edit: PERMISSIONS.canUpdateSheetProduction,
+    delete: PERMISSIONS.canDeleteSheetProduction,
+  },
+
   Stock: {
     view: PERMISSIONS.canViewStock,
     create: PERMISSIONS.canCreateStock,
     edit: PERMISSIONS.canEditStock,
     delete: PERMISSIONS.canDeleteStock,
+    manage: PERMISSIONS.canManageStock,
+  },
+
+  'Sheet Stock': {
+    view: PERMISSIONS.canViewSheetStock,
   },
 
   Sales: {
@@ -125,6 +137,7 @@ export const CRM_MODULE_PERMISSIONS = {
     create: PERMISSIONS.canCreatePayments,
     edit: PERMISSIONS.canEditPayments,
     delete: PERMISSIONS.canDeletePayments,
+    manage: PERMISSIONS.canManagePayments,
   },
 
   Reports: {
@@ -132,6 +145,24 @@ export const CRM_MODULE_PERMISSIONS = {
     create: PERMISSIONS.canCreateReports,
     edit: PERMISSIONS.canEditReports,
     delete: PERMISSIONS.canDeleteReports,
+  },
+
+  'Rod Products': {
+    view: PERMISSIONS.canViewRodProduct,
+    create: PERMISSIONS.canCreateRodProduct,
+  },
+
+  'Rod Product Stock': {
+    view: PERMISSIONS.canViewRodProductStock,
+  },
+
+  'Sheet Products': {
+    view: PERMISSIONS.canViewSheetProduct,
+    create: PERMISSIONS.canCreateSheetProduct,
+  },
+
+  'Sheet Product Stock': {
+    view: PERMISSIONS.canViewSheetProductStock,
   },
 
   Orders: {

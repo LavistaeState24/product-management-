@@ -35,6 +35,7 @@ import {
   deleteUser,
   fetchUserOptions,
   fetchUsers,
+  updateRolePermissions,
   updateUser,
   updateUserActiveStatus,
 } from '@/features/users/services/userService';
@@ -44,6 +45,15 @@ const ACTIONS = [
   { key: 'create', label: 'Create' },
   { key: 'edit', label: 'Edit' },
   { key: 'delete', label: 'Delete' },
+  { key: 'manage', label: 'Manage' },
+  { key: 'accept', label: 'Accept' },
+  { key: 'updateProduction', label: 'Update Production' },
+  { key: 'assignItemNumber', label: 'Assign Item #' },
+  { key: 'markReady', label: 'Mark Ready' },
+  { key: 'dispatch', label: 'Dispatch' },
+  { key: 'viewClientDetails', label: 'Client Details' },
+  { key: 'viewMessageLog', label: 'Message Log' },
+  { key: 'shareWhatsApp', label: 'Share WhatsApp' },
 ];
 
 const createEmptyForm = () => ({
@@ -78,8 +88,8 @@ function buildPermissionSet(permissions = []) {
 function toRoleOptions(roles = []) {
   const backendRoles = Array.isArray(roles)
     ? roles.filter((role) =>
-        ASSIGNABLE_ROLES.includes(role),
-      )
+      ASSIGNABLE_ROLES.includes(role),
+    )
     : [];
 
   const availableRoles = backendRoles.length
@@ -105,6 +115,9 @@ function PermissionMatrix({
 
   const modules = Object.entries(
     modulePermissions || {},
+  );
+  const availableActions = ACTIONS.filter(({ key }) =>
+    modules.some(([, actions]) => actions?.[key]),
   );
 
   function togglePermission(permission) {
@@ -141,7 +154,7 @@ function PermissionMatrix({
                 Module
               </th>
 
-              {ACTIONS.map((action) => (
+              {availableActions.map((action) => (
                 <th
                   key={action.key}
                   className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-[0.16em] text-body"
@@ -159,7 +172,7 @@ function PermissionMatrix({
                   {moduleName}
                 </td>
 
-                {ACTIONS.map((action) => {
+                {availableActions.map((action) => {
                   const permission =
                     actions?.[action.key];
 
@@ -225,6 +238,12 @@ function UsersPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingRole, setSavingRole] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(
+    ASSIGNABLE_ROLES.find((role) => role !== ROLES.Boss) ||
+    ROLES.User,
+  );
+  const [roleDraft, setRoleDraft] = useState([]);
 
   const [formOpen, setFormOpen] =
     useState(false);
@@ -249,13 +268,17 @@ function UsersPage() {
     () => toRoleOptions(options.roles),
     [options.roles],
   );
+  const editableRoleOptions = useMemo(
+    () => roleOptions.filter((role) => role.value !== ROLES.Boss),
+    [roleOptions],
+  );
 
   const isBossForm =
     form.role === ROLES.Boss;
 
   const effectivePermissions = isBossForm
     ? options.rolePermissions?.[ROLES.Boss] ||
-      form.permissions
+    form.permissions
     : form.permissions;
 
   useEffect(() => {
@@ -295,6 +318,12 @@ function UsersPage() {
       ignore = true;
     };
   }, [toast]);
+
+  useEffect(() => {
+    setRoleDraft(
+      options.rolePermissions?.[selectedRole] || [],
+    );
+  }, [options.rolePermissions, selectedRole]);
 
   useEffect(() => {
     let ignore = false;
@@ -356,7 +385,7 @@ function UsersPage() {
       role: defaultRole,
       permissions:
         options.rolePermissions?.[
-          defaultRole
+        defaultRole
         ] || [],
     });
 
@@ -407,9 +436,48 @@ function UsersPage() {
       role,
       permissions:
         options.rolePermissions?.[
-          role
+        role
         ] || [],
     }));
+  }
+
+  function handleRoleProfileChange(role) {
+    setSelectedRole(role);
+    setRoleDraft(
+      options.rolePermissions?.[role] || [],
+    );
+  }
+
+  async function handleSaveRolePermissions() {
+    setSavingRole(true);
+
+    try {
+      const response = await updateRolePermissions(
+        selectedRole,
+        roleDraft,
+      );
+
+      setOptions((current) => ({
+        ...current,
+        rolePermissions: {
+          ...current.rolePermissions,
+          [selectedRole]: response.permissions,
+        },
+      }));
+      setRoleDraft(response.permissions);
+      refreshUsers();
+      toast.success(
+        'Role permissions updated',
+        `Access was updated for all users with the ${selectedRole} role.`,
+      );
+    } catch (error) {
+      toast.error(
+        'Unable to update role permissions',
+        getApiErrorMessage(error),
+      );
+    } finally {
+      setSavingRole(false);
+    }
   }
 
   function handleSearchSubmit(event) {
@@ -704,6 +772,45 @@ function UsersPage() {
           </Button>
         </div>
       </div>
+
+      <section className="space-y-4 rounded-2xl border border-border bg-card p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-heading">
+              Role access profiles
+            </h3>
+            <p className="mt-1 text-sm text-body">
+              Saving updates all users in this role and overwrites individual customizations.
+              Edit users afterwards for custom access.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Select
+              label="Role"
+              value={selectedRole}
+              options={editableRoleOptions}
+              onChange={(event) =>
+                handleRoleProfileChange(event.target.value)
+              }
+            />
+            <Button
+              type="button"
+              loading={savingRole}
+              onClick={handleSaveRolePermissions}
+            >
+              Save Role Access
+            </Button>
+          </div>
+        </div>
+
+        <PermissionMatrix
+          modulePermissions={options.modulePermissions}
+          value={roleDraft}
+          disabled={savingRole}
+          onChange={setRoleDraft}
+        />
+      </section>
 
       <DataTable
         columns={columns}

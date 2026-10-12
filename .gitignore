@@ -2,6 +2,7 @@ node_modules/
 client/node_modules/
 server/node_modules/
 client/dist/
+.claude/
 
 # Environment files may contain secrets. Keep all local env variants out of Git.
 .env*
