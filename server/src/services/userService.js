@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import RolePermission from '../models/RolePermission.js';
 import { createHttpError } from '../utils/httpError.js';
 import {
   ALL_PERMISSIONS,
@@ -13,20 +14,6 @@ import {
 } from '../utils/queryHelpers.js';
 
 const VALID_ROLES = new Set(Object.values(ROLES));
-
-const BOSS_ONLY_PERMISSIONS = new Set([
-  // User administration
-  'canManageUsers',
-
-  // Destructive operations
-  'canDeletePurchase',
-  'canDeleteProduction',
-  'canDeleteSheetProduction',
-  'canDeleteSales',
-  'canDeleteStock',
-  'canDeletePayments',
-  'canDeleteReports',
-]);
 
 function normalizeEmail(email) {
   if (typeof email !== 'string') {
@@ -51,22 +38,67 @@ function normalizeRolePermissions(role, permissions) {
     return [...ALL_PERMISSIONS];
   }
 
-  const allowedPermissions = new Set(
-    ROLE_PERMISSIONS[role] || [],
-  );
+  return normalized;
+}
 
-  const invalidPermission = normalized.find(
-    (permission) => !allowedPermissions.has(permission),
-  );
+export async function getRolePermissionProfiles() {
+  const profiles = await RolePermission.find({
+    role: { $ne: ROLES.Boss },
+  }).lean();
 
-  if (invalidPermission) {
+  return {
+    ...Object.fromEntries(
+      Object.entries(ROLE_PERMISSIONS).map(([role, permissions]) => [
+        role,
+        [...permissions],
+      ]),
+    ),
+    ...Object.fromEntries(
+      profiles.map(({ role, permissions }) => [role, permissions]),
+    ),
+    [ROLES.Boss]: [...ALL_PERMISSIONS],
+  };
+}
+
+async function getRolePermissions(role) {
+  if (role === ROLES.Boss) {
+    return [...ALL_PERMISSIONS];
+  }
+
+  const profile = await RolePermission.findOne({ role }).lean();
+
+  return profile
+    ? [...profile.permissions]
+    : getDefaultPermissionsForRole(role);
+}
+
+export async function updateRolePermissions(role, permissions) {
+  validateRole(role);
+
+  if (role === ROLES.Boss) {
     throw createHttpError(
       400,
-      `${invalidPermission} is not allowed for the ${role} role.`,
+      'Boss always has full access and cannot be customized.',
     );
   }
 
-  return normalized;
+  const normalizedPermissions = normalizeRolePermissions(
+    role,
+    permissions,
+  );
+
+  await RolePermission.findOneAndUpdate(
+    { role },
+    { $set: { permissions: normalizedPermissions } },
+    { new: true, upsert: true, runValidators: true },
+  );
+
+  await User.updateMany(
+    { role },
+    { $set: { permissions: normalizedPermissions } },
+  );
+
+  return normalizedPermissions;
 }
 
 function buildUserPayload(body, { isCreate = false } = {}) {
@@ -226,7 +258,14 @@ export async function listUsers({
 }
 
 export async function createUser(body) {
-  const payload = buildUserPayload(body, {
+  const role = body.role === undefined
+    ? ROLES.User
+    : validateRole(body.role);
+  const rolePermissions = await getRolePermissions(role);
+  const payload = buildUserPayload({
+    ...body,
+    permissions: body.permissions ?? rolePermissions,
+  }, {
     isCreate: true,
   });
 
@@ -261,8 +300,14 @@ export async function updateUser(
       ? body.role
       : existingUser.role;
 
+  const rolePermissions =
+    body.role !== undefined && body.permissions === undefined
+      ? await getRolePermissions(validateRole(body.role))
+      : undefined;
+
   const payload = buildUserPayload({
     ...body,
+    ...(rolePermissions ? { permissions: rolePermissions } : {}),
     currentRole: effectiveRole,
   });
 

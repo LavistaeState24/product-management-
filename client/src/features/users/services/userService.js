@@ -5,6 +5,15 @@ export async function fetchUserOptions() {
   return response.data;
 }
 
+export async function updateRolePermissions(role, permissions) {
+  const response = await api.put('/users/role-permissions', {
+    role,
+    permissions,
+  });
+
+  return response.data;
+}
+
 export async function fetchUsers(params = {}) {
   const response = await api.get('/users', { params });
   return response.data;

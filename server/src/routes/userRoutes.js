@@ -7,6 +7,7 @@ import {
   listUsersController,
   setUserActiveStatusController,
   updateUserController,
+  updateRolePermissionsController,
 } from '../controllers/userController.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import { requirePermission } from '../middleware/rbacMiddleware.js';
@@ -19,6 +20,7 @@ import {
   listUsersValidator,
   setUserActiveStatusValidator,
   updateUserValidator,
+  updateRolePermissionsValidator,
 } from '../validators/userValidators.js';
 
 const router = Router();
@@ -27,6 +29,12 @@ router.use(requireAuth);
 router.use(requirePermission(PERMISSIONS.canManageUsers));
 
 router.get('/options', getUserManagementOptions);
+router.put(
+  '/role-permissions',
+  updateRolePermissionsValidator,
+  validateRequest,
+  updateRolePermissionsController,
+);
 
 router.get('/', listUsersValidator, validateRequest, listUsersController);
 router.post('/', createUserValidator, validateRequest, createUserController);
